@@ -1,0 +1,30 @@
+{
+  "pluginAlias": "HomebridgeEconetRheem",
+  "pluginType": "platform",
+  "singular": true,
+  "strictValidation": false,
+  "schema": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "title": "Email",
+        "type": "string",
+        "format": "email",
+        "required": true,
+        "description": "Rheem/Econet account email"
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "required": true,
+        "description": "Rheem/Econet account password"
+      },
+      "debug": {
+        "title": "Password",
+        "type": "boolean",
+        "required": false,
+        "description": "Enabled additional debug logging"
+      }
+    }
+  }
+}

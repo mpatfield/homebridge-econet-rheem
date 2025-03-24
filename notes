@@ -1,0 +1,7 @@
+cd /var/lib/homebridge/dev/homebridge-econet-rheem
+git pull
+sudo npm install
+sudo npm run build
+sudo npm link
+cd /var/lib/homebridge
+sudo npm link homebridge-econet-rheem
