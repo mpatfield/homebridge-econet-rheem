@@ -4,12 +4,18 @@
   "displayName": "Homebridge Econet Rheem",
   "description": "Homebridge plugin based on pyeconet for control of Rheem water heaters",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "homepage": "https://github.com/mpatfield/homebridge-econet-rheem#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/mpatfield/homebridge-econet-rheem.git"
   },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/mpatfield"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/mpatfield/homebridge-econet-rheem/issues"
   },
@@ -24,7 +30,8 @@
     "homebridge-plugin",
     "econet",
     "rheem",
-    "water-heater"
+    "water-heater",
+    "thermostat"
   ],
   "engines": {
     "node": "^18.20.4 || ^20.18.0 || ^22.10.0",
@@ -47,6 +54,8 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.1"
   },
-  "author": "Martin Patfield",
+  "author": {
+    "name": "mpatfield"
+  },
   "license": "Apache-2.0"
 }
