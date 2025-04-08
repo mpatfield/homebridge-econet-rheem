@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/homebridge/branding/raw/latest/logos/homebridge-wordmark-logo-vertical.png" width="150">
+<img src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/icon.png" width="100">
 </p>
 
 # Homebridge EcoNet Rheem Plugin
