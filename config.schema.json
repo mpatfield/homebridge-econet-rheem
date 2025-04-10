@@ -20,7 +20,7 @@
         "description": "Rheem/Econet account password"
       },
       "debug": {
-        "title": "Password",
+        "title": "Debug",
         "type": "boolean",
         "required": false,
         "description": "Enabled additional debug logging"
