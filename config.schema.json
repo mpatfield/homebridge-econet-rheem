@@ -2,10 +2,14 @@
   "pluginAlias": "HomebridgeEconetRheem",
   "pluginType": "platform",
   "singular": true,
-  "strictValidation": false,
   "schema": {
     "type": "object",
     "properties": {
+      "name": {
+        "title": "Plugin Name",
+        "type": "string",
+        "default": "Econet Rheem"
+      },
       "email": {
         "title": "Email",
         "type": "string",
@@ -23,8 +27,21 @@
         "title": "Debug",
         "type": "boolean",
         "required": false,
-        "description": "Enabled additional debug logging"
+        "description": "Enable additional debug logging"
       }
     }
-  }
+  },
+  "layout": [
+    {
+      "type": "fieldset",
+      "title": "Required Settings",
+      "items": ["email", "password"]
+    },
+    {
+      "type": "fieldset",
+      "title": "Advanced Settings",
+      "expandable": true,
+      "items": ["debug"]
+    }
+  ]
 }
