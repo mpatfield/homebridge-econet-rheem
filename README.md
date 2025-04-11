@@ -4,12 +4,19 @@
 
 # Homebridge EcoNet Rheem Plugin
 
-This Homebridge plugin integrates Rheem EcoNet-enabled devices into Apple HomeKit.
+This Homebridge plugin integrates Rheem EcoNet devices into Apple HomeKit.
 
 > [!NOTE]
-> This plugin uses an unofficial Econet API and could stop working at any time without warning.
+> This plugin uses an unofficial EcoNet API and could stop working at any time without warning.
 
-Currently, only water heaters in Fahrenheit have been fully implemented and tested. Thermostat implementation is incomplete and Celsius operation remains untested.
+## Limitations
+
+* Only water heaters in ºF have been fully tested
+* Celcius should work but is untested
+  * *Let me know if you have successfully used ºC so I can remove this*
+* Thermostat implementation is incomplete since I don't have access to the necessary hardware
+  * *Running in debug mode will generate the json output I need*
+* Due to limitations in HomeKit, it is not possible to switch water heater modes, only enable/disable and adjust the desired temperature.
 
 ## Installation
 
@@ -64,4 +71,4 @@ This plugin is independently developed and is not in any way affiliated with or 
 
 ## Credits
 
-Econet API is heavily influenced by [pyeconet](https://github.com/w1ll1am23/pyeconet).
+Econet API leans heavily on earlier work done by [@w1ll1am23](https://github.com/sponsors/w1ll1am23) in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API.
