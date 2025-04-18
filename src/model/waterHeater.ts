@@ -48,14 +48,22 @@ export class WaterHeater extends Equipment {
   protected updateFromREST(update: any): void {
     super.updateFromREST(update);
 
-    this.enabled = update['@ENABLED']?.value === 1;
-    this.running = update['@RUNNING'].replace(/\s/g, '').length > 0;
+    if ('@ENABLED' in update) {
+      this.enabled = update['@ENABLED'].value === 1;
+    }
 
-    this.temp_units = update['@SETPOINT']?.constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
+    if ('@RUNNING' in update) {
+      this.running = update['@RUNNING'].replace(/\s/g, '').length > 0;
+    }
 
-    this.lower_limit = update['@SETPOINT']?.constraints.lowerLimit || 100;
-    this.upper_limit = update['@SETPOINT']?.constraints.upperLimit || 150;
-    this.set_point = update['@SETPOINT']?.value || 0;
+    if ('@SETPOINT' in update) {
+
+      this.temp_units = update['@SETPOINT'].constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
+
+      this.lower_limit = update['@SETPOINT'].constraints.lowerLimit || 100;
+      this.upper_limit = update['@SETPOINT'].constraints.upperLimit || 150;
+      this.set_point = update['@SETPOINT'].value || 0;
+    }
 
     this.didUpdate();
   }
@@ -64,7 +72,7 @@ export class WaterHeater extends Equipment {
   updateFromMQTT(update: any): void {
     
     if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED']?.value === 1;
+      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED'].value === 1;
       this._api.log.debug(`${this.deviceName} enabled = ${this.enabled}`);
     }
 
