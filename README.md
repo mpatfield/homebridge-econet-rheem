@@ -15,7 +15,7 @@ This Homebridge plugin integrates Rheem EcoNet devices into Apple HomeKit.
 * Celcius should work but is untested
   * *Let me know if you have successfully used ºC so I can remove this*
 * Thermostat implementation is incomplete since I don't have access to the necessary hardware
-  * *Running in debug mode will generate the json output I need*
+  * *Running in debug/verbose mode will generate the json output needed*
 * Due to limitations in HomeKit, it is not possible to switch water heater modes, only enable/disable and adjust the desired temperature.
 
 ## Installation
@@ -38,7 +38,7 @@ Add the following to your Homebridge `config.json`:
          "platform": "HomebridgeEconetRheem",
          "email": "your_econet_email",
          "password": "your_econet_password",
-         "debug": false
+         "verbose": false
        }
      ]
    }
@@ -47,13 +47,13 @@ Add the following to your Homebridge `config.json`:
 - `platform`: (Required) Must be "HomebridgeEconetRheem".
 - `email`: (Required) Your Econet account email.
 - `password`: (Required) Your Econet account password.
-- `debug`: (Optional) Set to `true` to enable debug logging. Default is `false`.
+- `verbose`: (Optional) Set to `true` to enable additional debug logging. Default is `false`.
 
 ## Contributing
 
 Contributions to support Thermostat operation are welcome. To assist:
 
-1. Set `"debug": true` in the plugin configuration.
+1. Set `"verbose": true` in the plugin configuration.
 2. Run Homebridge in debug mode:
 
    ```bash

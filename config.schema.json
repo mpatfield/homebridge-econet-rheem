@@ -23,8 +23,8 @@
         "required": true,
         "description": "Rheem/Econet account password"
       },
-      "debug": {
-        "title": "Debug",
+      "verbose": {
+        "title": "Verbose",
         "type": "boolean",
         "required": false,
         "description": "Enable additional debug logging"
@@ -41,7 +41,7 @@
       "type": "fieldset",
       "title": "Advanced Settings",
       "expandable": true,
-      "items": ["debug"]
+      "items": ["verbose"]
     }
   ]
 }

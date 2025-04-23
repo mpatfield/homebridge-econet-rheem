@@ -47,7 +47,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   private async discoverDevices(): Promise<void> {
     const email = this.config.email as string;
     const password = this.config.password as string;
-    const verbose = this.config.debug as boolean;
+    const verbose = this.config.verbose as boolean;
 
     if (!email || !password) {
       this.log.error('Configuration error: "email" and "password" are required in config.json');
