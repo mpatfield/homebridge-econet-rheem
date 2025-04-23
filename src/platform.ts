@@ -57,7 +57,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     try {
 
       this.econetApi = await EconetApi.login(this.log, email, password, verbose);
-      this.log.debug('Successfully authenticated with Econet API');
 
       const equipmentMap = await this.econetApi.getEquipmentByType([THERMOSTAT, WATER_HEATER]);
 
