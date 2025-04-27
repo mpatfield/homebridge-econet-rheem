@@ -160,7 +160,7 @@ export class EconetApi {
     });
 
     this.mqttClient.on('offline', () => {
-      this.log.info('Client offline');
+      this.log.debug('Client offline');
     });
 
     this.mqttClient.on('close', () => {
@@ -199,7 +199,7 @@ export class EconetApi {
 
       this.subscribe();
 
-    }, this.reconnectDelaySeconds);
+    }, this.reconnectDelaySeconds * 1000);
   }
 
   publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {
