@@ -16,7 +16,8 @@ const HEADERS = {
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-const MAX_DELAY_SECONDS = 300;
+const DEFAULT_DELAY_SECONDS = 120;
+const MAX_DELAY_SECONDS = 3600;
 
 const RETRYABLE_CODES = [
   3, // MQTT: Server unavailable
@@ -63,32 +64,35 @@ interface MqttError extends Error {
 export class EconetApi {
   public readonly log: Logger;
   private readonly email: string;
+  private readonly password: string;
   private readonly verbose: boolean;
   private mqttOptions: mqtt.IClientOptions | null = null;
   private userToken: string | null = null;
   private accountId: string | null = null;
   private equipment: Map<string, Equipment> = new Map();
   private mqttClient: mqtt.MqttClient | null = null;
-  private reconnectDelaySeconds = 5;
+  private reconnectDelaySeconds = DEFAULT_DELAY_SECONDS;
   private isReconnecting = false;
+  private reconnectCount = 0;
 
-  constructor(log: Logger, email: string, verbose: boolean) {
+  constructor(log: Logger, email: string, password: string, verbose: boolean) {
     this.log = log;
     this.email = email;
+    this.password = password;
     this.verbose = verbose;    
   }
 
   static async login(log: Logger, email: string, password: string, verbose: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, verbose);
-    await api.authenticate({ email, password });
+    const api = new EconetApi(log, email, password, verbose);
+    await api.authenticate();
     return api;
   }
 
-  private async authenticate(payload: { email: string; password: string }): Promise<void> {
+  private async authenticate(): Promise<void> {
     const response = await fetch(`${REST_URL}/user/auth`, {
       method: 'POST',
       headers: HEADERS,
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ email: this.email, password: this.password }),
     });
     if (response.status === 200) {
       const json = await response.json();
@@ -107,6 +111,7 @@ export class EconetApi {
           password: CLEAR_BLADE_SYSTEM_KEY,
           rejectUnauthorized: true,
           keepalive: 90,
+          reconnectPeriod: 0,
         };
       } else {
         throw new InvalidCredentialsError(json.options.message || 'Invalid credentials');
@@ -131,7 +136,7 @@ export class EconetApi {
     this.mqttClient = mqtt.connect(`mqtts://${HOST}:1884`, this.mqttOptions);
 
     this.mqttClient.on('connect', () => {
-      this.reconnectDelaySeconds = 5; // Reset backoff on successful connection
+      this.reconnectDelaySeconds = DEFAULT_DELAY_SECONDS; // Reset backoff on successful connection
       this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
       this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
       this.log.info('Connected and listening for updates...');
@@ -176,7 +181,7 @@ export class EconetApi {
     });
   }
 
-  private resubscribe() {
+  private async resubscribe() {
 
     if (this.isReconnecting) {
       return;
@@ -185,6 +190,15 @@ export class EconetApi {
     this.log.info('Attempting to reconnect...');
 
     this.isReconnecting = true;
+    this.reconnectCount++;
+
+    if (this.reconnectCount % 3 === 0) {
+      try {
+        await this.authenticate();
+      } catch (error) {
+        this.log.error('Reauthentication failed:', error);
+      }
+    }
 
     setTimeout(() => {
 
