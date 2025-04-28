@@ -16,8 +16,8 @@ const HEADERS = {
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-const DEFAULT_DELAY_SECONDS = 120;
-const MAX_DELAY_SECONDS = 3600;
+const DEFAULT_RECONNECT_DELAY_SECONDS = 120;
+const MAX_RECONNECT_DELAY_SECONDS = 3600;
 
 const RETRYABLE_CODES = [
   3, // MQTT: Server unavailable
@@ -71,7 +71,8 @@ export class EconetApi {
   private accountId: string | null = null;
   private equipment: Map<string, Equipment> = new Map();
   private mqttClient: mqtt.MqttClient | null = null;
-  private reconnectDelaySeconds = DEFAULT_DELAY_SECONDS;
+  private shouldReconnect = false;
+  private reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS;
   private isReconnecting = false;
   private reconnectCount = 0;
 
@@ -121,7 +122,12 @@ export class EconetApi {
     }
   }
 
-  subscribe(): void {
+  subscribe() {
+    this.shouldReconnect = true;
+    this.connect();
+  }
+
+  private connect(): void {
     
     if (!this.equipment.size) {
       this.log.error('No equipment');
@@ -136,7 +142,7 @@ export class EconetApi {
     this.mqttClient = mqtt.connect(`mqtts://${HOST}:1884`, this.mqttOptions);
 
     this.mqttClient.on('connect', () => {
-      this.reconnectDelaySeconds = DEFAULT_DELAY_SECONDS; // Reset backoff on successful connection
+      this.reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS; // Reset backoff on successful connection
       this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
       this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
       this.log.info('Connected and listening for updates...');
@@ -170,20 +176,20 @@ export class EconetApi {
 
     this.mqttClient.on('close', () => {
       this.log.info('Connection closed');
-      this.resubscribe();
+      this.reconnect();
     });
 
     this.mqttClient.on('error', (err: MqttError) => {
       this.log.error('Client error:', err);
       if (err.code !== undefined && RETRYABLE_CODES.includes(err.code)) {
-        this.resubscribe();
+        this.reconnect();
       }
     });
   }
 
-  private async resubscribe() {
+  private async reconnect() {
 
-    if (this.isReconnecting) {
+    if (!this.shouldReconnect || this.isReconnecting) {
       return;
     }
 
@@ -207,11 +213,11 @@ export class EconetApi {
         this.mqttClient = null;
       }
 
-      this.reconnectDelaySeconds = Math.min(this.reconnectDelaySeconds * 2, MAX_DELAY_SECONDS);
+      this.reconnectDelaySeconds = Math.min(this.reconnectDelaySeconds * 2, MAX_RECONNECT_DELAY_SECONDS);
 
       this.isReconnecting = false;
 
-      this.subscribe();
+      this.connect();
 
     }, this.reconnectDelaySeconds * 1000);
   }
@@ -246,6 +252,7 @@ export class EconetApi {
   }
 
   unsubscribe(): void {
+    this.shouldReconnect = false;
     if (this.mqttClient) {
       this.mqttClient.end();
     }
