@@ -142,7 +142,7 @@ export class EconetApi {
     this.mqttClient = mqtt.connect(`mqtts://${HOST}:1884`, this.mqttOptions);
 
     this.mqttClient.on('connect', () => {
-      this.reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS; // Reset backoff on successful connection
+      this.reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS;
       this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
       this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
       this.log.info('Connected and listening for updates...');
@@ -180,9 +180,13 @@ export class EconetApi {
     });
 
     this.mqttClient.on('error', (err: MqttError) => {
-      this.log.error('Client error:', err);
       if (err.code !== undefined && RETRYABLE_CODES.includes(err.code)) {
+        if (this.verbose) {
+          this.log.error('Client error:', err);
+        }
         this.reconnect();
+      } else {
+        this.log.error('Client error:', err);
       }
     });
   }
@@ -193,25 +197,25 @@ export class EconetApi {
       return;
     }
 
-    this.log.info('Attempting to reconnect...');
-
     this.isReconnecting = true;
-    this.reconnectCount++;
 
+    if (this.mqttClient) {
+      this.mqttClient.end(true);
+      this.mqttClient = null;
+    }
+
+    this.reconnectCount++;
     if (this.reconnectCount % 3 === 0) {
       try {
+        this.log.info('Attempting to re-authenticate');
         await this.authenticate();
       } catch (error) {
-        this.log.error('Reauthentication failed:', error);
+        this.log.error('Re-authentication failed:', error);
       }
     }
 
+    this.log.info(`Will attempt to reconnect in ${this.reconnectDelaySeconds / 60} minutes...`);
     setTimeout(() => {
-
-      if (this.mqttClient) {
-        this.mqttClient.end(true); // Forcefully close the old client
-        this.mqttClient = null;
-      }
 
       this.reconnectDelaySeconds = Math.min(this.reconnectDelaySeconds * 2, MAX_RECONNECT_DELAY_SECONDS);
 
@@ -233,12 +237,7 @@ export class EconetApi {
       ...payload,
     };
     
-    if (!this.mqttClient) {
-      this.log.error('No client');
-      return;
-    }
-
-    if (!this.mqttClient.connected) {
+    if (!this.mqttClient || !this.mqttClient.connected) {
       this.log.error('Client not connected');
       return;
     }
