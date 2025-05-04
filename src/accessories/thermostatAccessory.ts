@@ -2,7 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../platform.js';
 import { Thermostat } from '../model/thermostat.js';
-import { ThermostatOperationMode } from '../model/enums.js';
+import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
 
 import { toCelsius, fromCelsius } from '../model/utils.js';
 
@@ -33,10 +33,19 @@ export class ThermostatAccessory {
       .onGet(this.getActive.bind(this))
       .onSet(this.setActive.bind(this));
 
+    this.service.getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
+      .onGet(this.getUnits.bind(this));
+
     this.service.getCharacteristic(this.Characteristic.CurrentHeatingCoolingState)
       .onGet(this.getCurrentState.bind(this));
 
     this.service.getCharacteristic(this.Characteristic.TargetHeatingCoolingState)
+      .setProps({ validValues:[
+        this.Characteristic.TargetHeatingCoolingState.OFF,
+        this.Characteristic.TargetHeatingCoolingState.HEAT,
+        this.Characteristic.TargetHeatingCoolingState.COOL,
+        this.Characteristic.TargetHeatingCoolingState.AUTO,
+      ] })
       .onGet(this.getTargetState.bind(this))
       .onSet(this.setTargetState.bind(this));
 
@@ -97,6 +106,10 @@ export class ThermostatAccessory {
   async setActive(value: CharacteristicValue): Promise<void> {
     const enabled = value as number === 1;
     await this.thermostat.setEnabled(enabled);
+  }
+
+  private getUnits(): number {
+    return this.thermostat.units === TemperatureUnits.FAHRENHEIT ? 1 : 0;
   }
 
   private getCurrentRunningState(): number {
