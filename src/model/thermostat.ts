@@ -7,6 +7,10 @@ export class Thermostat extends Equipment {
   private enabled: boolean = false;
   private running: boolean = false;
 
+  private temp_units = TemperatureUnits.CELSIUS;
+
+  private current_temp = 0;
+
   private cool_set_point = 0;
   private cool_lower_limit = 0;
   private cool_upper_limit = 0;
@@ -20,8 +24,6 @@ export class Thermostat extends Equipment {
   private text_modes: string[] = [];
   private supported_modes: ThermostatOperationMode[] = [];
   private current_mode = ThermostatOperationMode.UNKNOWN;
-
-  private temp_units = TemperatureUnits.CELSIUS;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(api: EconetApi, restUpdate: any) {
@@ -37,8 +39,12 @@ export class Thermostat extends Equipment {
     return this.running;
   }
 
+  get units() : TemperatureUnits {
+    return this.temp_units;
+  }
+
   get currentTemp(): number {
-    return this.dead_band;
+    return this.current_temp;
   }
 
   get coolSetPoint(): number {
@@ -69,31 +75,33 @@ export class Thermostat extends Equipment {
     return this.current_mode;
   }
 
-  get units() : TemperatureUnits {
-    return this.temp_units;
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected updateFromREST(update: any): void {
     super.updateFromREST(update);
 
-    this.enabled = update['@ENABLED']?.value === 1;
-    this.running = update['@RUNNINGSTATUS'] !== '';
-
-    this.cool_set_point = update['@COOLSETPOINT']?.value || 0;
-    
-    const coolLimits = update['@COOLSETPOINT']?.constraints;
-    if (coolLimits) {
-      this.cool_lower_limit = coolLimits.lowerLimit;
-      this.cool_upper_limit = coolLimits.upperLimit;
+    if ('@ENABLED' in update) {
+      this.enabled = update['@ENABLED'].value === 1;
     }
 
-    this.heat_set_point = update['@HEATSETPOINT']?.value || 0;
+    if ('@RUNNINGSTATUS' in update) {
+      this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
+    }
 
-    const heatLimits = update['@HEATSETPOINT']?.constraints;
-    if (heatLimits) {
-      this.heat_lower_limit = heatLimits.lowerLimit;
-      this.heat_upper_limit = heatLimits.upperLimit;
+    if ('@SETPOINT' in update) {
+      this.temp_units = update['@SETPOINT'].constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS; 
+      this.current_temp = update['@SETPOINT'].value || 70;
+    }
+
+    if ('@COOLSETPOINT' in update) {
+      this.cool_lower_limit = update['@COOLSETPOINT'].constraints.lowerLimit || 50;
+      this.cool_upper_limit = update['@COOLSETPOINT'].constraints.upperLimit || 90;
+      this.cool_set_point = update['@COOLSETPOINT'].value || 70;
+    }
+
+    if ('@HEATSETPOINT' in update) {
+      this.heat_lower_limit = update['@HEATSETPOINT'].constraints.lowerLimit || 50;
+      this.heat_upper_limit = update['@HEATSETPOINT'].constraints.upperLimit || 90;
+      this.heat_set_point = update['@HEATSETPOINT'].value || 70;
     }
 
     this.dead_band = update['@DEADBAND']?.value || 0;
@@ -101,9 +109,8 @@ export class Thermostat extends Equipment {
     this.text_modes = update['@MODE']?.constraints.enumText;
 
     this.supported_modes = [];
-    const modes = update['@MODE']?.constraints.enumText;
-    if (modes) {
-      for (const mode of modes) {
+    if (this.text_modes) {
+      for (const mode of this.text_modes) {
         const opMode = this._modeFromString(mode);
         if (opMode !== ThermostatOperationMode.UNKNOWN) {
           this.supported_modes.push(opMode);
@@ -113,8 +120,6 @@ export class Thermostat extends Equipment {
 
     this.current_mode = this.modes[update['@MODE']?.value] ?? ThermostatOperationMode.UNKNOWN;
 
-    this.temp_units = update['@DEADBAND']?.constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
-
     this.didUpdate();
   }
 
@@ -122,11 +127,31 @@ export class Thermostat extends Equipment {
   updateFromMQTT(update: any): void {
 
     if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED']?.value === 1;
+      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED'].value === 1;
       this._api.log.debug(`${this.deviceName} enabled = ${this.enabled}`);
     }
 
-    this._api.log.error('MQTT not yet implemented on thermostat: ', JSON.stringify(update, null, 2));
+    if ('@RUNNINGSTATUS' in update) {
+      this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
+      this._api.log.debug(`${this.deviceName} running = ${this.running}`);
+    }
+
+    if ('@SETPOINT' in update) {
+      this.current_temp = update['@SETPOINT'] || 70;
+      this._api.log.debug(`${this.deviceName} current temp = ${this.current_temp}`);
+    }
+
+    if ('@COOLSETPOINT' in update) {
+      this.cool_set_point = update['@COOLSETPOINT'] || 70;
+      this._api.log.debug(`${this.deviceName} cool setpoint = ${this.cool_set_point}`);
+    }
+
+    if ('@HEATSETPOINT' in update) {
+      this.heat_set_point = update['@HEATSETPOINT'] || 70;
+      this._api.log.debug(`${this.deviceName} heat setpoint = ${this.heat_set_point}`);
+    }
+
+    this._api.log.debug('Thermostat implementation is WIP. Please expect some bugs.', JSON.stringify(update, null, 2));
 
     this.didUpdate();
   }
