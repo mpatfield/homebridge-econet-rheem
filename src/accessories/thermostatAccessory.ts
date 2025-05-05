@@ -45,6 +45,9 @@ export class ThermostatAccessory {
       .onGet(this.getTargetState.bind(this))
       .onSet(this.setTargetState.bind(this));
 
+    this.service.getCharacteristic(this.Characteristic.CurrentRelativeHumidity)
+      .onGet(this.getCurrentHumidity.bind(this));
+
     this.service.getCharacteristic(this.Characteristic.CurrentTemperature)
       .onGet(this.getCurrentTemperature.bind(this));
 
@@ -80,14 +83,16 @@ export class ThermostatAccessory {
 
   private updateCharacteristics(): void {
 
+    this.service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, this.thermostat.humidity);
+
     this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, this.getCurrentState());
     this.service.updateCharacteristic(this.Characteristic.TargetHeatingCoolingState, this.getTargetState());
-  
+
     this.service.updateCharacteristic(this.Characteristic.CurrentTemperature,
       toCelsius(this.thermostat.currentTemp, this.thermostat.units));
 
     this.service.updateCharacteristic(this.Characteristic.TargetTemperature, this.getTargetTemperature());
-
+      
     this.service.updateCharacteristic(this.Characteristic.HeatingThresholdTemperature, this.getHeatingThresholdTemperature());
     this.service.updateCharacteristic(this.Characteristic.CoolingThresholdTemperature, this.getCoolingThresholdTemperature());
   }
@@ -147,6 +152,10 @@ export class ThermostatAccessory {
     this.thermostat.setMode(mode);
   }
 
+  private getCurrentHumidity(): number {
+    return this.thermostat.humidity;
+  }
+
   async getCurrentTemperature(): Promise<CharacteristicValue> {
     return toCelsius(this.thermostat.currentTemp, this.thermostat.units);
   }
@@ -180,13 +189,13 @@ export class ThermostatAccessory {
       const deadband = this.thermostat.deadband;
       const [heatMin, heatMax] = this.thermostat.heatSetPointLimits;
       const [coolMin, coolMax] = this.thermostat.coolSetPointLimits;
-      
+        
       let heatSetPoint = temp - deadband / 2;
       let coolSetPoint = temp + deadband / 2;
-      
+        
       heatSetPoint = Math.max(heatMin, Math.min(heatSetPoint, heatMax));
       coolSetPoint = Math.max(coolMin, Math.min(coolSetPoint, coolMax));
-      
+        
       if (coolSetPoint < heatSetPoint + deadband) {
         if (heatSetPoint + deadband <= coolMax) {
           coolSetPoint = heatSetPoint + deadband;
@@ -196,7 +205,7 @@ export class ThermostatAccessory {
           coolSetPoint = Math.max(coolMin, heatSetPoint + deadband);
         }
       }
-      
+        
       this.thermostat.setSetPoint(undefined, coolSetPoint, heatSetPoint);
       break;
     }    

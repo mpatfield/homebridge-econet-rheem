@@ -207,6 +207,7 @@ export class EconetApi {
     this.reconnectCount++;
     if (this.reconnectCount % 3 === 0) {
       try {
+        this.log.error('Having trouble staying connected');
         this.log.info('Attempting to re-authenticate');
         await this.authenticate();
       } catch (error) {

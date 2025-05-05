@@ -8,6 +8,7 @@ export class Thermostat extends Equipment {
 
   private temp_units = TemperatureUnits.CELSIUS;
 
+  private current_humidity = 0;
   private current_temp = 0;
 
   private cool_set_point = 0;
@@ -36,6 +37,10 @@ export class Thermostat extends Equipment {
 
   get units() : TemperatureUnits {
     return this.temp_units;
+  }
+
+  get humidity(): number {
+    return this.current_humidity;
   }
 
   get currentTemp(): number {
@@ -76,6 +81,10 @@ export class Thermostat extends Equipment {
 
     if ('@RUNNINGSTATUS' in update) {
       this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
+    }
+
+    if ('@HUMIDITY' in update) {
+      this.current_humidity = update['@HUMIDITY'].value || 0;
     }
 
     if ('@SETPOINT' in update) {
@@ -120,6 +129,11 @@ export class Thermostat extends Equipment {
     if ('@RUNNINGSTATUS' in update) {
       this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
       this._api.log.debug(`${this.deviceName} running = ${this.running}`);
+    }
+
+    if ('@HUMIDITY' in update) {
+      this.current_humidity = update['@HUMIDITY'] || 0;
+      this._api.log.debug(`${this.deviceName} current humidity = ${this.current_humidity}`);
     }
 
     if ('@SETPOINT' in update) {
