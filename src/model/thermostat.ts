@@ -4,7 +4,6 @@ import { ThermostatOperationMode, TemperatureUnits } from './enums.js';
 
 export class Thermostat extends Equipment {
 
-  private enabled: boolean = false;
   private running: boolean = false;
 
   private temp_units = TemperatureUnits.CELSIUS;
@@ -29,10 +28,6 @@ export class Thermostat extends Equipment {
   constructor(api: EconetApi, restUpdate: any) {
     super(api);
     this.updateFromREST(restUpdate);
-  }
-
-  get isEnabled(): boolean {
-    return this.enabled;
   }
 
   get isRunning(): boolean {
@@ -79,10 +74,6 @@ export class Thermostat extends Equipment {
   protected updateFromREST(update: any): void {
     super.updateFromREST(update);
 
-    if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'].value === 1;
-    }
-
     if ('@RUNNINGSTATUS' in update) {
       this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
     }
@@ -125,11 +116,6 @@ export class Thermostat extends Equipment {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateFromMQTT(update: any): void {
-
-    if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED'].value === 1;
-      this._api.log.debug(`${this.deviceName} enabled = ${this.enabled}`);
-    }
 
     if ('@RUNNINGSTATUS' in update) {
       this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
@@ -175,10 +161,6 @@ export class Thermostat extends Equipment {
       this._api.log.error('Unknown thermostat mode:', strValue);
       return ThermostatOperationMode.UNKNOWN;
     }
-  }
-
-  setEnabled(enabled: boolean): void {
-    this._api.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
   }
 
   setMode(mode: ThermostatOperationMode): void {

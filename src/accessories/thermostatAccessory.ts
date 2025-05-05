@@ -29,10 +29,6 @@ export class ThermostatAccessory {
 
     this.service.setCharacteristic(this.Characteristic.Name, this.thermostat.deviceName);
 
-    this.service.getCharacteristic(this.Characteristic.Active)
-      .onGet(this.getActive.bind(this))
-      .onSet(this.setActive.bind(this));
-
     this.service.getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
       .onGet(this.getUnits.bind(this));
 
@@ -83,9 +79,6 @@ export class ThermostatAccessory {
   }
 
   private updateCharacteristics(): void {
-    this.service.updateCharacteristic(this.Characteristic.Active, this.thermostat.isEnabled ? 1 : 0);
-
-    this.service.updateCharacteristic(this.Characteristic.CurrentHeaterCoolerState, this.getCurrentRunningState());
 
     this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, this.getCurrentState());
     this.service.updateCharacteristic(this.Characteristic.TargetHeatingCoolingState, this.getTargetState());
@@ -99,38 +92,11 @@ export class ThermostatAccessory {
     this.service.updateCharacteristic(this.Characteristic.CoolingThresholdTemperature, this.getCoolingThresholdTemperature());
   }
 
-  async getActive(): Promise<CharacteristicValue> {
-    return this.thermostat.isEnabled ? 1 : 0;
-  }
-
-  async setActive(value: CharacteristicValue): Promise<void> {
-    const enabled = value as number === 1;
-    await this.thermostat.setEnabled(enabled);
-  }
-
   private getUnits(): number {
     return this.thermostat.units === TemperatureUnits.FAHRENHEIT ? 1 : 0;
   }
 
-  private getCurrentRunningState(): number {
-
-    const currentState = this.getCurrentRunningState();
-
-    if (!this.thermostat.isRunning || currentState === this.Characteristic.CurrentHeatingCoolingState.OFF) {
-      return this.Characteristic.CurrentHeaterCoolerState.IDLE;
-    }
-
-    if (currentState === this.Characteristic.CurrentHeatingCoolingState.HEAT) {
-      return this.Characteristic.CurrentHeaterCoolerState.HEATING;
-    }
-
-    return this.Characteristic.CurrentHeaterCoolerState.COOLING;
-  }
-
   private getCurrentState(): number {
-    if (!this.thermostat.isEnabled) {
-      return this.Characteristic.CurrentHeatingCoolingState.OFF;
-    }
     switch (this.thermostat.mode) {
     case ThermostatOperationMode.HEATING:
     case ThermostatOperationMode.EMERGENCY_HEAT:
@@ -212,11 +178,28 @@ export class ThermostatAccessory {
       break;
     case ThermostatOperationMode.AUTO: {
       const deadband = this.thermostat.deadband;
-      const heatSetPoint = temp - deadband / 2;
-      const coolSetPoint = temp + deadband / 2;
+      const [heatMin, heatMax] = this.thermostat.heatSetPointLimits;
+      const [coolMin, coolMax] = this.thermostat.coolSetPointLimits;
+      
+      let heatSetPoint = temp - deadband / 2;
+      let coolSetPoint = temp + deadband / 2;
+      
+      heatSetPoint = Math.max(heatMin, Math.min(heatSetPoint, heatMax));
+      coolSetPoint = Math.max(coolMin, Math.min(coolSetPoint, coolMax));
+      
+      if (coolSetPoint < heatSetPoint + deadband) {
+        if (heatSetPoint + deadband <= coolMax) {
+          coolSetPoint = heatSetPoint + deadband;
+        } else {
+          heatSetPoint = coolSetPoint - deadband;
+          heatSetPoint = Math.max(heatMin, heatSetPoint);
+          coolSetPoint = Math.max(coolMin, heatSetPoint + deadband);
+        }
+      }
+      
       this.thermostat.setSetPoint(undefined, coolSetPoint, heatSetPoint);
       break;
-    }
+    }    
     }
   }
 

@@ -71,3 +71,5 @@ This plugin is independently developed and is not in any way affiliated with or 
 ## Credits
 
 Econet API leans heavily on earlier work done by [@w1ll1am23](https://github.com/sponsors/w1ll1am23) in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API.
+
+Special thanks to @r3tr3ad for helping debug thermostat implementation.
