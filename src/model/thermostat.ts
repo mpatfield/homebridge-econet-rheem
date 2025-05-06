@@ -21,8 +21,7 @@ export class Thermostat extends Equipment {
 
   private dead_band = 0;
 
-  private text_modes: string[] = [];
-  private supported_modes: ThermostatOperationMode[] = [];
+  private modes: Map<number, ThermostatOperationMode> = new Map();
   private current_mode = ThermostatOperationMode.UNKNOWN;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,10 +66,6 @@ export class Thermostat extends Equipment {
     return this.dead_band;
   }
 
-  get modes(): ThermostatOperationMode[] {
-    return this.supported_modes;
-  }
-
   get mode(): ThermostatOperationMode {
     return this.current_mode;
   }
@@ -106,19 +101,19 @@ export class Thermostat extends Equipment {
 
     this.dead_band = update['@DEADBAND']?.value || 0;
 
-    this.text_modes = update['@MODE']?.constraints.enumText;
+    const text_modes = update['@MODE']?.constraints.enumText;
 
-    this.supported_modes = [];
-    if (this.text_modes) {
-      for (const mode of this.text_modes) {
-        const opMode = this._modeFromString(mode);
-        if (opMode !== ThermostatOperationMode.UNKNOWN) {
-          this.supported_modes.push(opMode);
+    this.modes.clear();
+    if (text_modes) {
+      text_modes.forEach((textMode: string, index: number) => {
+        const mode = this._modeFromString(textMode);
+        if (mode !== ThermostatOperationMode.UNKNOWN) {
+          this.modes.set(index, mode);
         }
-      }
+      });
     }
 
-    this.current_mode = this.modes[update['@MODE']?.value] ?? ThermostatOperationMode.UNKNOWN;
+    this.current_mode = this.modes.get(update['@MODE']?.value) ?? ThermostatOperationMode.UNKNOWN;
 
     this.didUpdate();
   }
@@ -133,7 +128,7 @@ export class Thermostat extends Equipment {
 
     if ('@HUMIDITY' in update) {
       this.current_humidity = update['@HUMIDITY'] || 0;
-      this._api.log.debug(`${this.deviceName} current humidity = ${this.current_humidity}`);
+      this._api.log.debug(`${this.deviceName} humidity = ${this.current_humidity}`);
     }
 
     if ('@SETPOINT' in update) {
@@ -151,7 +146,13 @@ export class Thermostat extends Equipment {
       this._api.log.debug(`${this.deviceName} heat setpoint = ${this.heat_set_point}`);
     }
 
-    this._api.log.debug('Thermostat implementation is WIP. Please expect some bugs.', JSON.stringify(update, null, 2));
+    if ('@MODE' in update) {
+      const modeIndex = update['@MODE'] ?? update['@MODE'].value;
+      this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
+      this._api.log.debug(`${this.deviceName} mode = ${this._stringFromMode(this.current_mode) ?? 'UNKNOWN'}`);
+    }
+
+    this._api.log.debug('Thermostat implementation is WIP. Please expect some bugs!');
 
     this.didUpdate();
   }
@@ -177,17 +178,38 @@ export class Thermostat extends Equipment {
     }
   }
 
+  private _stringFromMode(mode: ThermostatOperationMode): string | null {
+    switch(mode) {
+    case ThermostatOperationMode.OFF:
+      return 'OFF';
+    case ThermostatOperationMode.HEATING:
+      return 'HEATING';
+    case ThermostatOperationMode.COOLING:
+      return 'COOLING';
+    case ThermostatOperationMode.AUTO:
+      return 'AUTO';
+    case ThermostatOperationMode.FAN_ONLY:
+      return 'FANONLY';
+    case ThermostatOperationMode.EMERGENCY_HEAT:
+      return 'EMERGENCYHEAT';
+    default:
+      return null;
+    }
+  }
+
   setMode(mode: ThermostatOperationMode): void {
     const payload: { [key: string]: number } = {};
 
-    this.text_modes.forEach((textMode: string, index: number) => {
-      if (mode === this._modeFromString(textMode)) {
+    for (const [index, entry] of this.modes.entries()) {
+      if (mode === entry) {
         payload['@MODE'] = index;
       }
-    });
+    }
 
     if (Object.keys(payload).length > 0) {
       this._api.publish(payload, this.deviceId, this.serialNumber);
+    } else {
+      this._api.log.error('Unknown thermostat mode:', mode);
     }
   }
 
