@@ -12,8 +12,6 @@ This Homebridge plugin integrates Rheem EcoNet devices into Apple HomeKit.
 ## Limitations
 
 * Due to limitations in HomeKit, it is not possible to switch water heater modes, only enable/disable and adjust the desired temperature.
-* I do not have access to a thermostat, so that functionality may be buggy
-  * *Please run in debug/verbose mode included the generated json output when creating an issue*
 * Celcius should work but is untested
   * *Let me know if you have successfully used ºC so I can remove this*
 

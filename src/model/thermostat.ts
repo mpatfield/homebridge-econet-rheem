@@ -152,8 +152,6 @@ export class Thermostat extends Equipment {
       this._api.log.debug(`${this.deviceName} mode = ${this._stringFromMode(this.current_mode) ?? 'UNKNOWN'}`);
     }
 
-    this._api.log.debug('Thermostat implementation is WIP. Please expect some bugs!');
-
     this.didUpdate();
   }
 
