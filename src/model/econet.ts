@@ -152,7 +152,7 @@ export class EconetApi {
       try {
         const unpackedJson = JSON.parse(message.toString());
         if (this.verbose) {
-          this.log.debug(`Received message from topic: ${topic}\n`, JSON.stringify(unpackedJson, null, 2));
+          this.log.info(`Received message from topic: ${topic}\n`, JSON.stringify(unpackedJson, null, 2));
         }
         const serial = unpackedJson.serial_number;
         const equipment = this.equipment.get(serial);
@@ -246,7 +246,7 @@ export class EconetApi {
     const topic = `user/${this.accountId}/device/desired`;
     const message = JSON.stringify(publishPayload, null, 2);
     if (this.verbose) {
-      this.log.debug(`Publishing message to topic: ${topic}\n`, message);
+      this.log.info(`Publishing message to topic: ${topic}\n`, message);
     }
     this.mqttClient.publish(topic, message);
   }
@@ -291,7 +291,7 @@ export class EconetApi {
         }
 
         if (this.verbose) {
-          this.log.debug('Creating Equipment with data:\n', JSON.stringify(equip, null, 2));
+          this.log.info('Creating Equipment with data:\n', JSON.stringify(equip, null, 2));
         }
 
         let equipObj: Equipment;
