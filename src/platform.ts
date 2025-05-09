@@ -12,6 +12,9 @@ import { WATER_HEATER, THERMOSTAT } from './model/econet.js';
 import { Thermostat } from './model/thermostat.js';
 import { WaterHeater } from './model/waterHeater.js';
 
+import { TemperatureUnits } from './model/enums.js';
+import { toCelsius } from './model/utils.js';
+
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
   public readonly Characteristic;
@@ -60,24 +63,26 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
       const equipmentMap = await this.econetApi.getEquipmentByType([THERMOSTAT, WATER_HEATER]);
 
-      const thermostats = equipmentMap.get(THERMOSTAT) || [];
-      const waterHeaters = equipmentMap.get(WATER_HEATER) || [];
+      const thermostats = equipmentMap.get(THERMOSTAT) as Thermostat[] || [];
+      const waterHeaters = equipmentMap.get(WATER_HEATER) as WaterHeater[] || [];
       const currentSerialNumbers = new Set<string>();
 
       for (const thermostat of thermostats) {
         const serialNumber = thermostat.serialNumber;
         currentSerialNumbers.add(serialNumber);
-        const existingAccessory = this.accessories.get(serialNumber);
 
+        const deviceName = thermostat.deviceName;
+
+        const existingAccessory = this.accessories.get(serialNumber);
         if (existingAccessory) {
-          this.log.info('Updating existing thermostat:', thermostat.deviceName);
-          new ThermostatAccessory(this, existingAccessory, thermostat as Thermostat);
+          this.log.info('Updating existing thermostat:', deviceName);
+          new ThermostatAccessory(this, existingAccessory, thermostat);
         } else {
-          this.log.info('Adding new thermostat:', thermostat.deviceName);
+          this.log.info('Adding new thermostat:', deviceName);
           const uuid = this.api.hap.uuid.generate(serialNumber);
-          const accessory = new this.api.platformAccessory(thermostat.deviceName, uuid);
+          const accessory = new this.api.platformAccessory(deviceName, uuid);
           accessory.context.serialNumber = serialNumber;
-          new ThermostatAccessory(this, accessory, thermostat as Thermostat);
+          new ThermostatAccessory(this, accessory, thermostat);
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           this.accessories.set(serialNumber, accessory);
         }
@@ -86,17 +91,19 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       for (const waterHeater of waterHeaters) {
         const serialNumber = waterHeater.serialNumber;
         currentSerialNumbers.add(serialNumber);
-        const existingAccessory = this.accessories.get(serialNumber);
 
+        const deviceName = waterHeater.deviceName;
+
+        const existingAccessory = this.accessories.get(serialNumber);
         if (existingAccessory) {
-          this.log.info('Updating existing water heater:', waterHeater.deviceName);
-          new WaterHeaterAccessory(this, existingAccessory, waterHeater as WaterHeater);
+          this.log.info('Updating existing water heater:', deviceName);
+          new WaterHeaterAccessory(this, existingAccessory, waterHeater, this.whInputTemp(waterHeater.units));
         } else {
-          this.log.info('Adding new water heater:', waterHeater.deviceName);
+          this.log.info('Adding new water heater:', deviceName);
           const uuid = this.api.hap.uuid.generate(serialNumber);
-          const accessory = new this.api.platformAccessory(waterHeater.deviceName, uuid);
+          const accessory = new this.api.platformAccessory(deviceName, uuid);
           accessory.context.serialNumber = serialNumber;
-          new WaterHeaterAccessory(this, accessory, waterHeater as WaterHeater);
+          new WaterHeaterAccessory(this, accessory, waterHeater, this.whInputTemp(waterHeater.units));
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           this.accessories.set(serialNumber, accessory);
         }
@@ -115,5 +122,31 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     } catch (error) {
       this.log.error('Failed to initialize platform:', error instanceof Error ? error.message : String(error));
     }
+  }
+
+  private whInputTemp(units: TemperatureUnits) : number | null {
+
+    if (!this.config.wh_estimate) {
+      return null;
+    }
+
+    if (this.config.wh_input_temp) {
+      return this.config.wh_input_temp;
+    }
+
+    const month = new Date().getMonth();
+  
+    // Coldest: Jan, Feb, Dec
+    if (month === 0 || month === 1 || month === 11) {
+      return toCelsius(50, units);
+    }
+
+    // Hottest: Jun, Jul, Aug
+    if (month === 5 || month === 6 || month === 7) {
+      return toCelsius(70, units);
+    }
+
+    // All other months
+    return toCelsius(60, units);
   }
 }

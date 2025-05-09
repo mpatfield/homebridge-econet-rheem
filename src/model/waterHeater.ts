@@ -13,6 +13,8 @@ export class WaterHeater extends Equipment {
   private upper_limit = 150;
   private set_point = 0;
 
+  private availability = 100;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(api: EconetApi, restUpdate: any) {
     super(api);
@@ -35,9 +37,13 @@ export class WaterHeater extends Equipment {
     return [this.lower_limit, this.upper_limit];
   }
 
-  // Currently not supplied by Econet api
-  get currentTemp(): number {
-    return this.set_point;
+  currentTemp(inputTemp?: number | null): number {
+
+    if (!inputTemp) {
+      return this.set_point;
+    }
+    
+    return Math.round(inputTemp + (this.availability / 100) * (this.set_point - inputTemp));
   }
 
   get setPoint(): number {
@@ -65,6 +71,10 @@ export class WaterHeater extends Equipment {
       this.set_point = update['@SETPOINT'].value || 0;
     }
 
+    if ('@HOTWATER' in update) {
+      this.availability = this._availabilityFromIcon(update['@HOTWATER']);
+    }
+
     this.didUpdate();
   }
 
@@ -86,6 +96,10 @@ export class WaterHeater extends Equipment {
       this._api.log.debug(`${this.deviceName} set_point = ${this.set_point}`);
     }
 
+    if ('@HOTWATER' in update) {
+      this.availability = this._availabilityFromIcon(update['@HOTWATER']);
+    }
+
     this.didUpdate();  
   }
 
@@ -95,5 +109,28 @@ export class WaterHeater extends Equipment {
 
   setSetPoint(setPoint: number): void {
     this._api.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
+  }
+
+  private _availabilityFromIcon(icon: string): number {
+    
+    this._api.log.debug('Fetching availability for icon: ', icon);
+
+    if (icon.includes('empty') || icon.includes('zero')) {
+      return 0;
+    }
+
+    if (icon.includes('ten')) {
+      return 10;
+    }
+
+    if (icon.includes('fourty')) {
+      return 40;
+    }
+
+    if (icon.includes('hundred')) {
+      return 100;
+    }
+
+    return 100;
   }
 }

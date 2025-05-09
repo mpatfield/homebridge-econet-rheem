@@ -28,6 +28,21 @@
         "type": "boolean",
         "required": false,
         "description": "Enable additional debug logging"
+      },
+      "wh_estimate": {
+        "title": "Estimate Current Water Heater Temp (Beta)",
+        "type": "boolean",
+        "required": false,
+        "description": "Calculate the average temp based on the set point and hot water availability"
+      },
+      "wh_input_temp": {
+        "title": "Water Heater Input Temp",
+        "type": "number",
+        "required": false,
+        "description": "Optional: setting this will improve the current temp calulcation",
+        "condition": {
+          "functionBody": "return model.wh_estimate === true"
+        }
       }
     }
   },
@@ -41,7 +56,7 @@
       "type": "fieldset",
       "title": "Advanced Settings",
       "expandable": true,
-      "items": ["verbose"]
+      "items": ["verbose", "wh_estimate", "wh_input_temp"]
     }
   ]
 }

@@ -13,6 +13,7 @@ export class WaterHeaterAccessory {
     private readonly platform: EconetRheemPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly waterHeater: WaterHeater,
+    private readonly inputTemperature?: number | null,
   ) {
     
     this.Characteristic = platform.api.hap.Characteristic;
@@ -73,7 +74,7 @@ export class WaterHeaterAccessory {
       this.Characteristic.TargetHeaterCoolerState.HEAT);
   
     this.service.updateCharacteristic(this.Characteristic.CurrentTemperature,
-      toCelsius(this.waterHeater.currentTemp, this.waterHeater.units));
+      toCelsius(this.waterHeater.currentTemp(this.inputTemperature), this.waterHeater.units));
 
     this.service.updateCharacteristic(this.Characteristic.HeatingThresholdTemperature,
       toCelsius(this.waterHeater.setPoint, this.waterHeater.units));
@@ -99,7 +100,7 @@ export class WaterHeaterAccessory {
   }
 
   async getCurrentTemperature(): Promise<CharacteristicValue> {
-    return toCelsius(this.waterHeater.currentTemp, this.waterHeater.units);
+    return toCelsius(this.waterHeater.currentTemp(this.inputTemperature), this.waterHeater.units);
   }
 
   async getHeatingThresholdTemperature(): Promise<CharacteristicValue> {
