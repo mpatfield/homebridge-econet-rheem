@@ -25,8 +25,8 @@ export class Thermostat extends Equipment {
   private current_mode = ThermostatOperationMode.UNKNOWN;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(api: EconetApi, restUpdate: any) {
-    super(api);
+  constructor(api: EconetApi, storagePath: string, restUpdate: any) {
+    super(api, storagePath);
     this.updateFromREST(restUpdate);
   }
 

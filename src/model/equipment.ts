@@ -6,10 +6,13 @@ export abstract class Equipment {
   private device_name?: string | null;
 
   protected _api: EconetApi;
+  protected _storagePath: string;
+
   private _onUpdateCallback: ((serialNumber: string) => void) | null = null;
 
-  constructor(api: EconetApi) {
+  constructor(api: EconetApi, storagePath: string) {
     this._api = api;
+    this._storagePath = storagePath;
   }
 
   get deviceId(): string {

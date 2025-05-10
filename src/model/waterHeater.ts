@@ -2,6 +2,9 @@ import { Equipment } from './equipment.js';
 import { EconetApi } from './econet.js';
 import { TemperatureUnits } from './enums.js';
 
+import path from 'path';
+import { safeGetItem, safeSetItem } from './utils.js';
+
 export class WaterHeater extends Equipment {
 
   private enabled: boolean = false;
@@ -16,6 +19,7 @@ export class WaterHeater extends Equipment {
   private availability = 100;
   private nextAvailability = 100;
 
+  private readonly recoveryRatesFilePath: string;
   private recoveryRates: number[] = [];
   private lastAvailabilityUpdate: number = 0;
   private lastAvailabilityValue: number = 100;
@@ -26,8 +30,9 @@ export class WaterHeater extends Equipment {
   private inputTemp: number | null = null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(api: EconetApi, restUpdate: any) {
-    super(api);
+  constructor(api: EconetApi, storagePath: string, restUpdate: any) {
+    super(api, storagePath);
+    this.recoveryRatesFilePath = path.join(process.cwd(), 'recoveryRates.json');;
     this.recoveryRates = this._loadRecoveryRates();
     this.updateFromREST(restUpdate);
   }
@@ -190,12 +195,12 @@ export class WaterHeater extends Equipment {
 
   private _saveRecoveryRates(): void {
     const key = `whRecoveryRates_${this.serialNumber}`;
-    localStorage.setItem(key, JSON.stringify(this.recoveryRates));
+    safeSetItem(this.recoveryRatesFilePath, key, JSON.stringify(this.recoveryRates));
   }
 
   private _loadRecoveryRates(): number[] {
     const key = `whRecoveryRates_${this.serialNumber}`;
-    const stored = localStorage.getItem(key);
+    const stored = safeGetItem(this.recoveryRatesFilePath, key);
     return stored ? JSON.parse(stored) : [];
   }
 

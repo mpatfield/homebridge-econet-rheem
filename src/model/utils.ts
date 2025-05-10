@@ -1,3 +1,5 @@
+import fs from 'fs';
+
 import { TemperatureUnits } from '../model/enums.js';
 
 const fahrenheitToCelsius = (fahrenheit: number): number => {
@@ -15,3 +17,26 @@ export const toCelsius = (temp: number, units: TemperatureUnits): number => {
 export const fromCelsius = (temp: number, units: TemperatureUnits): number => {
   return units === TemperatureUnits.FAHRENHEIT ? celsiusToFahrenheit(temp) : temp;
 };
+
+function readStorage(filePath: string): Record<string, string> {
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+  const data = fs.readFileSync(filePath, 'utf-8');
+  return JSON.parse(data);
+}
+
+function writeStorage(filePath: string, storage: Record<string, string>): void {
+  fs.writeFileSync(filePath, JSON.stringify(storage, null, 2));
+}
+
+export function safeGetItem(filePath: string, key: string): string | null {
+  const storage = readStorage(filePath);
+  return storage[key] ?? null;
+}
+
+export function safeSetItem(filePath: string, key: string, value: string): void {
+  const storage = readStorage(filePath);
+  storage[key] = value;
+  writeStorage(filePath, storage);
+}
