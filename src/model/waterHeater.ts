@@ -30,9 +30,9 @@ export class WaterHeater extends Equipment {
   private inputTemp: number | null = null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(api: EconetApi, storagePath: string, restUpdate: any) {
-    super(api, storagePath);
-    this.recoveryRatesFilePath = path.join(process.cwd(), 'recoveryRates.json');;
+  constructor(api: EconetApi, restUpdate: any) {
+    super(api);
+    this.recoveryRatesFilePath = path.join(api.storagePath, 'recoveryRates.json');;
     this.recoveryRates = this._loadRecoveryRates();
     this.updateFromREST(restUpdate);
   }

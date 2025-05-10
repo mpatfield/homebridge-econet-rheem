@@ -65,6 +65,7 @@ export class EconetApi {
   public readonly log: Logger;
   private readonly email: string;
   private readonly password: string;
+  readonly storagePath: string;
   private readonly verbose: boolean;
   private mqttOptions: mqtt.IClientOptions | null = null;
   private userToken: string | null = null;
@@ -76,15 +77,16 @@ export class EconetApi {
   private isReconnecting = false;
   private reconnectCount = 0;
 
-  constructor(log: Logger, email: string, password: string, verbose: boolean) {
+  constructor(log: Logger, email: string, password: string, storagePath: string, verbose: boolean) {
     this.log = log;
     this.email = email;
     this.password = password;
+    this.storagePath = storagePath;
     this.verbose = verbose;    
   }
 
-  static async login(log: Logger, email: string, password: string, verbose: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, verbose);
+  static async login(log: Logger, email: string, password: string, storagePath: string, verbose: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, storagePath, verbose);
     await api.authenticate();
     return api;
   }
