@@ -1,7 +1,8 @@
 import path from 'path';
-import { EconetApi } from './econet';
-import { fromCelsius, ONE_HOUR, safeGetItem, safeSetItem } from './utils';
-import { WaterHeater } from './waterHeater';
+
+import { EconetApi } from './econet.js';
+import { fromCelsius, ONE_HOUR, safeGetItem, safeSetItem } from './utils.js';
+import { WaterHeater } from './waterHeater.js';
 
 const DEFAULT_RECOVERY_RATE = 30; // in degrees Celsius per hour
 const RECOVERY_TIMER_INTERVAL = 300000; // 5 minutes
