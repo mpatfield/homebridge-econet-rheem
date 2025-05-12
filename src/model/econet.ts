@@ -5,6 +5,7 @@ import mqtt from 'mqtt';
 import { Equipment } from './equipment.js';
 import { WaterHeater } from './waterHeater.js';
 import { Thermostat } from './thermostat.js';
+import { ONE_HOUR } from './utils.js';
 
 const HOST = 'rheem.clearblade.com';
 const REST_URL = `https://${HOST}/api/v/1`;
@@ -76,6 +77,7 @@ export class EconetApi {
   private reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS;
   private isReconnecting = false;
   private reconnectCount = 0;
+  private idleMQTTTimer: NodeJS.Timeout | null = null;
 
   constructor(log: Logger, email: string, password: string, storagePath: string, verbose: boolean) {
     this.log = log;
@@ -151,6 +153,7 @@ export class EconetApi {
     });
 
     this.mqttClient.on('message', (topic, message) => {
+      this.resetIdleMQTTTimer();
       try {
         const unpackedJson = JSON.parse(message.toString());
         if (this.verbose) {
@@ -160,12 +163,6 @@ export class EconetApi {
         const equipment = this.equipment.get(serial);
         if (equipment) {
           equipment.updateFromMQTT(unpackedJson);
-        } else if ('@SIGNAL' in unpackedJson) {
-          for (const eq of this.equipment.values()) {
-            if (eq.deviceId === unpackedJson.device_name) {
-              eq.updateFromMQTT(unpackedJson);
-            }
-          }
         }
       } catch (e) {
         this.log.error('Failed to parse message:', message.toString());
@@ -191,6 +188,18 @@ export class EconetApi {
         this.log.error('Client error:', err);
       }
     });
+  }
+
+  private resetIdleMQTTTimer() {
+
+    if (this.idleMQTTTimer) {
+      clearTimeout(this.idleMQTTTimer);
+    }
+
+    this.idleMQTTTimer = setTimeout(()=>{
+      this.log.info('Idle connection');
+      this.reconnect();
+    }, 3 * ONE_HOUR); 
   }
 
   private async reconnect() {

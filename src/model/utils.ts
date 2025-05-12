@@ -2,6 +2,8 @@ import fs from 'fs';
 
 import { TemperatureUnits } from '../model/enums.js';
 
+export const ONE_HOUR = 3600000;
+
 const fahrenheitToCelsius = (fahrenheit: number): number => {
   return Number(((fahrenheit - 32) * 5 / 9).toFixed(1));
 };
