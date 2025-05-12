@@ -1,4 +1,3 @@
-// platform.ts
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
@@ -13,7 +12,7 @@ import { Thermostat } from './model/thermostat.js';
 import { WaterHeater } from './model/waterHeater.js';
 
 import { TemperatureUnits } from './model/enums.js';
-import { toCelsius } from './model/utils.js';
+import { fromCelsius } from './model/utils.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
@@ -138,15 +137,15 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   
     // Coldest: Jan, Feb, Dec
     if (month === 0 || month === 1 || month === 11) {
-      return toCelsius(50, units);
+      return fromCelsius(10, units);
     }
 
     // Hottest: Jun, Jul, Aug
     if (month === 5 || month === 6 || month === 7) {
-      return toCelsius(70, units);
+      return fromCelsius(20, units);
     }
 
     // All other months
-    return toCelsius(60, units);
+    return fromCelsius(15, units);
   }
 }
