@@ -16,14 +16,11 @@ export class WaterHeater extends Equipment {
 
   private availability_icon: string | null = null;
 
-  private recoverySimulator: RecoverySimulator;
+  private recoverySimulator: RecoverySimulator | null = null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(api: EconetApi, restUpdate: any) {
     super(api);
-    this.recoverySimulator = new RecoverySimulator(api, this, () => {
-      super.didUpdate();
-    });
     this.updateFromREST(restUpdate);
   }
 
@@ -76,7 +73,7 @@ export class WaterHeater extends Equipment {
       return this.set_point;
     }
 
-    return this.recoverySimulator.currentTemp(inputTemp);
+    return this.recoverySimulator!.currentTemp(inputTemp);
   }
 
   get setPoint(): number {
@@ -84,7 +81,16 @@ export class WaterHeater extends Equipment {
   }
 
   protected didUpdate() {
+
+    if (!this.recoverySimulator) {
+      this.recoverySimulator = new RecoverySimulator(this._api, this, () => {
+        super.didUpdate();
+      });
+
+    }
+
     this.recoverySimulator.handleUpdate(this);
+
     super.didUpdate();
   }
 
