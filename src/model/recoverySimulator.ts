@@ -76,6 +76,13 @@ export class RecoverySimulator {
       return;
     }
 
+    if (this.setPoint < this.previousSetPoint) {
+      this.simulatedTemp = Math.min(this.simulatedTemp, this.setPoint);
+      this._stopRecoveryTimer();
+      this.onUpdate();
+      return;
+    }
+
     if (waterHeater.isRunning && !this.isRecovering) {
       if (this.availability === 0 || this.setPoint > this.previousSetPoint) {
         this._startRecoveryTimer();
@@ -88,7 +95,7 @@ export class RecoverySimulator {
       this._endRecovery();
       this.onUpdate();
       return;
-    }
+    }    
   }
 
   private get recoveryRate(): number {
