@@ -4,6 +4,7 @@ import { EconetApi } from './econet.js';
 import { fromCelsius, ONE_HOUR, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
 
+const RECOVERY_FILE_PREFIX = 'whRecoveryRates_';
 const DEFAULT_RECOVERY_RATE = 30; // in degrees Celsius per hour
 const RECOVERY_TIMER_INTERVAL = 300000; // 5 minutes
 
@@ -16,8 +17,8 @@ export class RecoverySimulator {
 
   private readonly serialNumber: string;
 
-  private setPoint: number;
   private availability: number;
+  private setPoint: number;
 
   private previousSetPoint: number;
 
@@ -58,11 +59,13 @@ export class RecoverySimulator {
   }
 
   handleUpdate(waterHeater: WaterHeater): void {
-    const previousSetPoint = this.previousSetPoint;
 
-    this.setPoint = waterHeater.setPoint;
+    if (this.setPoint !== waterHeater.setPoint) {
+      this.previousSetPoint = this.setPoint;
+      this.setPoint = waterHeater.setPoint;
+    }
+
     this.availability = waterHeater.availability;
-    this.previousSetPoint = waterHeater.setPoint;
 
     if (this.availability === 0 && !waterHeater.isRunning) {
       this._stopRecoveryTimer();
@@ -70,7 +73,7 @@ export class RecoverySimulator {
     }
 
     if (waterHeater.isRunning && !this.isRecovering) {
-      if (this.availability === 0 || this.setPoint > previousSetPoint) {
+      if (this.availability === 0 || this.setPoint > this.previousSetPoint) {
         this._startRecoveryTimer();
       }
       return;
@@ -119,8 +122,7 @@ export class RecoverySimulator {
     this.simulatedTemp = Math.min(this.simulatedTemp + tempIncrease, this.setPoint);
 
     if (this.simulatedTemp === this.setPoint) {
-      this._recordRecoveryRate();
-      this._stopRecoveryTimer();
+      this._endRecovery();
     }
 
     this.onUpdate();
@@ -140,6 +142,9 @@ export class RecoverySimulator {
     const timeElapsed = (Date.now() - this.recoveryStartTime) / ONE_HOUR;
     const tempDifference = this.setPoint - this.recoveryStartTemp;
 
+    this.recoveryStartTime = null;
+    this.recoveryStartTemp = null;
+
     if (timeElapsed <= 0) {
       return;
     }
@@ -155,13 +160,13 @@ export class RecoverySimulator {
   }
 
   private _loadRecoveryRates(): number[] | null {
-    const key = `whRecoveryRates_${this.serialNumber}`;
+    const key = `${RECOVERY_FILE_PREFIX}${this.serialNumber}`;
     const stored = safeGetItem(this.recoveryRatesFilePath, key);
     return stored ? JSON.parse(stored) : null;
   }
 
   private _saveRecoveryRates(): void {
-    const key = `whRecoveryRates_${this.serialNumber}`;
+    const key = `${RECOVERY_FILE_PREFIX}${this.serialNumber}`;
     safeSetItem(this.recoveryRatesFilePath, key, JSON.stringify(this.recoveryRates));
   }
 }

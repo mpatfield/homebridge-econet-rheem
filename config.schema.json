@@ -23,17 +23,11 @@
         "required": true,
         "description": "Rheem/Econet account password"
       },
-      "verbose": {
-        "title": "Verbose",
-        "type": "boolean",
-        "required": false,
-        "description": "Enable additional debug logging"
-      },
       "wh_estimate": {
-        "title": "Estimate Current Water Heater Temp (Beta)",
+        "title": "Estimate Water Heater Temp (Beta)",
         "type": "boolean",
         "required": false,
-        "description": "Calculate the average temp based on the set point and hot water availability"
+        "description": "Predict the current temp based on the set point, availability, and past recovery rates"
       },
       "wh_input_temp": {
         "title": "Water Heater Input Temp",
@@ -43,6 +37,12 @@
         "condition": {
           "functionBody": "return model.wh_estimate === true"
         }
+      },
+      "verbose": {
+        "title": "Verbose",
+        "type": "boolean",
+        "required": false,
+        "description": "Enable additional debug logging"
       }
     }
   },
