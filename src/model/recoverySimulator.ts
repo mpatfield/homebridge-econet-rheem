@@ -5,8 +5,9 @@ import { fromCelsius, ONE_HOUR, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
 
 const RECOVERY_FILE_PREFIX = 'whRecoveryRates_';
-const DEFAULT_RECOVERY_RATE = 30; // in degrees Celsius per hour
-const RECOVERY_TIMER_INTERVAL = 300000; // 5 minutes
+const DEFAULT_RECOVERY_RATE = 20; // in degrees Celsius per hour
+const MINIMUM_RECOVERY_RATE = 5;
+const RECOVERY_TIMER_INTERVAL = 120000; // 2 minutes
 
 export class RecoverySimulator {
 
@@ -42,7 +43,10 @@ export class RecoverySimulator {
     this.simulatedTemp = this.setPoint;
 
     this.recoveryRatesFilePath = path.join(api.storagePath, 'recoveryRates.json');
-    this.recoveryRates = this._loadRecoveryRates() ?? [fromCelsius(DEFAULT_RECOVERY_RATE, waterHeater.units)];
+
+    const minRecoveryRate = fromCelsius(MINIMUM_RECOVERY_RATE, waterHeater.units);
+    const defaultRecoveryRate = fromCelsius(DEFAULT_RECOVERY_RATE, waterHeater.units);
+    this.recoveryRates = this._loadRecoveryRates()?.filter(x => x > minRecoveryRate)  ?? [defaultRecoveryRate];
   }
 
   currentTemp(inputTemp: number): number {
@@ -150,6 +154,10 @@ export class RecoverySimulator {
     }
 
     const rate = tempDifference / timeElapsed;
+    if (rate < MINIMUM_RECOVERY_RATE) {
+      return;
+    }
+
     this.recoveryRates.push(rate);
 
     if (this.recoveryRates.length > 3) {

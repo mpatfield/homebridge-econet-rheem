@@ -73,7 +73,7 @@ export class WaterHeater extends Equipment {
       return this.set_point;
     }
 
-    return this.recoverySimulator!.currentTemp(inputTemp);
+    return this.recoverySimulator?.currentTemp(inputTemp) || this.set_point;
   }
 
   get setPoint(): number {
@@ -86,7 +86,6 @@ export class WaterHeater extends Equipment {
       this.recoverySimulator = new RecoverySimulator(this._api, this, () => {
         super.didUpdate();
       });
-
     }
 
     this.recoverySimulator.handleUpdate(this);
