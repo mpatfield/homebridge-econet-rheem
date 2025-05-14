@@ -5,7 +5,7 @@ import mqtt from 'mqtt';
 import { Equipment } from './equipment.js';
 import { WaterHeater } from './waterHeater.js';
 import { Thermostat } from './thermostat.js';
-import { ONE_HOUR } from './utils.js';
+import { MINUTE, SECOND } from './utils.js';
 
 const HOST = 'rheem.clearblade.com';
 const REST_URL = `https://${HOST}/api/v/1`;
@@ -17,15 +17,14 @@ const HEADERS = {
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-const DEFAULT_RECONNECT_DELAY_SECONDS = 120;
-const MAX_RECONNECT_DELAY_SECONDS = 3600;
+const RECONNECT_DELAYS = [5 * SECOND, 15 * SECOND, MINUTE, 2 * MINUTE, 5 * MINUTE];
+const IDLE_CONNECTION_TIMER_INTERVAL = 16 * MINUTE;
 
 const RETRYABLE_CODES = [
   3, // MQTT: Server unavailable
   'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET',
   'ENOTFOUND', 'EHOSTUNREACH', 'ENETUNREACH',
 ];
-
 
 export const WATER_HEATER = 'WH';
 export const THERMOSTAT = 'HVAC';
@@ -74,7 +73,6 @@ export class EconetApi {
   private equipment: Map<string, Equipment> = new Map();
   private mqttClient: mqtt.MqttClient | null = null;
   private shouldReconnect = false;
-  private reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS;
   private isReconnecting = false;
   private reconnectCount = 0;
   private idleMQTTTimer: NodeJS.Timeout | null = null;
@@ -146,13 +144,13 @@ export class EconetApi {
     this.mqttClient = mqtt.connect(`mqtts://${HOST}:1884`, this.mqttOptions);
 
     this.mqttClient.on('connect', () => {
-      this.reconnectDelaySeconds = DEFAULT_RECONNECT_DELAY_SECONDS;
       this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
       this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
       this.log.info('Connected and listening for updates...');
     });
 
     this.mqttClient.on('message', (topic, message) => {
+      this.reconnectCount = 0;
       this.resetIdleMQTTTimer();
       try {
         const unpackedJson = JSON.parse(message.toString());
@@ -199,7 +197,7 @@ export class EconetApi {
     this.idleMQTTTimer = setTimeout(()=>{
       this.log.info('Idle connection');
       this.reconnect();
-    }, 3 * ONE_HOUR); 
+    }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
 
   private async reconnect() {
@@ -216,7 +214,7 @@ export class EconetApi {
     }
 
     this.reconnectCount++;
-    if (this.reconnectCount % 3 === 0) {
+    if (this.reconnectCount % RECONNECT_DELAYS.length === 0) {
       try {
         this.log.error('Having trouble staying connected');
         this.log.info('Attempting to re-authenticate');
@@ -226,16 +224,17 @@ export class EconetApi {
       }
     }
 
-    this.log.info(`Will attempt to reconnect in ${this.reconnectDelaySeconds / 60} minutes...`);
+    const reconnectDelay = RECONNECT_DELAYS[Math.min(this.reconnectCount, RECONNECT_DELAYS.length - 1)];
+    if (reconnectDelay <= MINUTE) {
+      this.log.info(`Will attempt to reconnect in ${reconnectDelay / SECOND} seconds...`);
+    } else {
+      this.log.info(`Will attempt to reconnect in ${reconnectDelay / MINUTE} minutes...`);
+    }
+
     setTimeout(() => {
-
-      this.reconnectDelaySeconds = Math.min(this.reconnectDelaySeconds * 2, MAX_RECONNECT_DELAY_SECONDS);
-
       this.isReconnecting = false;
-
       this.connect();
-
-    }, this.reconnectDelaySeconds * 1000);
+    }, reconnectDelay);
   }
 
   publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {

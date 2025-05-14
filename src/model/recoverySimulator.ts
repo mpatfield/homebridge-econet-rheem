@@ -1,13 +1,16 @@
 import path from 'path';
 
 import { EconetApi } from './econet.js';
-import { fromCelsius, ONE_HOUR, safeGetItem, safeSetItem } from './utils.js';
+import { fromCelsius, HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
 
 const RECOVERY_FILE_PREFIX = 'whRecoveryRates_';
-const DEFAULT_RECOVERY_RATE = 20; // in degrees Celsius per hour
+
+// in degrees Celsius per hour
+const DEFAULT_RECOVERY_RATE = 20;
 const MINIMUM_RECOVERY_RATE = 5;
-const RECOVERY_TIMER_INTERVAL = 120000; // 2 minutes
+
+const RECOVERY_TIMER_INTERVAL = 2 * MINUTE;
 
 export class RecoverySimulator {
 
@@ -129,7 +132,7 @@ export class RecoverySimulator {
       return;
     }
 
-    const tempIncrease = this.recoveryRate * (RECOVERY_TIMER_INTERVAL / ONE_HOUR);
+    const tempIncrease = this.recoveryRate * (RECOVERY_TIMER_INTERVAL / HOUR);
     this.simulatedTemp = Math.min(this.simulatedTemp + tempIncrease, this.setPoint);
 
     if (this.simulatedTemp === this.setPoint) {
@@ -150,7 +153,7 @@ export class RecoverySimulator {
       return;
     }
 
-    const timeElapsed = (Date.now() - this.recoveryStartTime) / ONE_HOUR;
+    const timeElapsed = (Date.now() - this.recoveryStartTime) / HOUR;
     const tempDifference = this.setPoint - this.recoveryStartTemp;
 
     this.recoveryStartTime = null;
