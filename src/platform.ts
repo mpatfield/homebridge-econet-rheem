@@ -12,7 +12,6 @@ import { Thermostat } from './model/thermostat.js';
 import { WaterHeater } from './model/waterHeater.js';
 
 import { TemperatureUnits } from './model/enums.js';
-import { fromCelsius } from './model/utils.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
@@ -125,27 +124,23 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
   private whInputTemp(units: TemperatureUnits) : number | null {
 
-    if (!this.config.wh_estimate) {
+    if (this.config.wh_sim_disable) {
       return null;
-    }
-
-    if (this.config.wh_input_temp) {
-      return this.config.wh_input_temp;
     }
 
     const month = new Date().getMonth();
   
     // Coldest: Jan, Feb, Dec
     if (month === 0 || month === 1 || month === 11) {
-      return fromCelsius(10, units);
+      return units === TemperatureUnits.FAHRENHEIT ? 50 : 10;
     }
 
     // Hottest: Jun, Jul, Aug
     if (month === 5 || month === 6 || month === 7) {
-      return fromCelsius(20, units);
+      return units === TemperatureUnits.FAHRENHEIT ? 70 : 20;
     }
 
     // All other months
-    return fromCelsius(15, units);
+    return units === TemperatureUnits.FAHRENHEIT ? 60 : 15;
   }
 }

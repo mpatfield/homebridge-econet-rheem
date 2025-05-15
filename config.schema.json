@@ -23,20 +23,11 @@
         "required": true,
         "description": "Rheem/Econet account password"
       },
-      "wh_estimate": {
-        "title": "Estimate Water Heater Temp (Beta)",
+      "wh_sim_disable": {
+        "title": "Disable Water Heater Temperature Simulator",
         "type": "boolean",
         "required": false,
-        "description": "Predict the current temp based on the set point, availability, and past recovery rates"
-      },
-      "wh_input_temp": {
-        "title": "Water Heater Input Temp",
-        "type": "number",
-        "required": false,
-        "description": "Optional: setting this will improve the current temp calulcation",
-        "condition": {
-          "functionBody": "return model.wh_estimate === true"
-        }
+        "description": "See [documentation](https://github.com/mpatfield/homebridge-econet-rheem#readme) for details"
       },
       "verbose": {
         "title": "Verbose",
@@ -56,7 +47,7 @@
       "type": "fieldset",
       "title": "Advanced Settings",
       "expandable": true,
-      "items": ["verbose", "wh_estimate", "wh_input_temp"]
+      "items": ["verbose", "wh_sim_disable"]
     }
   ]
 }

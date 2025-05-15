@@ -6,27 +6,35 @@
 
 This Homebridge plugin integrates Rheem EcoNet devices into Apple HomeKit.
 
+## Disclaimer
+
+This plugin is independently developed and is not in any way affiliated with or endorsed by Rheem. Any issues or damage resulting from use of this plugin are not the fault of the developer. Use at your own risk.
+
 > [!NOTE]
 > This plugin uses an unofficial EcoNet API and could stop working at any time without warning.
 
 ## Limitations
 
-* Due to limitations in HomeKit, it is not possible to switch water heater modes, only enable/disable and adjust the desired temperature.
+* Water Heaters
+  * Current temperature is not supported by the API so recovery temperature is simulated
+  * It is not possible to switch modes, only enable/disable and adjust the desired temperature
 * Celcius should work but is untested
   * *Let me know if you have successfully used ºC so I can remove this*
 
-## Installation
+## Account Sharing
 
-1. Ensure you have [Homebridge](https://homebridge.io) installed and running.
-2. Install this plugin via npm:
+> [!NOTE]
+> It is recommended to use a dedicated account for use with Homebridge.
 
-   ```bash
-   npm install -g homebridge-econet-rheem
-   ```
+This is because Rheem only allows one device to be subscribed to real-time updates, so if you open the Rheem app then the Homebridge plugin will silently stop receiving updates.
+
+The plugin will eventually resubscribe after being idle for an extended period, but you could miss updates in the meantime. Using a separate account will avoid this issue.
+
+To get started, visit "Account Sharing" in the Rheem app menu.
 
 ## Configuration
 
-Add the following to your Homebridge `config.json`:
+Using the Homebridge Config UI is the easiest way to set up this plugin. However, if you wish to do things manually then you will need to add the following to your Homebridge `config.json`:
 
    ```json
    {
@@ -35,6 +43,7 @@ Add the following to your Homebridge `config.json`:
          "platform": "HomebridgeEconetRheem",
          "email": "your_econet_email",
          "password": "your_econet_password",
+         "wh_sim_disable": false,
          "verbose": false
        }
      ]
@@ -44,27 +53,24 @@ Add the following to your Homebridge `config.json`:
 - `platform`: (Required) Must be "HomebridgeEconetRheem".
 - `email`: (Required) Your Econet account email.
 - `password`: (Required) Your Econet account password.
+- `wh_sim_disable`: (Optional) Set to `true` to disable and use set_point as the current temperature.
 - `verbose`: (Optional) Set to `true` to enable additional debug logging. Default is `false`.
 
 ## Contributing
 
-Contributions to support Thermostat operation are welcome. To assist:
+Ideas and bug reports are welcome. To assist:
 
-1. Set `"verbose": true` in the plugin configuration.
-2. Run Homebridge in debug mode:
+1. Turn on "Verbose" logging in the plugin config under "Advanced Settings"
+2. Run Homebridge in debug mode
 
-   ```bash
-   homebridge -D
+   ```
+   Homebridge Settings -> Startup & Environment -> Homebridge Debug Mode -D
    ```
 
-3. Capture the JSON responses for HTTP and MQTT state changes.
-4. Submit the captured data via a GitHub issue or pull request.
+3. Capture the JSON responses in the Logs for HTTP and MQTT state changes
+4. Submit the captured data via a GitHub [issue](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) or [pull request](https://github.com/mpatfield/homebridge-econet-rheem/pulls).
 
 Your contributions will help enhance the plugin's functionality and device support.
-
-## Disclaimer
-
-This plugin is independently developed and is not in any way affiliated with or endorsed by Rheem.
 
 ## Credits
 
