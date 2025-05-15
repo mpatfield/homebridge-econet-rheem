@@ -4,7 +4,7 @@ import { EconetApi } from './econet.js';
 import { fromCelsius, HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
 
-const RECOVERY_FILE_PREFIX = 'whRecoveryRates_';
+const RECOVERY_FILE_NAME = 'econetWHRecoveryRates.json';
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
@@ -45,7 +45,7 @@ export class RecoverySimulator {
 
     this.simulatedTemp = this.setPoint;
 
-    this.recoveryRatesFilePath = path.join(api.storagePath, 'recoveryRates.json');
+    this.recoveryRatesFilePath = path.join(api.storagePath, RECOVERY_FILE_NAME);
 
     const minRecoveryRate = fromCelsius(MINIMUM_RECOVERY_RATE, waterHeater.units);
     const defaultRecoveryRate = fromCelsius(DEFAULT_RECOVERY_RATE, waterHeater.units);
@@ -74,7 +74,13 @@ export class RecoverySimulator {
 
     this.availability = waterHeater.availability;
 
-    if (this.availability === 0 && !waterHeater.isRunning) {
+    if (waterHeater.isRunning && !this.isRecovering &&
+      (this.availability === 0 || this.setPoint > this.previousSetPoint)) {
+      this._startRecoveryTimer();
+      return;
+    }
+
+    if (!waterHeater.isRunning && this.availability === 0) {
       this._stopRecoveryTimer();
       this.onUpdate();
       return;
@@ -82,25 +88,23 @@ export class RecoverySimulator {
 
     if (this.setPoint < this.previousSetPoint && this.setPoint < this.simulatedTemp) {
       this._stopRecoveryTimer();
+
       this.simulatedTemp = this.setPoint;
       this.onUpdate();
-      return;
-    }
 
-    if (waterHeater.isRunning && !this.isRecovering &&
-      (this.availability === 0 || this.setPoint > this.previousSetPoint)) {
-      this._startRecoveryTimer();
       return;
     }
 
     if (!waterHeater.isRunning && this.isRecovering) {
       if (this.simulatedTemp >= this.setPoint) {
-        this._endRecovery();
-      } else {
-        this._stopRecoveryTimer();
+        this._recordRecoveryRate();
       }
+
+      this._stopRecoveryTimer();
+
       this.simulatedTemp = this.setPoint;
       this.onUpdate();
+
       return;
     }    
   }
@@ -137,18 +141,9 @@ export class RecoverySimulator {
     }
 
     const tempIncrease = this.recoveryRate * (RECOVERY_TIMER_INTERVAL / HOUR);
+ 
     this.simulatedTemp = Math.min(this.simulatedTemp + tempIncrease, this.setPoint);
-
-    if (this.simulatedTemp === this.setPoint) {
-      this._endRecovery();
-    }
-
     this.onUpdate();
-  }
-
-  private _endRecovery() {
-    this._recordRecoveryRate();
-    this._stopRecoveryTimer();
   }
 
   private _recordRecoveryRate() {
@@ -182,13 +177,11 @@ export class RecoverySimulator {
   }
 
   private _loadRecoveryRates(): number[] | null {
-    const key = `${RECOVERY_FILE_PREFIX}${this.serialNumber}`;
-    const stored = safeGetItem(this.recoveryRatesFilePath, key);
+    const stored = safeGetItem(this.recoveryRatesFilePath, this.serialNumber);
     return stored ? JSON.parse(stored) : null;
   }
 
   private _saveRecoveryRates(): void {
-    const key = `${RECOVERY_FILE_PREFIX}${this.serialNumber}`;
-    safeSetItem(this.recoveryRatesFilePath, key, JSON.stringify(this.recoveryRates));
+    safeSetItem(this.recoveryRatesFilePath, this.serialNumber, JSON.stringify(this.recoveryRates));
   }
 }

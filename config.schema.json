@@ -15,7 +15,7 @@
         "type": "string",
         "format": "email",
         "required": true,
-        "description": "Rheem/Econet account email"
+        "description": "Rheem/Econet account email (Homebridge dedicated account recommnded)"
       },
       "password": {
         "title": "Password",
@@ -27,7 +27,7 @@
         "title": "Disable Water Heater Temperature Simulator",
         "type": "boolean",
         "required": false,
-        "description": "See [documentation](https://github.com/mpatfield/homebridge-econet-rheem#readme) for details"
+        "description": "See documentation for details"
       },
       "verbose": {
         "title": "Verbose",
