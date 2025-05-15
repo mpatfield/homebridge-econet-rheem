@@ -76,26 +76,30 @@ export class RecoverySimulator {
 
     if (this.availability === 0 && !waterHeater.isRunning) {
       this._stopRecoveryTimer();
-      return;
-    }
-
-    if (this.setPoint < this.previousSetPoint) {
-      this.simulatedTemp = Math.min(this.simulatedTemp, this.setPoint);
-      this._stopRecoveryTimer();
       this.onUpdate();
       return;
     }
 
-    if (waterHeater.isRunning && !this.isRecovering) {
-      if (this.availability === 0 || this.setPoint > this.previousSetPoint) {
-        this._startRecoveryTimer();
-      }
+    if (this.setPoint < this.previousSetPoint && this.setPoint < this.simulatedTemp) {
+      this._stopRecoveryTimer();
+      this.simulatedTemp = this.setPoint;
+      this.onUpdate();
       return;
     }
 
-    if (this.isRecovering && this.simulatedTemp >= this.setPoint) {
+    if (waterHeater.isRunning && !this.isRecovering &&
+      (this.availability === 0 || this.setPoint > this.previousSetPoint)) {
+      this._startRecoveryTimer();
+      return;
+    }
+
+    if (!waterHeater.isRunning && this.isRecovering) {
+      if (this.simulatedTemp >= this.setPoint) {
+        this._endRecovery();
+      } else {
+        this._stopRecoveryTimer();
+      }
       this.simulatedTemp = this.setPoint;
-      this._endRecovery();
       this.onUpdate();
       return;
     }    
