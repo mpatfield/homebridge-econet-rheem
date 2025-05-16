@@ -1,20 +1,25 @@
 import path from 'path';
 
 import { EconetApi } from './econet.js';
-import { fromCelsius, HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
+import { HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
+import { TemperatureUnits } from './enums.js';
+
+const VERSION = 1;
 
 const RECOVERY_FILE_NAME = 'econetWHRecoveryRates.json';
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
-const MINIMUM_RECOVERY_RATE = 5;
+const MINIMUM_RECOVERY_RATE = 1;
 
 const RECOVERY_TIMER_INTERVAL = 2 * MINUTE;
 
 export class RecoverySimulator {
 
   private readonly recoveryRatesFilePath: string;
+  private readonly minRecoveryRate: number;
+  private readonly defaultRecoveryRate: number;
   private recoveryRates: number[];
 
   private recoveryTimer: NodeJS.Timeout | null = null;
@@ -47,9 +52,9 @@ export class RecoverySimulator {
 
     this.recoveryRatesFilePath = path.join(api.storagePath, RECOVERY_FILE_NAME);
 
-    const minRecoveryRate = fromCelsius(MINIMUM_RECOVERY_RATE, waterHeater.units);
-    const defaultRecoveryRate = fromCelsius(DEFAULT_RECOVERY_RATE, waterHeater.units);
-    this.recoveryRates = this._loadRecoveryRates()?.filter(x => x > minRecoveryRate)  ?? [defaultRecoveryRate];
+    this.minRecoveryRate = MINIMUM_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
+    this.defaultRecoveryRate = DEFAULT_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
+    this.recoveryRates = this._loadRecoveryRates()  ?? [this.defaultRecoveryRate];
   }
 
   currentTemp(inputTemp: number): number {
@@ -163,13 +168,13 @@ export class RecoverySimulator {
     }
 
     const rate = tempDifference / timeElapsed;
-    if (rate < MINIMUM_RECOVERY_RATE) {
+    if (rate < this.minRecoveryRate) {
       return;
     }
 
     this.recoveryRates.push(rate);
 
-    if (this.recoveryRates.length > 3) {
+    if (this.recoveryRates.length > 3 || (this.recoveryRates.length >= 2 && this.recoveryRates[0] === this.defaultRecoveryRate) ) {
       this.recoveryRates.shift();
     }
 
@@ -177,11 +182,13 @@ export class RecoverySimulator {
   }
 
   private _loadRecoveryRates(): number[] | null {
-    const stored = safeGetItem(this.recoveryRatesFilePath, this.serialNumber);
+    const key = `${VERSION}_${this.serialNumber}`;
+    const stored = safeGetItem(this.recoveryRatesFilePath, key);
     return stored ? JSON.parse(stored) : null;
   }
 
   private _saveRecoveryRates(): void {
-    safeSetItem(this.recoveryRatesFilePath, this.serialNumber, JSON.stringify(this.recoveryRates));
+    const key = `${VERSION}_${this.serialNumber}`;
+    safeSetItem(this.recoveryRatesFilePath, key, JSON.stringify(this.recoveryRates));
   }
 }
