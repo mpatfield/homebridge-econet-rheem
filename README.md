@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/icon.png" width="100">
+<img src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/banner.png" width="100">
 </p>
 
 # Homebridge EcoNet Rheem Plugin
