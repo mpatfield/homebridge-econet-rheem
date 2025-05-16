@@ -95,13 +95,13 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         const existingAccessory = this.accessories.get(serialNumber);
         if (existingAccessory) {
           this.log.info('Updating existing water heater:', deviceName);
-          new WaterHeaterAccessory(this, existingAccessory, waterHeater, this.config.simulate_alert, this.whInputTemp(waterHeater.units));
+          new WaterHeaterAccessory(this, existingAccessory, waterHeater, this.whInputTemp(waterHeater.units));
         } else {
           this.log.info('Adding new water heater:', deviceName);
           const uuid = this.api.hap.uuid.generate(serialNumber);
           const accessory = new this.api.platformAccessory(deviceName, uuid);
           accessory.context.serialNumber = serialNumber;
-          new WaterHeaterAccessory(this, accessory, waterHeater, this.config.simulate_alert, this.whInputTemp(waterHeater.units));
+          new WaterHeaterAccessory(this, accessory, waterHeater, this.whInputTemp(waterHeater.units));
           this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           this.accessories.set(serialNumber, accessory);
         }

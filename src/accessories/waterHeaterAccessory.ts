@@ -13,7 +13,6 @@ export class WaterHeaterAccessory {
     private readonly platform: EconetRheemPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly waterHeater: WaterHeater,
-    private readonly simulateAlert?: boolean,
     private readonly inputTemperature?: number | null,
   ) {
     
@@ -70,7 +69,7 @@ export class WaterHeaterAccessory {
   updateCharacteristics(): void {
 
     this.service.updateCharacteristic(this.Characteristic.StatusFault,
-      (this.simulateAlert || this.waterHeater.hasAlert) ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT);
+      this.waterHeater.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT);
 
     this.service.updateCharacteristic(this.Characteristic.Active, this.waterHeater.isEnabled ? 1 : 0);
 
@@ -89,7 +88,7 @@ export class WaterHeaterAccessory {
   }
 
   async getStatusFault(): Promise<CharacteristicValue> {
-    return (this.simulateAlert || this.waterHeater.hasAlert) ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
+    return this.waterHeater.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
   }
   
   async getActive(): Promise<CharacteristicValue> {
