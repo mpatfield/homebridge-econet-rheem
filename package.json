@@ -4,7 +4,7 @@
   "displayName": "Homebridge Econet Rheem",
   "description": "Homebridge plugin based on pyeconet for control of Rheem water heaters",
   "type": "module",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "homepage": "https://github.com/mpatfield/homebridge-econet-rheem#readme",
   "repository": {
     "type": "git",
@@ -25,7 +25,12 @@
     "watch": "npm run build && npm link && nodemon"
   },
   "keywords": [
+    "homebridge",
     "homebridge-plugin",
+    "homebridge-econet-rheem",
+    "hoobs",
+    "hoobs-plugin",
+    "homekit",
     "econet",
     "rheem",
     "water-heater",

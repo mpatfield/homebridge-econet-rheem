@@ -4,6 +4,7 @@
   "singular": true,
   "schema": {
     "type": "object",
+    "required": ["email", "password"],
     "properties": {
       "name": {
         "title": "Plugin Name",
@@ -14,13 +15,11 @@
         "title": "Email",
         "type": "string",
         "format": "email",
-        "required": true,
         "description": "Rheem/Econet account email (Homebridge dedicated account recommnded)"
       },
       "password": {
         "title": "Password",
         "type": "string",
-        "required": true,
         "description": "Rheem/Econet account password"
       },
       "wh_sim_disable": {

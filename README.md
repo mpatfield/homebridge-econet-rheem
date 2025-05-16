@@ -2,9 +2,18 @@
 <img src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/img/banner.png" width="600">
 </p>
 
-# Homebridge EcoNet Rheem Plugin
+<span align="center">
 
-This Homebridge plugin integrates Rheem EcoNet devices into Apple HomeKit.
+# homebridge-econet-rheem
+
+Homebridge plugin to integrate Rheem EcoNet devices into Apple HomeKit
+
+[![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
+<!--[![hoobs-certified](https://badgen.net/badge/HOOBS/certified/yellow)](https://plugins.hoobs.org/plugin/homebridge-econet-rheem)-->
+[![npm](https://img.shields.io/npm/dw/homebridge-econet-rheem)](https://www.npmjs.com/package/homebridge-econet-rheem)
+[![npm](https://img.shields.io/npm/dt/homebridge-econet-rheem)](https://www.npmjs.com/package/homebridge-econet-rheem)  
+
+</span>
 
 ## Disclaimer
 
