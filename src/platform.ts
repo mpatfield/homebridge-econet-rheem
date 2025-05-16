@@ -1,6 +1,4 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
@@ -14,9 +12,6 @@ import { Thermostat } from './model/thermostat.js';
 import { WaterHeater } from './model/waterHeater.js';
 
 import { TemperatureUnits } from './model/enums.js';
-
-const pkgPath = join(dirname(__dirname), 'package.json');
-const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
@@ -43,10 +38,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         this.econetApi.unsubscribe();
       }
     });
-  }
-
-  get packageVersion(): string {
-    return pkg.version;
   }
 
   configureAccessory(accessory: PlatformAccessory): void {

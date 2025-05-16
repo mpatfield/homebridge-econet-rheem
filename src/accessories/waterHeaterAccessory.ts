@@ -22,8 +22,7 @@ export class WaterHeaterAccessory {
     this.accessory.getService(Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Water Heater')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber)
-      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.packageVersion);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber);
 
     this.service = this.accessory.getService(Service.HeaterCooler) ||
       this.accessory.addService(Service.HeaterCooler);
