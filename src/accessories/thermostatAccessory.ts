@@ -20,9 +20,11 @@ export class ThermostatAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, 'Rheem')
+      .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Thermostat')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber)
+      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.packageVersion);
+
 
     this.service = this.accessory.getService(Service.Thermostat) ||
       this.accessory.addService(Service.Thermostat);

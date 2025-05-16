@@ -20,9 +20,10 @@ export class WaterHeaterAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, 'Rheem')
+      .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Water Heater')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber)
+      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.packageVersion);
 
     this.service = this.accessory.getService(Service.HeaterCooler) ||
       this.accessory.addService(Service.HeaterCooler);

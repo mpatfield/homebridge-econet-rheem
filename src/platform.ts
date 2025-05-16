@@ -13,6 +13,8 @@ import { WaterHeater } from './model/waterHeater.js';
 
 import { TemperatureUnits } from './model/enums.js';
 
+import pkg from '../package.json';
+
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
   public readonly Characteristic;
@@ -38,6 +40,10 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         this.econetApi.unsubscribe();
       }
     });
+  }
+
+  get packageVersion(): string {
+    return pkg.version;
   }
 
   configureAccessory(accessory: PlatformAccessory): void {
