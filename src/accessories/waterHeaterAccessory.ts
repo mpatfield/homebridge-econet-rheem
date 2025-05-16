@@ -29,6 +29,9 @@ export class WaterHeaterAccessory {
 
     this.service.setCharacteristic(this.Characteristic.Name, this.waterHeater.deviceName);
 
+    this.service.getCharacteristic(this.Characteristic.StatusFault)
+      .onGet(this.getStatusFault.bind(this));
+
     this.service.getCharacteristic(this.Characteristic.Active)
       .onGet(this.getActive.bind(this))
       .onSet(this.setActive.bind(this));
@@ -64,6 +67,10 @@ export class WaterHeaterAccessory {
   }
 
   updateCharacteristics(): void {
+
+    this.service.updateCharacteristic(this.Characteristic.StatusFault,
+      this.waterHeater.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT);
+
     this.service.updateCharacteristic(this.Characteristic.Active, this.waterHeater.isEnabled ? 1 : 0);
 
     this.service.updateCharacteristic(this.Characteristic.CurrentHeaterCoolerState,
@@ -80,6 +87,10 @@ export class WaterHeaterAccessory {
       toCelsius(this.waterHeater.setPoint, this.waterHeater.units));
   }
 
+  async getStatusFault(): Promise<CharacteristicValue> {
+    return this.waterHeater.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
+  }
+  
   async getActive(): Promise<CharacteristicValue> {
     return this.waterHeater.isEnabled ? 1 : 0;
   }
@@ -115,6 +126,6 @@ export class WaterHeaterAccessory {
 
   async setActive(value: CharacteristicValue): Promise<void> {
     const enabled = value as number === 1;
-    await this.waterHeater.setEnabled(enabled);
+    this.waterHeater.setEnabled(enabled);
   }
 }

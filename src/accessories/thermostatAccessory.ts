@@ -29,6 +29,9 @@ export class ThermostatAccessory {
 
     this.service.setCharacteristic(this.Characteristic.Name, this.thermostat.deviceName);
 
+    this.service.getCharacteristic(this.Characteristic.StatusFault)
+      .onGet(this.getStatusFault.bind(this));
+
     this.service.getCharacteristic(this.Characteristic.TemperatureDisplayUnits)
       .onGet(this.getUnits.bind(this));
 
@@ -83,6 +86,9 @@ export class ThermostatAccessory {
 
   private updateCharacteristics(): void {
 
+    this.service.updateCharacteristic(this.Characteristic.StatusFault,
+      this.thermostat.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT);
+
     this.service.updateCharacteristic(this.Characteristic.CurrentRelativeHumidity, this.thermostat.humidity);
 
     this.service.updateCharacteristic(this.Characteristic.CurrentHeatingCoolingState, this.getCurrentState());
@@ -95,6 +101,10 @@ export class ThermostatAccessory {
       
     this.service.updateCharacteristic(this.Characteristic.HeatingThresholdTemperature, this.getHeatingThresholdTemperature());
     this.service.updateCharacteristic(this.Characteristic.CoolingThresholdTemperature, this.getCoolingThresholdTemperature());
+  }
+
+  async getStatusFault(): Promise<CharacteristicValue> {
+    return this.thermostat.hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT  : this.Characteristic.StatusFault.NO_FAULT;
   }
 
   private getUnits(): number {
