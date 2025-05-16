@@ -1,12 +1,8 @@
 import { Equipment } from './equipment.js';
 import { EconetApi } from './econet.js';
-import { ThermostatOperationMode, TemperatureUnits } from './enums.js';
+import { ThermostatOperationMode } from './enums.js';
 
 export class Thermostat extends Equipment {
-
-  private running: boolean = false;
-
-  private temp_units = TemperatureUnits.CELSIUS;
 
   private current_humidity = 0;
   private current_temp = 0;
@@ -30,12 +26,8 @@ export class Thermostat extends Equipment {
     this.updateFromREST(restUpdate);
   }
 
-  get isRunning(): boolean {
-    return this.running;
-  }
-
-  get units() : TemperatureUnits {
-    return this.temp_units;
+  protected get runningKey(): string {
+    return '@RUNNINGSTATUS';
   }
 
   get humidity(): number {
@@ -74,16 +66,11 @@ export class Thermostat extends Equipment {
   protected updateFromREST(update: any): void {
     super.updateFromREST(update);
 
-    if ('@RUNNINGSTATUS' in update) {
-      this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
-    }
-
     if ('@HUMIDITY' in update) {
       this.current_humidity = update['@HUMIDITY'].value || 0;
     }
 
     if ('@SETPOINT' in update) {
-      this.temp_units = update['@SETPOINT'].constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS; 
       this.current_temp = update['@SETPOINT'].value || 70;
     }
 
@@ -120,11 +107,7 @@ export class Thermostat extends Equipment {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   updateFromMQTT(update: any): void {
-
-    if ('@RUNNINGSTATUS' in update) {
-      this.running = update['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
-      this._api.log.debug(`${this.deviceName} running = ${this.running}`);
-    }
+    super.updateFromMQTT(update);
 
     if ('@HUMIDITY' in update) {
       this.current_humidity = update['@HUMIDITY'] || 0;
