@@ -22,7 +22,8 @@ export class ThermostatAccessory {
     this.accessory.getService(Service.AccessoryInformation)!
       .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Thermostat')
-      .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber);
+      .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber)
+      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.version);
 
 
     this.service = this.accessory.getService(Service.Thermostat) ||

@@ -12,6 +12,7 @@ import { Thermostat } from './model/thermostat.js';
 import { WaterHeater } from './model/waterHeater.js';
 
 import { TemperatureUnits } from './model/enums.js';
+import getVersion from './model/utils.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
@@ -43,6 +44,14 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   configureAccessory(accessory: PlatformAccessory): void {
     this.log.info('Restoring cached accessory:', accessory.displayName);
     this.accessories.set(accessory.context.serialNumber, accessory);
+  }
+
+  get version(): string {
+    if (this.config.test_version) {
+      return getVersion();
+    } else {
+      return '0.0.0';
+    }
   }
 
   private async discoverDevices(): Promise<void> {

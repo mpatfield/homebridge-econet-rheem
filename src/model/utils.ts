@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 import { TemperatureUnits } from '../model/enums.js';
 
@@ -21,6 +22,17 @@ export const toCelsius = (temp: number, units: TemperatureUnits): number => {
 export const fromCelsius = (temp: number, units: TemperatureUnits): number => {
   return units === TemperatureUnits.FAHRENHEIT ? celsiusToFahrenheit(temp) : temp;
 };
+
+ 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function loadPackageJson(): any {
+  const packageJSONPath = path.join(__dirname, '../package.json');
+  return JSON.parse(fs.readFileSync(packageJSONPath, { encoding: 'utf8' }));
+}
+
+export default function getVersion(): string {
+  return loadPackageJson().version;
+}
 
 function readStorage(filePath: string): Record<string, string> {
   if (!fs.existsSync(filePath)) {
