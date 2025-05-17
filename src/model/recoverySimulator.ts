@@ -101,10 +101,7 @@ export class RecoverySimulator {
     }
 
     if (!waterHeater.isRunning && this.isRecovering) {
-      if (this.simulatedTemp >= this.setPoint) {
-        this._recordRecoveryRate();
-      }
-
+      this._recordRecoveryRate();
       this._stopRecoveryTimer();
 
       this.simulatedTemp = this.setPoint;

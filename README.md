@@ -83,6 +83,10 @@ Your contributions will help enhance the plugin's functionality and device suppo
 
 ## Credits
 
-Econet API leans heavily on earlier work done by [@w1ll1am23](https://github.com/sponsors/w1ll1am23) in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API.
+[@w1ll1am23](https://github.com/sponsors/w1ll1am23) for earlier work done by in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API
 
-Special thanks to [@r3tr3ad](https://github.com/r3tr3ad) for helping debug the thermostat implementation.
+[@r3tr3ad](https://github.com/r3tr3ad) for helping debug the thermostat implementation.
+
+[Keryan Belahcene](https://www.instagram.com/keryan.me) for creating the [Flume](https://github.com/homebridge-plugins/homebridge-flume) header logo which I adapted for this plugin
+
+And to the amazing creators/contributors of [Homebridge](https://homebridge.io) who made this plugin possible!
