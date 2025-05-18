@@ -3,7 +3,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 import { EconetRheemPlatform } from '../platform.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
-import { toCelsius, fromCelsius } from '../model/utils.js';
+import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 
 export class WaterHeaterAccessory {
   private service: Service;
@@ -23,7 +23,7 @@ export class WaterHeaterAccessory {
       .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Water Heater')
       .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber)
-      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.version);
+      .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 
     this.service = this.accessory.getService(Service.HeaterCooler) ||
       this.accessory.addService(Service.HeaterCooler);

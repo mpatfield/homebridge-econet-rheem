@@ -4,7 +4,7 @@ import { EconetRheemPlatform } from '../platform.js';
 import { Thermostat } from '../model/thermostat.js';
 import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
 
-import { toCelsius, fromCelsius } from '../model/utils.js';
+import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 
 export class ThermostatAccessory {
   private service: Service;
@@ -23,7 +23,7 @@ export class ThermostatAccessory {
       .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
       .setCharacteristic(this.Characteristic.Model, 'Thermostat')
       .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber)
-      .setCharacteristic(this.Characteristic.FirmwareRevision, platform.version);
+      .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 
 
     this.service = this.accessory.getService(Service.Thermostat) ||
