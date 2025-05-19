@@ -83,7 +83,7 @@ Your contributions will help enhance the plugin's functionality and device suppo
 
 ## Credits
 
-[@w1ll1am23](https://github.com/sponsors/w1ll1am23) for earlier work done by in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API
+[@w1ll1am23](https://github.com/sponsors/w1ll1am23) for earlier work done in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API
 
 [@r3tr3ad](https://github.com/r3tr3ad) for helping debug the thermostat implementation.
 

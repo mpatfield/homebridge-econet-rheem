@@ -33,7 +33,7 @@
     "homekit",
     "econet",
     "rheem",
-    "water-heater",
+    "water heater",
     "thermostat"
   ],
   "engines": {
