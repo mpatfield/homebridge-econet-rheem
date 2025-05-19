@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 import { TemperatureUnits } from '../model/enums.js';
+import { fileURLToPath } from 'url';
 
 export const SECOND = 1000;
 export const MINUTE = 60000;
@@ -26,12 +27,17 @@ export const fromCelsius = (temp: number, units: TemperatureUnits): number => {
  
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function loadPackageJson(): any {
-  const packageJSONPath = path.join(process.cwd(), 'package.json');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
+  const packageJSONPath = path.join(__dirname, '../../package.json');
   return JSON.parse(fs.readFileSync(packageJSONPath, { encoding: 'utf8' }));
 }
 
 export default function getVersion(): string {
-  return loadPackageJson().version;
+  try {
+    return loadPackageJson().version;
+  } catch (error) {
+    return '0.0.0'; 
+  }
 }
 
 function readStorage(filePath: string): Record<string, string> {
