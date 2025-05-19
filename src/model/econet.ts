@@ -5,7 +5,8 @@ import mqtt from 'mqtt';
 import { Equipment } from './equipment.js';
 import { WaterHeater } from './waterHeater.js';
 import { Thermostat } from './thermostat.js';
-import { MINUTE, SECOND } from './utils.js';
+import { MINUTE, safeGetItem, safeSetItem, SECOND } from './utils.js';
+import path from 'path';
 
 const HOST = 'rheem.clearblade.com';
 const REST_URL = `https://${HOST}/api/v/1`;
@@ -25,6 +26,8 @@ const RETRYABLE_CODES = [
   'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET',
   'ENOTFOUND', 'EHOSTUNREACH', 'ENETUNREACH',
 ];
+
+const MQTT_DEBUG_FILE_NAME = 'mqttDebug.json';
 
 export const WATER_HEATER = 'WH';
 export const THERMOSTAT = 'HVAC';
@@ -62,11 +65,6 @@ interface MqttError extends Error {
 }
 
 export class EconetApi {
-  public readonly log: Logger;
-  private readonly email: string;
-  private readonly password: string;
-  readonly storagePath: string;
-  private readonly verbose: boolean;
   private mqttOptions: mqtt.IClientOptions | null = null;
   private userToken: string | null = null;
   private accountId: string | null = null;
@@ -77,16 +75,17 @@ export class EconetApi {
   private reconnectCount = 0;
   private idleMQTTTimer: NodeJS.Timeout | null = null;
 
-  constructor(log: Logger, email: string, password: string, storagePath: string, verbose: boolean) {
-    this.log = log;
-    this.email = email;
-    this.password = password;
-    this.storagePath = storagePath;
-    this.verbose = verbose;    
-  }
+  constructor(
+    public readonly log: Logger,
+    private readonly email: string,
+    private readonly password: string,
+    readonly storagePath: string,
+    private readonly verbose: boolean,
+    private readonly debugMQTT: boolean,
+  ) {}
 
-  static async login(log: Logger, email: string, password: string, storagePath: string, verbose: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, storagePath, verbose);
+  static async login(log: Logger, email: string, password: string, storagePath: string, verbose: boolean, debugMQTT: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, storagePath, verbose, debugMQTT);
     await api.authenticate();
     return api;
   }
@@ -161,6 +160,9 @@ export class EconetApi {
         const equipment = this.equipment.get(serial);
         if (equipment) {
           equipment.updateFromMQTT(unpackedJson);
+          if (this.debugMQTT) {
+            this.saveMQTT(unpackedJson);
+          }
         }
       } catch (e) {
         this.log.error('Failed to parse message:', message.toString());
@@ -336,5 +338,30 @@ export class EconetApi {
       }
     }
     return result;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private saveMQTT(json: any) {
+
+    const filePath = path.join(this.storagePath, MQTT_DEBUG_FILE_NAME);
+    const ignoreKeys = new Set(['transactionId']);
+
+    for (const [key, value] of Object.entries(json)) {
+
+      if (ignoreKeys.has(key)) {
+        continue;
+      }
+
+      let valuesString = safeGetItem(filePath, key);
+      let valuesArray = valuesString ? JSON.parse(valuesString) : [];
+      const valuesSet = new Set(valuesArray);
+
+      valuesSet.add(value);
+
+      valuesArray = Array.from(valuesSet);
+      valuesString = JSON.stringify(valuesArray);
+
+      safeSetItem(filePath, key, valuesString);
+    }
   }
 }

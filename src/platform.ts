@@ -49,6 +49,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const email = this.config.email as string;
     const password = this.config.password as string;
     const verbose = this.config.verbose as boolean;
+    const debugMQTT = this.config.mqtt_debug as boolean;
 
     if (!email || !password) {
       this.log.error('Configuration error: "email" and "password" are required in config.json');
@@ -57,7 +58,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     try {
 
-      this.econetApi = await EconetApi.login(this.log, email, password, this.api.user.storagePath(), verbose);
+      this.econetApi = await EconetApi.login(this.log, email, password, this.api.user.storagePath(), verbose, debugMQTT);
 
       const equipmentMap = await this.econetApi.getEquipmentByType([THERMOSTAT, WATER_HEATER]);
 
