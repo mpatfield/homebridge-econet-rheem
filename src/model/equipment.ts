@@ -64,7 +64,7 @@ export abstract class Equipment {
     }
 
     if ('@SETPOINT' in update) {
-      this.temp_units = update['@SETPOINT'].constraints.units === 'deg F' ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS; 
+      this.temp_units = update['@SETPOINT'].constraints.units.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS; 
     }
 
     if (this.runningKey in update) {

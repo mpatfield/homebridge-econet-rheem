@@ -2,6 +2,20 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.5.8 (2025-05-XX)
+
+### Added
+
+- Display plugin version number in accessory info
+
+### Fixed
+
+- Fahrenheit conversion not working on some water heaters 
+
+### Changed
+
+- Updated various dependency libraries
+
 ## 1.5.7 (2025-05-18)
 
 ### Added
@@ -32,7 +46,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 - Water heater recovery simulator since current temp is not supplied by the Econet API
 
-### Fixed
+### Changed
 
 - Better reconnect logic and forced reauth when connection continually disconnects
 
