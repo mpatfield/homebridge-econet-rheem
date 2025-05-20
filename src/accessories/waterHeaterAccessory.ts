@@ -4,6 +4,7 @@ import { EconetRheemPlatform } from '../platform.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
 import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
+import { TemperatureUnits } from '../model/enums.js';
 
 export class WaterHeaterAccessory {
   private service: Service;
@@ -13,7 +14,7 @@ export class WaterHeaterAccessory {
     private readonly platform: EconetRheemPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly waterHeater: WaterHeater,
-    private readonly inputTemperature?: number | null,
+    private readonly alwaysUseCurrentTemp: boolean,
   ) {
     
     this.Characteristic = platform.api.hap.Characteristic;
@@ -128,5 +129,27 @@ export class WaterHeaterAccessory {
   async setActive(value: CharacteristicValue): Promise<void> {
     const enabled = value as number === 1;
     this.waterHeater.setEnabled(enabled);
+  }
+
+  private get inputTemperature() : number | null {
+
+    if (this.alwaysUseCurrentTemp) {
+      return null;
+    }
+
+    const month = new Date().getMonth();
+  
+    // Coldest: Jan, Feb, Dec
+    if (month === 0 || month === 1 || month === 11) {
+      return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 50 : 10;
+    }
+
+    // Hottest: Jun, Jul, Aug
+    if (month === 5 || month === 6 || month === 7) {
+      return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 70 : 20;
+    }
+
+    // All other months
+    return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 60 : 15;
   }
 }
