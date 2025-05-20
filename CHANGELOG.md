@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.5.8 (2025-05-XX)
+## 1.5.8 (2025-05-20)
 
 ### Added
 
