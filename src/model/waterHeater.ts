@@ -4,7 +4,7 @@ import { RecoverySimulator } from './recoverySimulator.js';
 
 export class WaterHeater extends Equipment {
 
-  private enabled: boolean = false;
+  private enabled: boolean = true;
 
   private lower_limit = 100;
   private upper_limit = 150;

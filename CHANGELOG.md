@@ -2,6 +2,20 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+### HELP NEEDED!
+
+Do you have a leak sensor and/or shut off valve on your water heater? I would like to add support for these but I don't have access. Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) if you'd like to see these features added.
+
+## 1.5.9 (2025-05-23)
+
+### Fixed
+
+- Some water heaters were not being set as enabled on startup
+
+### Changed
+
+- Updated dependencies
+
 ## 1.5.8 (2025-05-20)
 
 ### Added
