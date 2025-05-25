@@ -1,0 +1,104 @@
+<p class="text-center">
+  <img
+    src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/img/banner.png?raw=true"
+    alt="homebridge-econet-rheem logo"
+    style="width: 60%;"
+  />
+</p>
+<div id="support" class="text-center" style="display: none;">
+  <p>For help and support please visit <a target="_blank" href="https://github.com/mpatfield/homebridge-econet-rheem/">GitHub</a>. We hope you find this plugin useful!</p>
+</div>
+<div id="pageIntro" class="text-center" style="display: none;">
+  <p class="lead">Thank you for installing <strong>homebridge-econet-rheem</strong></p>
+  <p>
+  </br>You will need your Rheem username and password</br>
+  </p>
+  </br><button type="button" class="btn btn-primary" id="introContinue">Continue &rarr;</button>
+</div>
+<div id="spinner-container">
+  <div id="spinner" class="spinner"></div>
+</div>
+<style>
+
+#spinner-container {
+  margin-top: 2rem;
+  display: none;
+  justify-content: center;
+}
+
+.spinner {
+  border: 8px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 8px solid #3498db;
+  width: 60px;
+  height: 60px;
+  -webkit-animation: spin 1s linear infinite; /* Safari */
+  animation: spin 1s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+<script>
+  ;(async () => {
+
+      const showSpinner = () => {
+        const spinnerContainer = document.getElementById('spinner-container')
+        spinnerContainer.style.display = 'flex'
+      }
+
+      const hideSpinner = () => {
+        const spinnerContainer = document.getElementById('spinner-container')
+        spinnerContainer.style.display = 'none'
+      }
+
+      const showIntro = () => {
+        const introContinue = document.getElementById('introContinue')
+        introContinue.addEventListener('click', async () => {
+          showSettings()
+        })
+        document.getElementById('pageIntro').style.display = 'block'
+        hideSpinner()
+      }
+
+      const showSupport = () => {
+        document.getElementById('support').style.display = 'block'
+      }
+
+      const showSettings = async () => {
+        document.getElementById('pageIntro').style.display = 'none'
+        showSpinner()
+        showSupport()
+        await homebridge.showSchemaForm()
+        hideSpinner()
+      }
+
+    try {
+
+      showSpinner()
+      await new Promise(r => setTimeout(r, 500))
+
+      const currentConfig = await homebridge.getPluginConfig()
+
+      if (currentConfig.length) {
+        await showSettings()
+      } else {
+        currentConfig.push({ name: 'Econet Rheem' })
+        await homebridge.updatePluginConfig(currentConfig)
+        showIntro()
+      }
+      
+    } catch (err) {
+      homebridge.toast.error(err.message, 'Sorry, something went wrong. Please try again.')
+      hideSpinner()
+    }
+  })()
+</script>

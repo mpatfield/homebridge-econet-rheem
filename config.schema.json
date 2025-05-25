@@ -2,6 +2,8 @@
   "pluginAlias": "HomebridgeEconetRheem",
   "pluginType": "platform",
   "singular": true,
+  "customUi": true,
+  "customUiPath": "./src/homebridge-ui",
   "schema": {
     "type": "object",
     "required": ["email", "password"],
@@ -15,7 +17,7 @@
         "title": "Email",
         "type": "string",
         "format": "email",
-        "description": "Rheem/Econet account email (Homebridge dedicated account recommnded)"
+        "description": "Rheem/Econet account email (Homebridge dedicated account recommended)"
       },
       "password": {
         "title": "Password",
