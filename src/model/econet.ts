@@ -344,7 +344,7 @@ export class EconetApi {
   private saveMQTT(json: any) {
 
     const filePath = path.join(this.storagePath, MQTT_DEBUG_FILE_NAME);
-    const ignoreKeys = new Set(['transactionId']);
+    const ignoreKeys = new Set(['transactionId', 'device_name', 'serial_number']);
 
     for (const [key, value] of Object.entries(json)) {
 
