@@ -6,7 +6,7 @@
 
 # homebridge-econet-rheem
 
-Homebridge plugin to integrate Rheem EcoNet devices into Apple HomeKit
+Homebridge plugin for HomeKit control of Rheem water heaters and thermostats
 
 [![verified-by-homebridge](https://badgen.net/badge/homebridge/verified/purple)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
 <!--[![hoobs-certified](https://badgen.net/badge/HOOBS/certified/yellow)](https://plugins.hoobs.org/plugin/homebridge-econet-rheem)-->
