@@ -2,14 +2,12 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig }
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
-import { EconetApi } from './model/econet.js';
+import { ThermostatAccessory } from '../homebridge/thermostatAccessory.js';
+import { WaterHeaterAccessory } from '../homebridge/waterHeaterAccessory.js';
 
-import { ThermostatAccessory } from './accessories/thermostatAccessory.js';
-import { WaterHeaterAccessory } from './accessories/waterHeaterAccessory.js';
-
-import { WATER_HEATER, THERMOSTAT } from './model/econet.js';
-import { Thermostat } from './model/thermostat.js';
-import { WaterHeater } from './model/waterHeater.js';
+import { EconetApi, WATER_HEATER, THERMOSTAT } from '../model/econet.js';
+import { Thermostat } from '../model/thermostat.js';
+import { WaterHeater } from '../model/waterHeater.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;

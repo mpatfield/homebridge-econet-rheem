@@ -1,6 +1,6 @@
-import { Equipment } from './equipment.js';
 import { EconetApi } from './econet.js';
 import { ThermostatOperationMode } from './enums.js';
+import { Equipment } from './equipment.js';
 
 export class Thermostat extends Equipment {
 

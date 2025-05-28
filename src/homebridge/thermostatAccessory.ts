@@ -1,9 +1,9 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { EconetRheemPlatform } from '../platform.js';
-import { Thermostat } from '../model/thermostat.js';
-import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
+import { EconetRheemPlatform } from '../homebridge/platform.js';
 
+import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
+import { Thermostat } from '../model/thermostat.js';
 import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 
 export class ThermostatAccessory {

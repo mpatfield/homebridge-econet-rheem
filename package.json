@@ -17,7 +17,7 @@
   "bugs": {
     "url": "https://github.com/mpatfield/homebridge-econet-rheem/issues"
   },
-  "main": "dist/index.js",
+  "main": "dist/homebridge/index.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "lint": "eslint . --max-warnings=0",

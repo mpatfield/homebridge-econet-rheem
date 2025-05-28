@@ -1,12 +1,12 @@
 import { Logger } from 'homebridge';
 
 import mqtt from 'mqtt';
+import path from 'path';
 
 import { Equipment } from './equipment.js';
 import { WaterHeater } from './waterHeater.js';
 import { Thermostat } from './thermostat.js';
 import { MINUTE, safeGetItem, safeSetItem, SECOND } from './utils.js';
-import path from 'path';
 
 const HOST = 'rheem.clearblade.com';
 const REST_URL = `https://${HOST}/api/v/1`;

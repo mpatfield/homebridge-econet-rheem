@@ -1,10 +1,10 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { EconetRheemPlatform } from '../platform.js';
-import { WaterHeater } from '../model/waterHeater.js';
+import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 import { TemperatureUnits } from '../model/enums.js';
+import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
+import { WaterHeater } from '../model/waterHeater.js';
 
 export class WaterHeaterAccessory {
   private service: Service;

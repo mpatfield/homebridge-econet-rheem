@@ -1,5 +1,5 @@
-import { Equipment } from './equipment.js';
 import { EconetApi } from './econet.js';
+import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
 
 export class WaterHeater extends Equipment {

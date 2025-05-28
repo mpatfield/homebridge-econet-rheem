@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { TemperatureUnits } from '../model/enums.js';
-import { fileURLToPath } from 'url';
 
 export const SECOND = 1000;
 export const MINUTE = 60000;
