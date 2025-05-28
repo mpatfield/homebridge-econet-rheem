@@ -5,7 +5,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { ThermostatAccessory } from '../homebridge/thermostatAccessory.js';
 import { WaterHeaterAccessory } from '../homebridge/waterHeaterAccessory.js';
 
-import { EconetApi, WATER_HEATER, THERMOSTAT } from '../model/econet.js';
+import { EconetApi, WATER_HEATER, THERMOSTAT } from '../model/api.js';
 import { Thermostat } from '../model/thermostat.js';
 import { WaterHeater } from '../model/waterHeater.js';
 

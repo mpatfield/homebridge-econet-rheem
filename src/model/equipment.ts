@@ -1,4 +1,4 @@
-import { EconetApi } from './econet.js';
+import { EconetApi } from './api.js';
 import { TemperatureUnits } from './enums.js';
 
 export abstract class Equipment {

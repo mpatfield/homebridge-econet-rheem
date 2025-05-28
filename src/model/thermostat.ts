@@ -1,4 +1,4 @@
-import { EconetApi } from './econet.js';
+import { EconetApi } from './api.js';
 import { ThermostatOperationMode } from './enums.js';
 import { Equipment } from './equipment.js';
 

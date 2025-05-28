@@ -1,6 +1,6 @@
 import path from 'path';
 
-import { EconetApi } from './econet.js';
+import { EconetApi } from './api.js';
 import { TemperatureUnits } from './enums.js';
 import { HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
 import { WaterHeater } from './waterHeater.js';
