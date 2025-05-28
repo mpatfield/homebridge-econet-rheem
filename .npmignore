@@ -1,5 +1,5 @@
 # Ignore source code
-src
+src/**/*.ts
 
 # ------------- Defaults ------------- #
 
