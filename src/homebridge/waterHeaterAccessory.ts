@@ -6,6 +6,8 @@ import { TemperatureUnits } from '../model/enums.js';
 import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
+import strings from '../lang/en.js';
+
 export class WaterHeaterAccessory {
   private service: Service;
   private readonly Characteristic: typeof import('homebridge').Characteristic;
@@ -21,8 +23,8 @@ export class WaterHeaterAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
-      .setCharacteristic(this.Characteristic.Model, 'Water Heater')
+      .setCharacteristic(this.Characteristic.Manufacturer, strings.brand)
+      .setCharacteristic(this.Characteristic.Model, strings.waterHeater)
       .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber)
       .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 
@@ -64,7 +66,7 @@ export class WaterHeaterAccessory {
   private handleEquipmentUpdate(serial: string): void {
     if (serial === this.waterHeater.serialNumber) {
       this.updateCharacteristics();
-      this.platform.log.debug(`Received update for ${serial}, refreshed accessory state`);
+      this.platform.log.debug(strings.updateReceived, serial);
     }
   }
 

@@ -1,6 +1,8 @@
 import { EconetApi } from './api.js';
 import { TemperatureUnits } from './enums.js';
 
+import strings from '../lang/en.js';
+
 export abstract class Equipment {
   private device_id?: string | null;
   private serial_number?: string | null;
@@ -77,12 +79,12 @@ export abstract class Equipment {
 
     if ('@ALERTCOUNT' in update) {
       this.alertCount = update['@ALERTCOUNT'] ?? 0;
-      this._api.log.debug(`${this.deviceName} alert count = ${this.alertCount}`);
+      this._api.log.debug(strings.alertCount, this.deviceName, this.alertCount);
     }
 
     if (this.runningKey in update) {
       this.running = update[this.runningKey].replace(/\s/g, '').length > 0;
-      this._api.log.debug(`${this.deviceName} running = ${this.running}`);
+      this._api.log.debug(strings.runningState, this.deviceName, this.running);
     }
   }
 }

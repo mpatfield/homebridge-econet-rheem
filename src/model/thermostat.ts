@@ -2,6 +2,8 @@ import { EconetApi } from './api.js';
 import { ThermostatOperationMode } from './enums.js';
 import { Equipment } from './equipment.js';
 
+import strings from '../lang/en.js';
+
 export class Thermostat extends Equipment {
 
   private current_humidity = 0;
@@ -111,28 +113,28 @@ export class Thermostat extends Equipment {
 
     if ('@HUMIDITY' in update) {
       this.current_humidity = update['@HUMIDITY'] || 0;
-      this._api.log.debug(`${this.deviceName} humidity = ${this.current_humidity}`);
+      this._api.log.debug(strings.humidityState, this.deviceName, this.current_humidity);
     }
 
     if ('@SETPOINT' in update) {
       this.current_temp = update['@SETPOINT'] || 70;
-      this._api.log.debug(`${this.deviceName} current temp = ${this.current_temp}`);
+      this._api.log.debug(strings.currentTempState, this.deviceName, this.current_temp);
     }
 
     if ('@COOLSETPOINT' in update) {
       this.cool_set_point = update['@COOLSETPOINT'] || 70;
-      this._api.log.debug(`${this.deviceName} cool setpoint = ${this.cool_set_point}`);
+      this._api.log.debug(strings.coolSetpoint, this.deviceName, this.cool_set_point);
     }
 
     if ('@HEATSETPOINT' in update) {
       this.heat_set_point = update['@HEATSETPOINT'] || 70;
-      this._api.log.debug(`${this.deviceName} heat setpoint = ${this.heat_set_point}`);
+      this._api.log.debug(strings.heatSetpoint, this.deviceName, this.heat_set_point);
     }
 
     if ('@MODE' in update) {
       const modeIndex = update['@MODE'] ?? update['@MODE'].value;
       this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
-      this._api.log.debug(`${this.deviceName} mode = ${this._stringFromMode(this.current_mode) ?? 'UNKNOWN'}`);
+      this._api.log.debug(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
     }
 
     this.didUpdate();
@@ -154,7 +156,7 @@ export class Thermostat extends Equipment {
     case 'EMERGENCYHEAT':
       return ThermostatOperationMode.EMERGENCY_HEAT;
     default:
-      this._api.log.error('Unknown thermostat mode:', strValue);
+      this._api.log.error(strings.unknownMode, strValue);
       return ThermostatOperationMode.UNKNOWN;
     }
   }
@@ -190,7 +192,7 @@ export class Thermostat extends Equipment {
     if (Object.keys(payload).length > 0) {
       this._api.publish(payload, this.deviceId, this.serialNumber);
     } else {
-      this._api.log.error('Unknown thermostat mode:', mode);
+      this._api.log.error(strings.unknownMode, mode);
     }
   }
 
@@ -204,7 +206,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         coolPayload['@COOLSETPOINT'] = temp;
       } else {
-        this._api.log.error(`Cool set point out of range. Lower: ${lower}, Upper: ${upper}, Set point: ${temp}`);
+        this._api.log.error(strings.outOfRangeCool, lower, upper, temp);
       }
     }
 
@@ -214,7 +216,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         heatPayload['@HEATSETPOINT'] = temp;
       } else {
-        this._api.log.error(`Heat set point out of range. Lower: ${lower}, Upper: ${upper}, Set point: ${temp}`);
+        this._api.log.error(strings.outOfRangeHeat, lower, upper, temp);
       }
     }
 
@@ -234,7 +236,7 @@ export class Thermostat extends Equipment {
       } else if ([ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
         payload = heatPayload;
       } else {
-        this._api.log.error(`Can't auto determine set point to set when mode is: ${this.mode}`);
+        this._api.log.error(strings.setpointUnknown, this.mode);
       }
       if (Object.keys(payload).length > 0) {
         this._api.publish(payload, this.deviceId, this.serialNumber);

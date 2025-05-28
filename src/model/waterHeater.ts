@@ -2,6 +2,8 @@ import { EconetApi } from './api.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
 
+import strings from '../lang/en.js';
+
 export class WaterHeater extends Equipment {
 
   private enabled: boolean = true;
@@ -112,17 +114,17 @@ export class WaterHeater extends Equipment {
  
     if ('@ENABLED' in update) {
       this.enabled = update['@ENABLED'] === 1 || update['@ENABLED'].value === 1;
-      this._api.log.debug(`${this.deviceName} enabled = ${this.enabled}`);
+      this._api.log.debug(strings.enabledState, this.deviceName, this.enabled);
     }
 
     if ('@SETPOINT' in update) {
       this.set_point = update['@SETPOINT'];
-      this._api.log.debug(`${this.deviceName} set_point = ${this.set_point}`);
+      this._api.log.debug(strings.setpointState, this.deviceName, this.set_point);
     }
 
     if ('@HOTWATER' in update) {
       this.availability_icon = update['@HOTWATER'];
-      this._api.log.debug(`${this.deviceName} availability = ${this.availability_icon}`);
+      this._api.log.debug(strings.availabilityState, this.deviceName, this.availability_icon);
     }
 
     this.didUpdate();  

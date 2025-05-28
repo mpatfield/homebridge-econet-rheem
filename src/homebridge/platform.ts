@@ -8,6 +8,9 @@ import { WaterHeaterAccessory } from '../homebridge/waterHeaterAccessory.js';
 import { EconetApi, WATER_HEATER, THERMOSTAT } from '../model/api.js';
 import { Thermostat } from '../model/thermostat.js';
 import { WaterHeater } from '../model/waterHeater.js';
+import getVersion from '../model/utils.js';
+
+import strings from '../lang/en.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
   public readonly Service;
@@ -25,6 +28,15 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
 
+    this.log.info(
+      'v%s | System %s | Node %s | HB v%s | HAPNodeJS v%s',
+      getVersion(),
+      process.platform,
+      process.version,
+      api.serverVersion,
+      api.hap.HAPLibraryVersion(),
+    );
+
     this.api.on('didFinishLaunching', () => {
       this.discoverDevices();
     });
@@ -37,7 +49,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   configureAccessory(accessory: PlatformAccessory): void {
-    this.log.info('Restoring cached accessory:', accessory.displayName);
+    this.log.info(strings.restoringDevice, accessory.displayName);
     this.accessories.set(accessory.context.serialNumber, accessory);
   }
 
@@ -48,7 +60,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const debugMQTT = this.config.mqtt_debug as boolean;
 
     if (!email || !password) {
-      this.log.error('Configuration error: "email" and "password" are required in config.json');
+      this.log.error(strings.badConfig);
       return;
     }
 
@@ -70,10 +82,9 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
         const existingAccessory = this.accessories.get(serialNumber);
         if (existingAccessory) {
-          this.log.info('Updating existing thermostat:', deviceName);
           new ThermostatAccessory(this, existingAccessory, thermostat);
         } else {
-          this.log.info('Adding new thermostat:', deviceName);
+          this.log.info(strings.newThermostat, deviceName);
           const uuid = this.api.hap.uuid.generate(serialNumber);
           const accessory = new this.api.platformAccessory(deviceName, uuid);
           accessory.context.serialNumber = serialNumber;
@@ -91,10 +102,9 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
         const existingAccessory = this.accessories.get(serialNumber);
         if (existingAccessory) {
-          this.log.info('Updating existing water heater:', deviceName);
           new WaterHeaterAccessory(this, existingAccessory, waterHeater, this.config.wh_sim_disable);
         } else {
-          this.log.info('Adding new water heater:', deviceName);
+          this.log.info(strings.newWaterHeater, deviceName);
           const uuid = this.api.hap.uuid.generate(serialNumber);
           const accessory = new this.api.platformAccessory(deviceName, uuid);
           accessory.context.serialNumber = serialNumber;
@@ -106,16 +116,16 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
       for (const [serialNumber, accessory] of this.accessories) {
         if (!currentSerialNumbers.has(serialNumber)) {
-          this.log.info('Removing stale accessory:', accessory.displayName);
+          this.log.info(strings.removeDevice, accessory.displayName);
           this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
           this.accessories.delete(serialNumber);
         }
       }
 
       this.econetApi.subscribe();
-      this.log.debug('Subscribed to Econet MQTT updates');
+
     } catch (error) {
-      this.log.error('Failed to initialize platform:', error instanceof Error ? error.message : String(error));
+      this.log.error(strings.setupFailed, error instanceof Error ? error.message : String(error));
     }
   }
 }

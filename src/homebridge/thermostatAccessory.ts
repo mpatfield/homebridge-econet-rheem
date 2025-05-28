@@ -6,6 +6,8 @@ import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
 import { Thermostat } from '../model/thermostat.js';
 import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
 
+import strings from '../lang/en.js';
+
 export class ThermostatAccessory {
   private service: Service;
   private readonly Characteristic: typeof import('homebridge').Characteristic;
@@ -20,8 +22,8 @@ export class ThermostatAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, 'EcoNet')
-      .setCharacteristic(this.Characteristic.Model, 'Thermostat')
+      .setCharacteristic(this.Characteristic.Manufacturer, strings.brand)
+      .setCharacteristic(this.Characteristic.Model, strings.thermostat)
       .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber)
       .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 
@@ -82,7 +84,7 @@ export class ThermostatAccessory {
   private handleEquipmentUpdate(serial: string): void {
     if (serial === this.thermostat.serialNumber) {
       this.updateCharacteristics();
-      this.platform.log.debug(`Received update for ${serial}, refreshed accessory state`);
+      this.platform.log.debug(strings.updateReceived, serial);
     }
   }
 
@@ -158,7 +160,7 @@ export class ThermostatAccessory {
       mode = ThermostatOperationMode.AUTO;
       break;
     default:
-      this.platform.log.error('Unsupported target state:', state);
+      this.platform.log.error(strings.unsupportedState, state);
       return;
     }
     this.thermostat.setMode(mode);

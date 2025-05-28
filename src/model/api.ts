@@ -8,6 +8,8 @@ import { WaterHeater } from './waterHeater.js';
 import { Thermostat } from './thermostat.js';
 import { MINUTE, safeGetItem, safeSetItem, SECOND } from './utils.js';
 
+import strings from '../lang/en.js';
+
 const HOST = 'rheem.clearblade.com';
 const REST_URL = `https://${HOST}/api/v/1`;
 const CLEAR_BLADE_SYSTEM_KEY = 'e2e699cb0bb0bbb88fc8858cb5a401';
@@ -99,7 +101,7 @@ export class EconetApi {
     if (response.status === 200) {
       const json = await response.json();
       if (json.options.success) {
-        this.log.info('Successfully authenticated');
+        this.log.info(strings.authSuccess);
 
         this.userToken = json.user_token;
         this.accountId = json.options.account_id;
@@ -116,27 +118,27 @@ export class EconetApi {
           reconnectPeriod: 0,
         };
       } else {
-        throw new InvalidCredentialsError(json.options.message || 'Invalid credentials');
+        throw new InvalidCredentialsError(json.options.message || strings.invalidCredentials);
       }
     } else {
-      throw new GenericHTTPError(`HTTP error: ${response.status}`);
+      throw new GenericHTTPError(`${strings.httpError} ${response.status}`);
     }
   }
 
   subscribe() {
     this.shouldReconnect = true;
-    this.connect();
+    this.connect(true);
   }
 
-  private connect(): void {
+  private connect(isStartup: boolean = false): void {
     
     if (!this.equipment.size) {
-      this.log.error('No equipment');
+      this.log.error(strings.noEquipment);
       return;
     }
 
     if (!this.mqttOptions) {
-      this.log.error('MQTT options are undefined');
+      this.log.error(strings.noMQTTOptions);
       return;
     }
 
@@ -145,7 +147,12 @@ export class EconetApi {
     this.mqttClient.on('connect', () => {
       this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
       this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
-      this.log.info('Connected and listening for updates...');
+      this.log.info(strings.connected);
+
+      if (isStartup) {
+        const randIndex = Math.floor(Math.random() * strings.welcomeMessages.length);
+        this.log.info(strings.setupComplete, strings.welcomeMessages[randIndex]);
+      }
     });
 
     this.mqttClient.on('message', (topic, message) => {
@@ -154,7 +161,7 @@ export class EconetApi {
       try {
         const unpackedJson = JSON.parse(message.toString());
         if (this.verbose) {
-          this.log.info(`Received message from topic: ${topic}\n`, JSON.stringify(unpackedJson, null, 2));
+          this.log.info(strings.topicUpdate, topic, JSON.stringify(unpackedJson));
         }
         const serial = unpackedJson.serial_number;
         const equipment = this.equipment.get(serial);
@@ -165,27 +172,27 @@ export class EconetApi {
           }
         }
       } catch (e) {
-        this.log.error('Failed to parse message:', message.toString());
+        this.log.error(strings.parseFailed, message.toString());
       }
     });
 
     this.mqttClient.on('offline', () => {
-      this.log.debug('Client offline');
+      this.log.debug(strings.clientOffline);
     });
 
     this.mqttClient.on('close', () => {
-      this.log.info('Connection closed');
+      this.log.info(strings.connectionClosed);
       this.reconnect();
     });
 
     this.mqttClient.on('error', (err: MqttError) => {
       if (err.code !== undefined && RETRYABLE_CODES.includes(err.code)) {
         if (this.verbose) {
-          this.log.error('Client error:', err);
+          this.log.error(strings.clientError, err);
         }
         this.reconnect();
       } else {
-        this.log.error('Client error:', err);
+        this.log.error(strings.clientError, err);
       }
     });
   }
@@ -197,7 +204,7 @@ export class EconetApi {
     }
 
     this.idleMQTTTimer = setTimeout(()=>{
-      this.log.info('Idle connection');
+      this.log.info(strings.idleConnection);
       this.reconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
@@ -218,19 +225,19 @@ export class EconetApi {
     this.reconnectCount++;
     if (this.reconnectCount % RECONNECT_DELAYS.length === 0) {
       try {
-        this.log.error('Having trouble staying connected');
-        this.log.info('Attempting to re-authenticate');
+        this.log.error(strings.unstableConnection);
+        this.log.info(strings.reauthenticate);
         await this.authenticate();
       } catch (error) {
-        this.log.error('Re-authentication failed:', error);
+        this.log.error(strings.reauthFailed, error);
       }
     }
 
     const reconnectDelay = RECONNECT_DELAYS[Math.min(this.reconnectCount, RECONNECT_DELAYS.length - 1)];
     if (reconnectDelay <= MINUTE) {
-      this.log.info(`Will attempt to reconnect in ${reconnectDelay / SECOND} seconds...`);
+      this.log.info(strings.reconnectInSeconds, reconnectDelay / SECOND);
     } else {
-      this.log.info(`Will attempt to reconnect in ${reconnectDelay / MINUTE} minutes...`);
+      this.log.info(strings.reconnectInMinutes, reconnectDelay / MINUTE);
     }
 
     setTimeout(() => {
@@ -251,14 +258,14 @@ export class EconetApi {
     };
     
     if (!this.mqttClient || !this.mqttClient.connected) {
-      this.log.error('Client not connected');
+      this.log.error(strings.clientNotConnected);
       return;
     }
 
     const topic = `user/${this.accountId}/device/desired`;
     const message = JSON.stringify(publishPayload, null, 2);
     if (this.verbose) {
-      this.log.info(`Publishing message to topic: ${topic}\n`, message);
+      this.log.info(strings.topicPublish, topic, message);
     }
     this.mqttClient.publish(topic, message);
   }
@@ -288,9 +295,9 @@ export class EconetApi {
       if (json.success) {
         return json.results.locations;
       }
-      throw new InvalidResponseFormat('Invalid response format');
+      throw new InvalidResponseFormat(strings.invalidResponse);
     }
-    throw new GenericHTTPError(`HTTP error: ${response.status}`);
+    throw new GenericHTTPError(`${strings.httpError} ${response.status}`);
   }
 
   async getEquipment(): Promise<void> {
@@ -298,12 +305,12 @@ export class EconetApi {
     for (const location of locations) {
       for (const equip of location.equiptments) {
         if ('error' in equip) {
-          this.log.error(`Equipment error: ${equip.error}`);
+          this.log.error(strings.equipmentError, equip.error);
           continue;
         }
 
         if (this.verbose) {
-          this.log.info('Creating Equipment with data:\n', JSON.stringify(equip, null, 2));
+          this.log.info(strings.creatingEquipment, JSON.stringify(equip));
         }
 
         let equipObj: Equipment;
