@@ -1,3 +1,8 @@
+export enum EquipmentType {
+  THERMOSTAT = 'HVAC',
+  WATER_HEATER = 'WH'
+}
+
 export enum ThermostatOperationMode {
   OFF = 1,
   HEATING = 2,

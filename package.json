@@ -41,6 +41,8 @@
     "homebridge": "^1.8.0 || ^2.0.0-beta.0"
   },
   "dependencies": {
+    "@homebridge/plugin-ui-utils": "^2.0.2",
+    "axios": "^1.7.2",
     "homebridge-lib": "^7.1.4",
     "mqtt": "^5.7.0"
   },

@@ -2,11 +2,13 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import { TemperatureUnits } from '../model/enums.js';
-import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
+import strings from '../lang/en.js';
+
+import { TemperatureUnits } from '../model/constants.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
-import strings from '../lang/en.js';
+import { toCelsius, fromCelsius } from '../tools/temperature.js';
+import getVersion from '../tools/version.js';
 
 export class WaterHeaterAccessory {
   private service: Service;
@@ -65,8 +67,8 @@ export class WaterHeaterAccessory {
 
   private handleEquipmentUpdate(serial: string): void {
     if (serial === this.waterHeater.serialNumber) {
-      this.updateCharacteristics();
       this.platform.log.debug(strings.updateReceived, serial);
+      this.updateCharacteristics();
     }
   }
 

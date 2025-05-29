@@ -1,13 +1,11 @@
-import path from 'path';
-
 import { EconetApi } from './api.js';
-import { TemperatureUnits } from './enums.js';
-import { HOUR, MINUTE, safeGetItem, safeSetItem } from './utils.js';
+import { TemperatureUnits } from './constants.js';
 import { WaterHeater } from './waterHeater.js';
 
-const VERSION = 1;
+import { HOUR, MINUTE } from '../tools/time.js';
+import { safeGetItem, safeSetItem } from '../tools/storage.js';
 
-const RECOVERY_FILE_NAME = 'econetWHRecoveryRates.json';
+const VERSION = 1;
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
@@ -17,7 +15,6 @@ const RECOVERY_TIMER_INTERVAL = 2 * MINUTE;
 
 export class RecoverySimulator {
 
-  private readonly recoveryRatesFilePath: string;
   private readonly minRecoveryRate: number;
   private readonly defaultRecoveryRate: number;
   private recoveryRates: number[];
@@ -38,7 +35,7 @@ export class RecoverySimulator {
 
   constructor(
     private readonly api: EconetApi,
-    waterHeater: WaterHeater,
+    readonly waterHeater: WaterHeater,
     private readonly onUpdate: () => void,
   ) {
 
@@ -49,8 +46,6 @@ export class RecoverySimulator {
     this.previousSetPoint = this.setPoint;
 
     this.simulatedTemp = this.setPoint;
-
-    this.recoveryRatesFilePath = path.join(api.storagePath, RECOVERY_FILE_NAME);
 
     this.minRecoveryRate = MINIMUM_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
     this.defaultRecoveryRate = DEFAULT_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
@@ -180,12 +175,12 @@ export class RecoverySimulator {
 
   private _loadRecoveryRates(): number[] | null {
     const key = `${VERSION}_${this.serialNumber}`;
-    const stored = safeGetItem(this.recoveryRatesFilePath, key);
+    const stored = safeGetItem(this.waterHeater.storageFilePath, key);
     return stored ? JSON.parse(stored) : null;
   }
 
   private _saveRecoveryRates(): void {
     const key = `${VERSION}_${this.serialNumber}`;
-    safeSetItem(this.recoveryRatesFilePath, key, JSON.stringify(this.recoveryRates));
+    safeSetItem(this.waterHeater.storageFilePath, key, JSON.stringify(this.recoveryRates));
   }
 }

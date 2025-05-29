@@ -1,76 +1,66 @@
-import { Logger } from 'homebridge';
-
+import axios, { AxiosRequestConfig, AxiosResponse, isAxiosError } from 'axios';
+import { Logger, LogLevel } from 'homebridge';
 import mqtt from 'mqtt';
-import path from 'path';
 
+import { Auth } from './auth.js';
+import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
-import { WaterHeater } from './waterHeater.js';
+import * as Types from './types.js';
+
 import { Thermostat } from './thermostat.js';
-import { MINUTE, safeGetItem, safeSetItem, SECOND } from './utils.js';
+import { WaterHeater } from './waterHeater.js';
 
 import strings from '../lang/en.js';
 
-const HOST = 'rheem.clearblade.com';
-const REST_URL = `https://${HOST}/api/v/1`;
+import { safeGetItem, safeSetItem } from '../tools/storage.js';
+import { MINUTE, SECOND } from '../tools/time.js';
+
 const CLEAR_BLADE_SYSTEM_KEY = 'e2e699cb0bb0bbb88fc8858cb5a401';
 const CLEAR_BLADE_SYSTEM_SECRET = 'E2E699CB0BE6C6FADDB1B0BC9A20';
-const HEADERS = {
+const BASE_HEADERS = {
   'ClearBlade-SystemKey': CLEAR_BLADE_SYSTEM_KEY,
   'ClearBlade-SystemSecret': CLEAR_BLADE_SYSTEM_SECRET,
   'Content-Type': 'application/json; charset=UTF-8',
 };
 
-const RECONNECT_DELAYS = [5 * SECOND, 15 * SECOND, MINUTE, 2 * MINUTE, 5 * MINUTE];
+const HOST = 'rheem.clearblade.com';
+const BASE_URL = `https://${HOST}/api/v/1`;
+const AUTH_URL = `${BASE_URL}/user/auth`;
+const LOCATIONS_URL = `${BASE_URL}/code/${CLEAR_BLADE_SYSTEM_KEY}/getUserDataForApp`;
+
+const MQTT_URL = `mqtts://${HOST}:1884`;
+const MQTT_TOPIC_REPORTED = 'user/%s/device/reported';
+const MQTT_TOPIC_DESIRED = 'user/%s/device/desired';
+
+const HTTP_TIMEOUT = 10 * SECOND;
+const MQTT_KEEPALIVE = 90;
+
+const DELAYS = [5 * SECOND, 15 * SECOND, MINUTE, 2 * MINUTE, 5 * MINUTE];
 const IDLE_CONNECTION_TIMER_INTERVAL = 16 * MINUTE;
+
+const HTTP_RETRY_CODES = [
+  'ERR_NETWORK',  // General network error in Axios
+  'ETIMEDOUT',    // Request timed out
+  'ECONNREFUSED', // Connection refused by server
+  '429',          // Too Many Requests (rate limit)
+  '500',          // Internal Server Error
+  '502',          // Bad Gateway
+  '503',          // Service Unavailable
+  '504',          // Gateway Timeout
+];
 
 const RETRYABLE_CODES = [
   3, // MQTT: Server unavailable
-  'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET',
-  'ENOTFOUND', 'EHOSTUNREACH', 'ENETUNREACH',
+  'ECONNREFUSED', 'ETIMEDOUT', 'ECONNRESET', 'ENOTFOUND',
+  'EHOSTUNREACH', 'ENETUNREACH', 'EAI_AGAIN', 'EPIPE',
 ];
 
-const MQTT_DEBUG_FILE_NAME = 'mqttDebug.json';
-
-export const WATER_HEATER = 'WH';
-export const THERMOSTAT = 'HVAC';
-
-export class PyeconetError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'PyeconetError';
-  }
-}
-
-export class InvalidCredentialsError extends PyeconetError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'InvalidCredentialsError';
-  }
-}
-
-export class InvalidResponseFormat extends PyeconetError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'InvalidResponseFormat';
-  }
-}
-
-export class GenericHTTPError extends PyeconetError {
-  constructor(message: string) {
-    super(message);
-    this.name = 'GenericHTTPError';
-  }
-}
-
-interface MqttError extends Error {
-  code?: string | number;
-}
-
 export class EconetApi {
-  private mqttOptions: mqtt.IClientOptions | null = null;
-  private userToken: string | null = null;
-  private accountId: string | null = null;
-  private equipment: Map<string, Equipment> = new Map();
+  private _auth?: Auth | null;
+  private retryIndex: number = 0;
+
+  readonly equipments: Map<string, Equipment> = new Map();
+
   private mqttClient: mqtt.MqttClient | null = null;
   private shouldReconnect = false;
   private isReconnecting = false;
@@ -81,72 +71,214 @@ export class EconetApi {
     public readonly log: Logger,
     private readonly email: string,
     private readonly password: string,
-    readonly storagePath: string,
+    readonly storageFilePath: string,
     private readonly verbose: boolean,
     private readonly debugMQTT: boolean,
-  ) {}
+  ) {
+    this.auth = Auth.load(this.storageFilePath, email);
+  }
 
-  static async login(log: Logger, email: string, password: string, storagePath: string, verbose: boolean, debugMQTT: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, storagePath, verbose, debugMQTT);
-    await api.authenticate();
+  static async connect(log: Logger, email: string, password: string, storageFilePath: string, verbose: boolean, debugMQTT: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, storageFilePath, verbose, debugMQTT);
+
+    let shouldContinue = true;
+    if (!api.auth) {
+      shouldContinue = await api.authenticate();
+    }
+
+    if (shouldContinue) {
+      await api.getLocations();
+
+      api.shouldReconnect = true;
+      api.mqttConnect(true);
+    }
+
     return api;
   }
 
-  private async authenticate(): Promise<void> {
-    const response = await fetch(`${REST_URL}/user/auth`, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify({ email: this.email, password: this.password }),
-    });
-    if (response.status === 200) {
-      const json = await response.json();
-      if (json.options.success) {
-        this.log.info(strings.authSuccess);
-
-        this.userToken = json.user_token;
-        this.accountId = json.options.account_id;
-
-        const timeString = Date.now().toString().replace('.', '').slice(0, 13);
-        const clientId = `${this.email}${timeString}_android`;
-
-        this.mqttOptions = {
-          clientId,
-          username: this.userToken!,
-          password: CLEAR_BLADE_SYSTEM_KEY,
-          rejectUnauthorized: true,
-          keepalive: 90,
-          reconnectPeriod: 0,
-        };
-      } else {
-        throw new InvalidCredentialsError(json.options.message || strings.invalidCredentials);
-      }
-    } else {
-      throw new GenericHTTPError(`${strings.httpError} ${response.status}`);
+  teardown(): void {
+    this.shouldReconnect = false;
+    if (this.mqttClient) {
+      this.mqttClient.end(true);
+      this.mqttClient = null;
     }
   }
 
-  subscribe() {
-    this.shouldReconnect = true;
-    this.connect(true);
-  }
-
-  private connect(isStartup: boolean = false): void {
+  publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {
     
-    if (!this.equipment.size) {
-      this.log.error(strings.noEquipment);
+    if (!this.mqttClient || !this.mqttClient.connected) {
+      this.log.error(strings.clientNotConnected);
       return;
     }
 
-    if (!this.mqttOptions) {
-      this.log.error(strings.noMQTTOptions);
+    if (!this.auth?.accountId) {
+      this.log.error(strings.authMissing);
       return;
     }
 
-    this.mqttClient = mqtt.connect(`mqtts://${HOST}:1884`, this.mqttOptions);
+    const dateTime = new Date().toISOString().replace(/\.\d{3}Z$/, '');
+    const transactionId = `ANDROID_${dateTime}`;
+
+    const data = {
+      transactionId,
+      device_name: deviceId,
+      serial_number: serialNumber,
+      ...payload,
+    };
+
+    const topic = MQTT_TOPIC_DESIRED.replace('%s', this.auth.accountId);
+    const message = JSON.stringify(data);
+
+    this.mqttClient.publish(topic, message);
+
+    if (this.verbose) {
+      this.log.info(strings.topicPublish, topic, message);
+    }
+  }
+
+  private get auth(): Auth | null {
+    return this._auth ?? null;
+  }
+  
+  private set auth(value: Auth | null) {
+    this._auth = value;
+
+    if (this._auth) {
+      this._auth.save(this.storageFilePath, this.email);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async do<T = any>(
+    caller: string, 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any | null, 
+    shouldRetry: boolean,
+    url: string, 
+    ...parameters: (string|undefined)[]
+  ):  Promise<T | null> {
+
+    parameters.forEach(param => {
+      url = url.replace('%s', param ?? '');
+    });
+
+    let config: AxiosRequestConfig;
+    if (this.auth?.token) {
+      const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.auth?.token };
+      config = { headers: headers, timeout: HTTP_TIMEOUT };
+    } else {
+      config = { headers: BASE_HEADERS, timeout: HTTP_TIMEOUT };
+    }
+
+    try {
+
+      let res: AxiosResponse<T>;
+      if (data) {
+        res = await axios.post(url, data, config);
+      } else {
+        res = await axios.get(url, config);
+      }
+
+      if (!res.data) {
+        this.logHTTP(LogLevel.DEBUG, caller, JSON.stringify(res.data));
+        throw new Error(strings.noDataReceived);
+      }
+
+      this.logIfVerbose(caller, res.data);
+      this.retryIndex = 0;
+
+      return res.data;
+
+    } catch (err: unknown) {
+      if (shouldRetry) {
+        return this.retryIfPossible<T>(err, caller, () => this.do<T>(caller, data, shouldRetry, url, ...parameters));
+      } else {
+        this.logHTTP(LogLevel.WARN, caller, (err as Error).message);
+        return null;
+      }
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async retryIfPossible<T = any>(err: unknown, caller: string, retry: () => (Promise<T | null>)): Promise<T | null> {
+
+    if (!isAxiosError(err)) {
+      this.logHTTP(LogLevel.WARN, caller, (err as Error).message);
+      return null;
+    }
+  
+    const errorCode = err.code || err.response?.status?.toString() || 'UNKNOWN';
+
+    if (!HTTP_RETRY_CODES.includes(errorCode) || this.retryIndex >= DELAYS.length) {
+      this.logHTTP(LogLevel.WARN, caller, err.message);
+      return null;
+    }
+    
+    const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
+    if (reconnectDelay <= MINUTE) {
+      this.log.warn(strings.httpRetrySeconds, reconnectDelay / SECOND);
+    } else {
+      this.log.warn(strings.httpRetryMinutes, reconnectDelay / MINUTE);
+    }
+
+    await new Promise(resolve => setTimeout(resolve, reconnectDelay));
+
+    this.retryIndex += 1;
+
+    return await retry();
+  }
+
+  private async authenticate(): Promise<boolean> {
+
+    const data = { email: this.email, password: this.password };
+    const tokenData = await this.do<Types.TokenData>(this.authenticate.name, data, true, AUTH_URL);
+
+    if (!tokenData) {
+      return false;
+    } 
+    
+    this.auth = new Auth(tokenData);
+
+    this.log.info(strings.authSuccess);
+
+    return true;
+  }
+
+  private mqttConnect(isStartup: boolean = false): void {
+    
+    if (!this.equipments.size) {
+      return;
+    }
+  
+    if (!this.auth?.token) {
+      this.log.error(strings.authMissing);
+      return;
+    }
+
+    const timeString = Date.now().toString().replace('.', '').slice(0, 13);
+    const clientId = `${this.email}${timeString}_android`;
+
+    const options = {
+      clientId,
+      username: this.auth.token,
+      password: CLEAR_BLADE_SYSTEM_KEY,
+      rejectUnauthorized: true,
+      keepalive: MQTT_KEEPALIVE,
+      reconnectPeriod: 0,
+    };
+
+    this.mqttClient = mqtt.connect(MQTT_URL, options);
 
     this.mqttClient.on('connect', () => {
-      this.mqttClient!.subscribe(`user/${this.accountId}/device/reported`);
-      this.mqttClient!.subscribe(`user/${this.accountId}/device/desired`);
+      
+      if (!this.mqttClient || !this.auth?.accountId) {
+        this.log.error(strings.connectionError);
+        return;
+      }
+      
+      this.mqttClient.subscribe(MQTT_TOPIC_REPORTED.replace('%s', this.auth.accountId));
+      this.mqttClient.subscribe(MQTT_TOPIC_DESIRED.replace('%s', this.auth.accountId));
+      
       this.log.info(strings.connected);
 
       if (isStartup) {
@@ -156,19 +288,25 @@ export class EconetApi {
     });
 
     this.mqttClient.on('message', (topic, message) => {
+
       this.reconnectCount = 0;
       this.resetIdleMQTTTimer();
+
       try {
-        const unpackedJson = JSON.parse(message.toString());
+
+        const data = JSON.parse(message.toString()) as Types.MQTTData;
+
         if (this.verbose) {
-          this.log.info(strings.topicUpdate, topic, JSON.stringify(unpackedJson));
+          this.log.info(strings.topicUpdate, topic, JSON.stringify(data));
         }
-        const serial = unpackedJson.serial_number;
-        const equipment = this.equipment.get(serial);
+
+        const serial = data.serial_number;
+        const equipment = this.equipments.get(serial);
         if (equipment) {
-          equipment.updateFromMQTT(unpackedJson);
+          equipment.updateFromMQTT(data);
+
           if (this.debugMQTT) {
-            this.saveMQTT(unpackedJson);
+            this.saveMQTT(data);
           }
         }
       } catch (e) {
@@ -182,15 +320,15 @@ export class EconetApi {
 
     this.mqttClient.on('close', () => {
       this.log.info(strings.connectionClosed);
-      this.reconnect();
+      this.mqttReconnect();
     });
 
-    this.mqttClient.on('error', (err: MqttError) => {
+    this.mqttClient.on('error', (err: Types.MQTTError) => {
       if (err.code !== undefined && RETRYABLE_CODES.includes(err.code)) {
         if (this.verbose) {
           this.log.error(strings.clientError, err);
         }
-        this.reconnect();
+        this.mqttReconnect();
       } else {
         this.log.error(strings.clientError, err);
       }
@@ -205,11 +343,11 @@ export class EconetApi {
 
     this.idleMQTTTimer = setTimeout(()=>{
       this.log.info(strings.idleConnection);
-      this.reconnect();
+      this.mqttReconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
 
-  private async reconnect() {
+  private async mqttReconnect() {
 
     if (!this.shouldReconnect || this.isReconnecting) {
       return;
@@ -223,7 +361,7 @@ export class EconetApi {
     }
 
     this.reconnectCount++;
-    if (this.reconnectCount % RECONNECT_DELAYS.length === 0) {
+    if (this.reconnectCount % DELAYS.length === 0) {
       try {
         this.log.error(strings.unstableConnection);
         this.log.info(strings.reauthenticate);
@@ -233,7 +371,7 @@ export class EconetApi {
       }
     }
 
-    const reconnectDelay = RECONNECT_DELAYS[Math.min(this.reconnectCount, RECONNECT_DELAYS.length - 1)];
+    const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
     if (reconnectDelay <= MINUTE) {
       this.log.info(strings.reconnectInSeconds, reconnectDelay / SECOND);
     } else {
@@ -242,124 +380,56 @@ export class EconetApi {
 
     setTimeout(() => {
       this.isReconnecting = false;
-      this.connect();
+      this.mqttConnect();
     }, reconnectDelay);
   }
 
-  publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {
-
-    const dateTime = new Date().toISOString().replace(/\.\d{3}Z$/, '');
-    const transactionId = `ANDROID_${dateTime}`;
-    const publishPayload = {
-      transactionId,
-      device_name: deviceId,
-      serial_number: serialNumber,
-      ...payload,
-    };
-    
-    if (!this.mqttClient || !this.mqttClient.connected) {
-      this.log.error(strings.clientNotConnected);
-      return;
-    }
-
-    const topic = `user/${this.accountId}/device/desired`;
-    const message = JSON.stringify(publishPayload, null, 2);
-    if (this.verbose) {
-      this.log.info(strings.topicPublish, topic, message);
-    }
-    this.mqttClient.publish(topic, message);
-  }
-
-  unsubscribe(): void {
-    this.shouldReconnect = false;
-    if (this.mqttClient) {
-      this.mqttClient.end();
-    }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async getLocation(): Promise<any[]> {
-    const headers = { ...HEADERS, 'ClearBlade-UserToken': this.userToken! };
-    const payload = {
+  private async getLocations(): Promise<void> {
+      
+    const data = {
       location_only: false,
       type: 'com.econet.econetconsumerandroid',
       version: '6.0.0-375-01b4870e',
     };
-    const response = await fetch(`${REST_URL}/code/${CLEAR_BLADE_SYSTEM_KEY}/getUserDataForApp`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
+
+    const locationsData = await this.do<Types.LocationsResponse>(this.getLocations.name, data, true, LOCATIONS_URL);
+    if (!locationsData) {
+      return;
+    }
+
+    locationsData.results.locations.forEach(location => {
+      location.equiptments.forEach(equipmentData => {
+
+        let equipment: Equipment | null = null;
+        switch(equipmentData.device_type) {
+        case EquipmentType.THERMOSTAT:
+          equipment = new Thermostat(this, equipmentData as unknown as Types.ThermostatData);
+          break;
+        case EquipmentType.WATER_HEATER:
+          equipment = new WaterHeater(this, equipmentData as unknown as Types.WaterHeaterData, this.storageFilePath);
+          break;
+        default:
+          this.log.error(strings.unsupportedEquipment, equipmentData.device_type);
+        }
+
+        if (equipment) {
+          this.equipments.set(equipment.serialNumber, equipment);
+        }
+      });
     });
-    if (response.status === 200) {
-      const json = await response.json();
-      if (json.success) {
-        return json.results.locations;
-      }
-      throw new InvalidResponseFormat(strings.invalidResponse);
-    }
-    throw new GenericHTTPError(`${strings.httpError} ${response.status}`);
   }
 
-  async getEquipment(): Promise<void> {
-    const locations = await this.getLocation();
-    for (const location of locations) {
-      for (const equip of location.equiptments) {
-        if ('error' in equip) {
-          this.log.error(strings.equipmentError, equip.error);
-          continue;
-        }
+  private saveMQTT(data: Types.MQTTData) {
 
-        if (this.verbose) {
-          this.log.info(strings.creatingEquipment, JSON.stringify(equip));
-        }
-
-        let equipObj: Equipment;
-        if (equip.device_type === WATER_HEATER) {
-          equipObj = new WaterHeater(this, equip);
-        } else if (equip.device_type === THERMOSTAT) {
-          equipObj = new Thermostat(this, equip);
-        } else {
-          continue;
-        }
-
-        this.equipment.set(equipObj.serialNumber, equipObj);
-        if (equip.device_type === THERMOSTAT && equip.zoning_devices) {
-          for (const zoningDevice of equip.zoning_devices) {
-            const zoningEquip = new Thermostat(this, zoningDevice);
-            this.equipment.set(zoningEquip.serialNumber, zoningEquip);
-          }
-        }
-      }
-    }
-  }
-
-  async getEquipmentByType(types: string[]): Promise<Map<string, Equipment[]>> {
-    if (!this.equipment.size) {
-      await this.getEquipment();
-    }
-    const result = new Map<string, Equipment[]>();
-    types.forEach((type) => result.set(type, []));
-    for (const equip of this.equipment.values()) {
-      if (types.includes(equip instanceof WaterHeater ? WATER_HEATER : THERMOSTAT)) {
-        result.get(equip instanceof WaterHeater ? WATER_HEATER : THERMOSTAT)!.push(equip);
-      }
-    }
-    return result;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private saveMQTT(json: any) {
-
-    const filePath = path.join(this.storagePath, MQTT_DEBUG_FILE_NAME);
     const ignoreKeys = new Set(['transactionId', 'device_name', 'serial_number']);
 
-    for (const [key, value] of Object.entries(json)) {
+    for (const [key, value] of Object.entries(data)) {
 
-      if (ignoreKeys.has(key)) {
+      if (ignoreKeys.has(key) || value.toString.length === 0) {
         continue;
       }
 
-      let valuesString = safeGetItem(filePath, key);
+      let valuesString = safeGetItem(this.storageFilePath, key);
       let valuesArray = valuesString ? JSON.parse(valuesString) : [];
       const valuesSet = new Set(valuesArray);
 
@@ -368,7 +438,28 @@ export class EconetApi {
       valuesArray = Array.from(valuesSet);
       valuesString = JSON.stringify(valuesArray);
 
-      safeSetItem(filePath, key, valuesString);
+      safeSetItem(this.storageFilePath, key, valuesString);
     }
+  }
+
+  private logHTTP(level: LogLevel, caller: string, message: string) {
+    this.log.log(level, '[HTTP %s()] %s', caller, message);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private logIfVerbose(caller: string, data: any) {
+
+    if (!this.verbose) {
+      return;
+    }
+
+    let message = JSON.stringify(data);
+
+    Types.SENSITIVE_KEYS.forEach(key => {
+      const regex = new RegExp(`"${key}"\\s*:\\s*(".*?"|\\d+|true|false|null)`, 'gi');
+      message = message.replace(regex, `"${key}": "${strings.redacted}"`);
+    });
+
+    this.logHTTP(LogLevel.INFO, caller, message);
   }
 }
