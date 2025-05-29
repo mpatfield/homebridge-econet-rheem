@@ -6,6 +6,12 @@ Do you have a leak sensor and/or shut off valve on your water heater? I would li
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.5.12 (2025-06-TODO)
+
+### Changed
+
+While there are no new features in this release, significant portions of the code rewritten and modernized. This will make it much easier to maintain and improve this plugin going forward.
+
 ## 1.5.11 (2025-05-28)
 
 ### Fixed
