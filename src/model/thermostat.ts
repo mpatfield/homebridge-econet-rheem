@@ -1,9 +1,16 @@
 import { EconetApi } from './api.js';
 import { EquipmentType, ThermostatOperationMode } from './constants.js';
 import { Equipment } from './equipment.js';
+import { EquipmentData, getValue, MQTTData, ThermostatData } from './types.js';
 
 import strings from '../lang/en.js';
-import { EquipmentData, getValue, MQTTData, ThermostatData } from './types.js';
+
+import { fromCelsius } from '../tools/temperature.js';
+
+const DEFAULT_HUMIDITY = 50;
+const DEFAULT_LOWER_LIMIT = 10;
+const DEFAULT_UPPER_LIMIT = 30;
+const DEFAULT_SETPOINT = 20;
 
 export class Thermostat extends Equipment {
 
@@ -26,22 +33,26 @@ export class Thermostat extends Equipment {
   constructor(api: EconetApi, data: ThermostatData) {
     super(api, data as unknown as EquipmentData);
 
-    this.running = data['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
+    const defaultLowerLimit = fromCelsius(DEFAULT_LOWER_LIMIT, this.units);
+    const defaultUpperLimit = fromCelsius(DEFAULT_UPPER_LIMIT, this.units);
+    const defaultSetpoint = fromCelsius(DEFAULT_SETPOINT, this.units);
 
-    this.current_humidity = data['@HUMIDITY'].value;
-    this.current_temp = data['@SETPOINT'].value || 70;
+    this.running = data['@RUNNINGSTATUS'] ? data['@RUNNINGSTATUS']?.replace(/\s/g, '').length > 0 : false;
 
-    this.cool_lower_limit = data['@COOLSETPOINT'].constraints.lowerLimit;
-    this.cool_upper_limit = data['@COOLSETPOINT'].constraints.upperLimit;
-    this.cool_set_point = data['@COOLSETPOINT'].value;
+    this.current_humidity = data['@HUMIDITY']?.value ?? DEFAULT_HUMIDITY;
+    this.current_temp = data['@SETPOINT']?.value ?? defaultSetpoint;
 
-    this.heat_lower_limit = data['@HEATSETPOINT'].constraints.lowerLimit || 50;
-    this.heat_upper_limit = data['@HEATSETPOINT'].constraints.upperLimit || 90;
-    this.heat_set_point = data['@HEATSETPOINT'].value || 70;
+    this.cool_lower_limit = data['@COOLSETPOINT']?.constraints.lowerLimit ?? defaultLowerLimit;
+    this.cool_upper_limit = data['@COOLSETPOINT']?.constraints.upperLimit ?? defaultUpperLimit;
+    this.cool_set_point = data['@COOLSETPOINT']?.value ?? defaultSetpoint;
 
-    this.dead_band = data['@DEADBAND'].value || 0;
+    this.heat_lower_limit = data['@HEATSETPOINT']?.constraints.lowerLimit ?? defaultLowerLimit;
+    this.heat_upper_limit = data['@HEATSETPOINT']?.constraints.upperLimit ?? defaultUpperLimit;
+    this.heat_set_point = data['@HEATSETPOINT']?.value ?? defaultSetpoint;
 
-    const text_modes = data['@MODE'].constraints.enumText;
+    this.dead_band = data['@DEADBAND']?.value ?? 0;
+
+    const text_modes = data['@MODE']?.constraints?.enumText ?? [];
 
     this.modes.clear();
     if (text_modes) {
@@ -53,7 +64,7 @@ export class Thermostat extends Equipment {
       });
     }
 
-    this.current_mode = this.modes.get(data['@MODE'].value) ?? ThermostatOperationMode.UNKNOWN;
+    this.current_mode = this.modes.get(data['@MODE']?.value ?? -1) ?? ThermostatOperationMode.UNKNOWN;
 
     this.didUpdate();
   }
@@ -97,33 +108,33 @@ export class Thermostat extends Equipment {
   updateFromMQTT(data: MQTTData): void {
     super.updateFromMQTT(data);
 
-    if (data['@HUMIDITY']) {
+    if (data['@HUMIDITY'] !== undefined) {
       this.current_humidity = data['@HUMIDITY'];
       this.api.log.debug(strings.humidityState, this.deviceName, this.current_humidity);
     }
 
-    if (data['@SETPOINT']) {
+    if (data['@SETPOINT'] !== undefined) {
       this.current_temp = data['@SETPOINT'];
       this.api.log.debug(strings.currentTempState, this.deviceName, this.current_temp);
     }
 
-    if (data['@COOLSETPOINT']) {
+    if (data['@COOLSETPOINT'] !== undefined) {
       this.cool_set_point = data['@COOLSETPOINT'];
       this.api.log.debug(strings.coolSetpoint, this.deviceName, this.cool_set_point);
     }
 
-    if (data['@HEATSETPOINT']) {
+    if (data['@HEATSETPOINT'] !== undefined) {
       this.heat_set_point = data['@HEATSETPOINT'];
       this.api.log.debug(strings.heatSetpoint, this.deviceName, this.heat_set_point);
     }
 
-    if (data['@MODE']) {
+    if (data['@MODE'] !== undefined) {
       const modeIndex = getValue(data['@MODE']);
       this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
       this.api.log.debug(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
     }
 
-    if (data['@RUNNINGSTATUS']) {
+    if (data['@RUNNINGSTATUS'] !== undefined) {
       this.running = data['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
       this.api.log.debug(strings.runningState, this.deviceName, this.running);
     }

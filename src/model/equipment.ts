@@ -17,23 +17,23 @@ export abstract class Equipment {
   constructor(readonly api: EconetApi, data: EquipmentData) {
     this.device_id = data.device_name;
     this.serial_number = data.serial_number;
-    this.device_name = data['@NAME'].value;
-    this.alert_count = data['@ALERTCOUNT'];
-    this.temp_units = data['@SETPOINT'].constraints.units.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
+    this.device_name = data['@NAME']?.value ?? strings.brand;
+    this.alert_count = data['@ALERTCOUNT'] ?? 0;
+    this.temp_units = data['@SETPOINT']?.constraints?.units?.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
   }
 
   abstract get type(): EquipmentType;
 
   get deviceId(): string {
-    return this.device_id || 'undefined';
+    return this.device_id || strings.undefined;
   }
 
   get serialNumber(): string {
-    return this.serial_number || 'undefined';
+    return this.serial_number || strings.undefined;
   }
 
   get deviceName(): string {
-    return this.device_name || 'undefined';
+    return this.device_name || strings.undefined;
   }
 
   get hasAlert(): boolean {
@@ -60,7 +60,7 @@ export abstract class Equipment {
 
   updateFromMQTT(update: MQTTData): void {
 
-    if (update['@ALERTCOUNT']) {
+    if (update['@ALERTCOUNT'] !== undefined) {
       this.alert_count = update['@ALERTCOUNT'];
       this.api.log.debug(strings.alertCount, this.deviceName, this.alert_count);
     }

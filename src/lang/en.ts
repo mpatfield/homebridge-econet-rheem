@@ -3,6 +3,7 @@ const langEn = {
   // General
   brand: 'EcoNet',
   redacted: '****redacted****',
+  undefined: 'undefined',
 
   // Startup
   badConfig: 'One or more required variables are missing from the config. Please check the documentation. https://github.com/mpatfield/homebridge-econet-rheem',

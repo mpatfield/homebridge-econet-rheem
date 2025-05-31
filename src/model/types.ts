@@ -1,10 +1,21 @@
 import { ThermostatOperationMode } from './constants';
 
 export const SENSITIVE_KEYS = [
-  'user_id', 'user_token', 'account_id', 'address', 'email', 'first_name',
-  'last_name', 'phone_number', 'postal_code', 'macAddress', 'serialNumber',
-  'street', 'city', 'zipcode', 'name', 'coordinates', 'loc', 'device_name',
-  'serial_number', 'mac_address',
+  'address',
+  'coordinates',
+  'email',
+  'last_name',
+  'loc',
+  'mac_address',
+  'macAddress',
+  'name',
+  'phone_number',
+  'serial_number',
+  'serialNumber',
+  'street',
+  'user_id',
+  'user_token',
+  'zipcode',
 ];
 
 export type ValueOrObject<T> = T | { value: T };
@@ -35,27 +46,28 @@ export type Setpoint = {
 }
 
 export type SetpointConstraints = {
-  lowerLimit: number;
-  upperLimit: number;
-  units: string;
+  lowerLimit?: number;
+  upperLimit?: number;
+  units?: string;
 }
 
 export type ModeConstraints = {
-  enumText: string[];
+  enumText?: string[];
 }
 
 export type Mode = {
-  constraints: ModeConstraints;
-  value: ThermostatOperationMode;
+  constraints?: ModeConstraints;
+  value?: ThermostatOperationMode;
 }
 
 export type EquipmentData = {
-  device_type: string;
-  device_name: string;
-  serial_number: string;
-  '@NAME': StringValue;
-  '@ALERTCOUNT': number;
-  '@SETPOINT': Setpoint;
+  device_type?: string;
+  device_name?: string;
+  serial_number?: string;
+  '@NAME'?: StringValue;
+  '@ALERTCOUNT'?: number;
+  '@SETPOINT'?: Setpoint;
+  zoning_devices?: EquipmentData[];
 }
 
 export type LocationData = {
@@ -67,34 +79,34 @@ export type LocationsResponse = {
 }
 
 export type ThermostatData = {
-  '@HUMIDITY': NumberValue;
-  '@SETPOINT': NumberValue;
-  '@COOLSETPOINT': Setpoint;
-  '@HEATSETPOINT': Setpoint;
-  '@DEADBAND': NumberValue;
-  '@MODE': Mode;
-  '@RUNNINGSTATUS': string;
+  '@HUMIDITY'?: NumberValue;
+  '@SETPOINT'?: NumberValue;
+  '@COOLSETPOINT'?: Setpoint;
+  '@HEATSETPOINT'?: Setpoint;
+  '@DEADBAND'?: NumberValue;
+  '@MODE'?: Mode;
+  '@RUNNINGSTATUS'?: string;
 }
 
 export type WaterHeaterData = {
-  '@RUNNING': string;
-  '@ENABLED': NumberValue;
-  '@SETPOINT': Setpoint;
-  '@HOTWATER': string;
+  '@RUNNING'?: string;
+  '@ENABLED'?: NumberValue;
+  '@SETPOINT'?: Setpoint;
+  '@HOTWATER'?: string;
 }
 
 export type MQTTData = {
-  serial_number: string;
+  serial_number?: string;
   '@ALERTCOUNT'?: number;
   '@ENABLED'?: ValueOrObject<number>;
-  '@SETPOINT': number;
-  '@HOTWATER': string;
-  '@RUNNING': string;
-  '@RUNNINGSTATUS': string;
-  '@HUMIDITY': number;
-  '@COOLSETPOINT': number;
-  '@HEATSETPOINT': number;
-  '@MODE': NumberValue;
+  '@SETPOINT'?: number;
+  '@HOTWATER'?: string;
+  '@RUNNING'?: string;
+  '@RUNNINGSTATUS'?: string;
+  '@HUMIDITY'?: number;
+  '@COOLSETPOINT'?: number;
+  '@HEATSETPOINT'?: number;
+  '@MODE'?: NumberValue;
 }
 
 export interface MQTTError extends Error {

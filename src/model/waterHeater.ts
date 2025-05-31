@@ -1,17 +1,23 @@
 import { EconetApi } from './api.js';
+import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
+import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
+
 
 import strings from '../lang/en.js';
-import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
-import { EquipmentType } from './constants.js';
+import { fromCelsius } from '../tools/temperature.js';
+
+const DEFAULT_LOWER_LIMIT = 35;
+const DEFAULT_UPPER_LIMIT = 65;
+const DEFAULT_SETPOINT = 50;
 
 export class WaterHeater extends Equipment {
 
   private enabled: boolean = true;
 
-  private lower_limit = 100;
-  private upper_limit = 150;
+  private lower_limit = 0;
+  private upper_limit = 0;
   private set_point = 0;
 
   private availability_icon: string | null = null;
@@ -21,14 +27,14 @@ export class WaterHeater extends Equipment {
   constructor(api: EconetApi, data: WaterHeaterData, readonly storageFilePath: string) {
     super(api, data as unknown as EquipmentData);
 
-    this.running = data['@RUNNING'].replace(/\s/g, '').length > 0;
-    this.enabled = data['@ENABLED'].value === 1;
+    this.running = data['@RUNNING'] ? data['@RUNNING']?.replace(/\s/g, '').length > 0 : false;
+    this.enabled = data['@ENABLED']?.value === 1;
 
-    this.lower_limit = data['@SETPOINT'].constraints.lowerLimit;
-    this.upper_limit = data['@SETPOINT'].constraints.upperLimit;
-    this.set_point = data['@SETPOINT'].value;
+    this.lower_limit = data['@SETPOINT']?.constraints.lowerLimit ?? fromCelsius(DEFAULT_LOWER_LIMIT, this.units);
+    this.upper_limit = data['@SETPOINT']?.constraints.upperLimit ?? fromCelsius(DEFAULT_UPPER_LIMIT, this.units);
+    this.set_point = data['@SETPOINT']?.value ?? fromCelsius(DEFAULT_SETPOINT, this.units);
 
-    this.availability_icon = data['@HOTWATER'];
+    this.availability_icon = data['@HOTWATER'] ?? '';
 
     this.didUpdate();
   }
@@ -101,22 +107,22 @@ export class WaterHeater extends Equipment {
   updateFromMQTT(data: MQTTData): void {
     super.updateFromMQTT(data);
  
-    if (data['@ENABLED']) {
+    if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
       this.api.log.debug(strings.enabledState, this.deviceName, this.enabled);
     }
 
-    if (data['@SETPOINT']) {
+    if (data['@SETPOINT'] !== undefined) {
       this.set_point = data['@SETPOINT'];
       this.api.log.debug(strings.setpointState, this.deviceName, this.set_point);
     }
 
-    if (data['@HOTWATER']) {
+    if (data['@HOTWATER'] !== undefined) {
       this.availability_icon = data['@HOTWATER'];
       this.api.log.debug(strings.availabilityState, this.deviceName, this.availability_icon);
     }
 
-    if (data['@RUNNING']) {
+    if (data['@RUNNING'] !== undefined) {
       this.running = data['@RUNNING'].replace(/\s/g, '').length > 0;
       this.api.log.debug(strings.runningState, this.deviceName, this.running);
     }
