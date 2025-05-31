@@ -3,9 +3,7 @@ import { TemperatureUnits } from './constants.js';
 import { WaterHeater } from './waterHeater.js';
 
 import { HOUR, MINUTE } from '../tools/time.js';
-import { safeGetItem, safeSetItem } from '../tools/storage.js';
-
-const VERSION = 1;
+import { safeGetItem, safeSetItem, STORAGE_KEY_RECOVERY_RATES } from '../tools/storage.js';
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
@@ -49,7 +47,7 @@ export class RecoverySimulator {
 
     this.minRecoveryRate = MINIMUM_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
     this.defaultRecoveryRate = DEFAULT_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
-    this.recoveryRates = this._loadRecoveryRates()  ?? [this.defaultRecoveryRate];
+    this.recoveryRates = this._loadRecoveryRates() ?? [this.defaultRecoveryRate];
   }
 
   currentTemp(inputTemp: number): number {
@@ -173,14 +171,18 @@ export class RecoverySimulator {
     this._saveRecoveryRates();
   }
 
-  private _loadRecoveryRates(): number[] | null {
-    const key = `${VERSION}_${this.serialNumber}`;
-    const stored = safeGetItem(this.waterHeater.storageFilePath, key);
-    return stored ? JSON.parse(stored) : null;
+  private get recoveryRatesMap(): Map<string, number[]> | null {
+    const mapString = safeGetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES);
+    return  mapString ? JSON.parse(mapString) : null;
+  }
+
+  private _loadRecoveryRates(): number[] | undefined {
+    return this.recoveryRatesMap?.get(this.serialNumber);
   }
 
   private _saveRecoveryRates(): void {
-    const key = `${VERSION}_${this.serialNumber}`;
-    safeSetItem(this.waterHeater.storageFilePath, key, JSON.stringify(this.recoveryRates));
+    const ratesMap = this.recoveryRatesMap ?? new Map();
+    ratesMap.set(this.serialNumber, this.recoveryRates);
+    safeSetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesMap));
   }
 }

@@ -2,7 +2,7 @@ import { EconetApi } from './api.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
-import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
+import { EquipmentData, MQTTData, WaterHeaterData } from './types.js';
 
 
 import strings from '../lang/en.js';
@@ -108,7 +108,7 @@ export class WaterHeater extends Equipment {
     super.updateFromMQTT(data);
  
     if (data['@ENABLED'] !== undefined) {
-      this.enabled = getValue(data['@ENABLED']) === 1;
+      this.enabled = data['@ENABLED'].value === 1;
       this.api.log.debug(strings.enabledState, this.deviceName, this.enabled);
     }
 

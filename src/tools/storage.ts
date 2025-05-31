@@ -2,6 +2,10 @@ import fs from 'fs';
 
 export const STORAGE_FILE_NAME = 'econetRheem.json';
 
+export const STORAGE_KEY_AUTH = 'auth';
+export const STORAGE_KEY_MQTT = 'mqtt';
+export const STORAGE_KEY_RECOVERY_RATES = 'recoveryRates';
+
 function readStorage(filePath: string): Record<string, string> {
   if (!fs.existsSync(filePath)) {
     return {};

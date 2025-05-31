@@ -12,7 +12,7 @@ import { WaterHeater } from './waterHeater.js';
 
 import strings from '../lang/en.js';
 
-import { safeGetItem, safeSetItem } from '../tools/storage.js';
+import { safeGetItem, safeSetItem, STORAGE_KEY_MQTT } from '../tools/storage.js';
 import { MINUTE, SECOND } from '../tools/time.js';
 
 const CLEAR_BLADE_SYSTEM_KEY = 'e2e699cb0bb0bbb88fc8858cb5a401';
@@ -125,7 +125,7 @@ export class EconetApi {
 
     this.mqttClient.publish(topic, message);
 
-    this.logIfVerbose(this.publish.name, strings.topicPublish, topic, this.desensitize(data));
+    this.logIfVerbose(this.publish.name, topic, this.desensitize(data));
   }
 
   private get auth(): Auth | null {
@@ -176,7 +176,7 @@ export class EconetApi {
         throw new Error(strings.noDataReceived);
       }
 
-      this.logIfVerbose(caller, this.desensitize(res.data));
+      this.logIfVerbose(caller, url.substring(BASE_URL.length + 1), this.desensitize(res.data));
       this.retryIndex = 0;
 
       return res.data;
@@ -298,9 +298,10 @@ export class EconetApi {
 
       const equipment = data.serial_number ? this.equipments.get(data.serial_number) : null;
       if (equipment) {
-        equipment.updateFromMQTT(data);
 
-        this.logIfVerbose(this.mqttMessageReceived.name, strings.topicUpdate, topic, this.desensitize(data));
+        this.logIfVerbose(this.mqttMessageReceived.name, topic, this.desensitize(data));
+
+        equipment.updateFromMQTT(data);
 
         if (this.debugMQTT) {
           this.saveMQTT(data);
@@ -411,33 +412,36 @@ export class EconetApi {
 
     const ignoreKeys = new Set(['transactionId', 'device_name', 'serial_number']);
 
+    const objectString = safeGetItem(this.storageFilePath, STORAGE_KEY_MQTT);
+    const valuesObject = objectString ? JSON.parse(objectString) : {};
+
     for (const [key, value] of Object.entries(data)) {
 
       if (ignoreKeys.has(key) || value.toString.length === 0) {
         continue;
       }
 
-      let valuesString = safeGetItem(this.storageFilePath, key);
-      let valuesArray = valuesString ? JSON.parse(valuesString) : [];
-      const valuesSet = new Set(valuesArray);
+      let valuesArray = valuesObject[key] ?? [];
 
+      const valuesSet = new Set(valuesArray);
       valuesSet.add(value);
 
       valuesArray = Array.from(valuesSet);
-      valuesString = JSON.stringify(valuesArray);
 
-      safeSetItem(this.storageFilePath, key, valuesString);
+      valuesObject[key] = valuesArray;
     }
+
+    safeSetItem(this.storageFilePath, STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private logIfVerbose(caller: string, message: string, ...parameters: any[]) {
+   
+  private logIfVerbose(caller: string, message: string, data: string) {
 
     if (!this.verbose) {
       return;
     }
 
-    this.log.info(`[${caller}()] —`, message, parameters);
+    this.log.info(`${caller}() —`, message, `\n${data}`);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

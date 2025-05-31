@@ -49,8 +49,6 @@ const langEn = {
   parseFailed: 'Failed to parse message:',
   reconnectInMinutes: 'Will attempt to reconnect in %s minutes…',
   reconnectInSeconds: 'Will attempt to reconnect in %s seconds…',
-  topicPublish: 'Publishing message to topic: %s\n',
-  topicUpdate: 'Received message from topic: %s\n',
   unstableConnection: 'Having trouble staying connected',
 
   // Debug
@@ -65,7 +63,6 @@ const langEn = {
   modeState: '%s mode = %s',
   runningState: '%s running = %s',
   setpointState: '%s setpoint = %s',
-  updateReceived: 'Received update for %s',
 };
 
 export default langEn;

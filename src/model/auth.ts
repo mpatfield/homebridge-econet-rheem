@@ -2,9 +2,7 @@ import crypto from 'crypto';
 
 import { TokenData } from './types.js';
 
-import { safeGetItem, safeSetItem } from '../tools/storage.js';
-
-const STORAGE_AUTH_KEY = 'auth';
+import { safeGetItem, safeSetItem, STORAGE_KEY_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
@@ -40,12 +38,12 @@ export class Auth {
     const encrypted = Buffer.concat([cipher.update(serailzed, 'utf8'), cipher.final()]);
     const final = iv.toString('hex') + ':' + encrypted.toString('hex');
 
-    safeSetItem(filePath, STORAGE_AUTH_KEY, final);
+    safeSetItem(filePath, STORAGE_KEY_AUTH, final);
   }
 
   static load(filePath: string, encryptionKey: string): Auth | null {
 
-    const final = safeGetItem(filePath, STORAGE_AUTH_KEY);
+    const final = safeGetItem(filePath, STORAGE_KEY_AUTH);
     if (!final) {
       return null;
     }

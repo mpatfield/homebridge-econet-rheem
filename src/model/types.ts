@@ -98,7 +98,7 @@ export type WaterHeaterData = {
 export type MQTTData = {
   serial_number?: string;
   '@ALERTCOUNT'?: number;
-  '@ENABLED'?: ValueOrObject<number>;
+  '@ENABLED'?: NumberValue;
   '@SETPOINT'?: number;
   '@HOTWATER'?: string;
   '@RUNNING'?: string;
