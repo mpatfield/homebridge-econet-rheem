@@ -1,5 +1,4 @@
 import axios, { AxiosRequestConfig, AxiosResponse, isAxiosError } from 'axios';
-import { Logger } from 'homebridge';
 import mqtt from 'mqtt';
 
 import { Auth } from './auth.js';
@@ -14,6 +13,7 @@ import strings from '../lang/en.js';
 
 import { safeGetItem, safeSetItem, STORAGE_KEY_MQTT } from '../tools/storage.js';
 import { MINUTE, SECOND } from '../tools/time.js';
+import { Log, LogType } from '../tools/log.js';
 
 const CLEAR_BLADE_SYSTEM_KEY = 'e2e699cb0bb0bbb88fc8858cb5a401';
 const CLEAR_BLADE_SYSTEM_SECRET = 'E2E699CB0BE6C6FADDB1B0BC9A20';
@@ -62,18 +62,17 @@ export class EconetApi {
   private idleMQTTTimer: NodeJS.Timeout | null = null;
 
   constructor(
-    public readonly log: Logger,
+    public readonly log: Log,
     private readonly email: string,
     private readonly password: string,
     readonly storageFilePath: string,
-    private readonly verbose: boolean,
     private readonly debugMQTT: boolean,
   ) {
     this.auth = Auth.load(this.storageFilePath, email);
   }
 
-  static async connect(log: Logger, email: string, password: string, storageFilePath: string, verbose: boolean, debugMQTT: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, storageFilePath, verbose, debugMQTT);
+  static async connect(log: Log, email: string, password: string, storageFilePath: string, debugMQTT: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, storageFilePath, debugMQTT);
 
     let shouldContinue = true;
     if (!api.auth) {
@@ -125,7 +124,7 @@ export class EconetApi {
 
     this.mqttClient.publish(topic, message);
 
-    this.logIfVerbose(this.publish.name, topic, this.desensitize(data));
+    this.logDebug(this.publish.name, topic, data);
   }
 
   private get auth(): Auth | null {
@@ -145,7 +144,6 @@ export class EconetApi {
     caller: string, 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     data: any | null, 
-    shouldRetry: boolean,
     url: string, 
     ...parameters: (string|undefined)[]
   ):  Promise<T | null> {
@@ -172,22 +170,17 @@ export class EconetApi {
       }
 
       if (!res.data) {
-        this.log.error(caller, this.desensitize(res.data));
+        this.log.warning(caller, this.desensitize(res.data));
         throw new Error(strings.noDataReceived);
       }
 
-      this.logIfVerbose(caller, url.substring(BASE_URL.length + 1), this.desensitize(res.data));
+      this.logDebug(caller, url.substring(BASE_URL.length + 1), res.data);
       this.retryIndex = 0;
 
       return res.data;
 
     } catch (err: unknown) {
-      if (shouldRetry) {
-        return this.retryHTTPIfPossible<T>(err, caller, () => this.httpRequest<T>(caller, data, shouldRetry, url, ...parameters));
-      } else {
-        this.log.error((err as Error).message);
-        return null;
-      }
+      return this.retryHTTPIfPossible<T>(err, caller, () => this.httpRequest<T>(caller, data, url, ...parameters));
     }
   }
 
@@ -195,25 +188,25 @@ export class EconetApi {
   private async retryHTTPIfPossible<T = any>(err: unknown, caller: string, retry: () => (Promise<T | null>)): Promise<T | null> {
 
     if (!isAxiosError(err)) {
-      this.log.warn((err as Error).message);
+      this.log.warning((err as Error).message);
       return null;
     }
   
     const errorCode = err.code || err.response?.status?.toString() || 'UNKNOWN';
 
     if (!HTTP_RETRY_CODES.includes(errorCode) || this.retryIndex >= DELAYS.length) {
-      this.log.warn(err.message);
+      this.log.warning(err.message);
       return null;
     }
     
-    const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
-    if (reconnectDelay <= MINUTE) {
-      this.log.warn(strings.httpRetrySeconds, reconnectDelay / SECOND);
+    const retryDelay = DELAYS[Math.min(this.retryIndex, DELAYS.length - 1)];
+    if (retryDelay <= MINUTE) {
+      this.log.ifVerbose(strings.httpRetrySeconds, retryDelay / SECOND);
     } else {
-      this.log.warn(strings.httpRetryMinutes, reconnectDelay / MINUTE);
+      this.log.ifVerbose(strings.httpRetryMinutes, retryDelay / MINUTE);
     }
 
-    await new Promise(resolve => setTimeout(resolve, reconnectDelay));
+    await new Promise(resolve => setTimeout(resolve, retryDelay));
 
     this.retryIndex += 1;
 
@@ -223,7 +216,7 @@ export class EconetApi {
   private async authenticate(): Promise<boolean> {
 
     const data = { email: this.email, password: this.password };
-    const tokenData = await this.httpRequest<Types.TokenData>(this.authenticate.name, data, true, AUTH_URL);
+    const tokenData = await this.httpRequest<Types.TokenData>(this.authenticate.name, data, AUTH_URL);
 
     if (!tokenData) {
       return false;
@@ -231,7 +224,7 @@ export class EconetApi {
     
     this.auth = new Auth(tokenData);
 
-    this.log.info(strings.authSuccess);
+    this.log.always(strings.authSuccess);
 
     return true;
   }
@@ -267,10 +260,11 @@ export class EconetApi {
 
     this.mqttClient.on('close', () => this.mqttConnectionClosed());
 
-    this.mqttClient.on('error', (error: Types.MQTTError) => this.log.error(strings.clientError, error));
+    this.mqttClient.on('error', (error: Types.MQTTError) => this.log.ifVerbose(LogType.WARNING, strings.clientError, error));
   }
 
   private mqttSubscribe(isStartup: boolean) {
+    
     if (!this.mqttClient || !this.auth?.accountId) {
       this.log.error(strings.connectionError);
       return;
@@ -279,11 +273,11 @@ export class EconetApi {
     this.mqttClient.subscribe(MQTT_TOPIC_REPORTED.replace('%s', this.auth.accountId));
     this.mqttClient.subscribe(MQTT_TOPIC_DESIRED.replace('%s', this.auth.accountId));
       
-    this.log.info(strings.connected);
+    this.log.always(strings.connected);
 
     if (isStartup) {
       const randIndex = Math.floor(Math.random() * strings.welcomeMessages.length);
-      this.log.info(strings.setupComplete, strings.welcomeMessages[randIndex]);
+      this.log.always(strings.setupComplete, strings.welcomeMessages[randIndex]);
     }
   }
 
@@ -299,7 +293,7 @@ export class EconetApi {
       const equipment = data.serial_number ? this.equipments.get(data.serial_number) : null;
       if (equipment) {
 
-        this.logIfVerbose(this.mqttMessageReceived.name, topic, this.desensitize(data));
+        this.logDebug(this.mqttMessageReceived.name, topic, data);
 
         equipment.updateFromMQTT(data);
 
@@ -308,12 +302,12 @@ export class EconetApi {
         }
       }
     } catch (e) {
-      this.log.error(strings.parseFailed, this.desensitize(message));
+      this.log.warning(strings.parseFailed, this.desensitize(message));
     }
   }
 
   private mqttConnectionClosed() {
-    this.log.info(strings.connectionClosed);
+    this.log.ifVerbose(strings.connectionClosed);
     this.mqttReconnect();
   }
 
@@ -324,7 +318,7 @@ export class EconetApi {
     }
 
     this.idleMQTTTimer = setTimeout(()=>{
-      this.log.info(strings.idleConnection);
+      this.log.ifVerbose(strings.idleConnection);
       this.mqttReconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
@@ -345,19 +339,19 @@ export class EconetApi {
     this.reconnectCount++;
     if (this.reconnectCount % DELAYS.length === 0) {
       try {
-        this.log.error(strings.unstableConnection);
-        this.log.info(strings.reauthenticate);
+        this.log.ifVerbose(strings.unstableConnection);
+        this.log.ifVerbose(strings.reauthenticate);
         await this.authenticate();
       } catch (error) {
-        this.log.error(strings.reauthFailed, error);
+        this.log.ifVerbose(strings.reauthFailed, error);
       }
     }
 
     const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
     if (reconnectDelay < MINUTE) {
-      this.log.info(strings.reconnectInSeconds, reconnectDelay / SECOND);
+      this.log.ifVerbose(strings.reconnectInSeconds, reconnectDelay / SECOND);
     } else {
-      this.log.info(strings.reconnectInMinutes, reconnectDelay / MINUTE);
+      this.log.ifVerbose(strings.reconnectInMinutes, reconnectDelay / MINUTE);
     }
 
     setTimeout(() => {
@@ -374,7 +368,7 @@ export class EconetApi {
       version: '6.0.0-375-01b4870e',
     };
 
-    const locationsData = await this.httpRequest<Types.LocationsResponse>(this.getLocations.name, data, true, LOCATIONS_URL);
+    const locationsData = await this.httpRequest<Types.LocationsResponse>(this.getLocations.name, data, LOCATIONS_URL);
     if (!locationsData) {
       return;
     }
@@ -434,23 +428,37 @@ export class EconetApi {
     safeSetItem(this.storageFilePath, STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
   }
 
-   
-  private logIfVerbose(caller: string, message: string, data: string) {
-
-    if (!this.verbose) {
-      return;
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private logDebug(caller: string, message: string, data: any) {
+    if (this.log.verbose) {
+      this.log.ifVerbose(`${caller}() —`, this.desensitize(message), `\n${this.desensitize(data)}`);
     }
-
-    this.log.info(`${caller}() —`, message, `\n${data}`);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private desensitize(data: any): string {
-    let output = JSON.stringify(data);
-    Types.SENSITIVE_KEYS.forEach(key => {
-      const regex = new RegExp(`"${key}"\\s*:\\s*(".*?"|\\d+|true|false|null)`, 'gi');
-      output = output.replace(regex, `"${key}": "${strings.redacted}"`);
-    });
+
+    let output: string;
+    
+    if (typeof data === 'string') {
+      output = data;
+
+    } else {
+      output = JSON.stringify(data);
+
+      Types.SENSITIVE_KEYS.forEach(key => {
+        const regex = new RegExp(`"${key}"\\s*:\\s*(".*?"|\\d+|true|false|null)`, 'gi');
+        output = output.replace(regex, `"${key}": "${strings.redacted}"`);
+      });
+    }
+
+    if (this.auth) {
+      output = output.replaceAll(this.auth.accountId, strings.redacted);
+      output = output.replaceAll(this.auth.token, strings.redacted);
+      output = output.replaceAll(this.auth.userId, strings.redacted);
+    }
+
     return output;
   }
 }

@@ -4,6 +4,8 @@ import { EquipmentData, MQTTData } from './types.js';
 
 import strings from '../lang/en.js';
 
+import { Log } from '../tools/log.js';
+
 export abstract class Equipment {
   private device_id?: string | null;
   private serial_number?: string | null;
@@ -14,7 +16,7 @@ export abstract class Equipment {
 
   private _onUpdateCallback: ((serialNumber: string) => void) | null = null;
 
-  constructor(readonly api: EconetApi, data: EquipmentData) {
+  constructor(private readonly api: EconetApi, data: EquipmentData) {
     this.device_id = data.device_name;
     this.serial_number = data.serial_number;
     this.device_name = data['@NAME']?.value ?? strings.brand;
@@ -48,6 +50,10 @@ export abstract class Equipment {
     return this.running;
   }
 
+  protected get log(): Log {
+    return this.api.log;
+  }
+
   setOnUpdateCallback(callback: (serialNumber: string) => void): void {
     this._onUpdateCallback = callback;
   }
@@ -62,7 +68,11 @@ export abstract class Equipment {
 
     if (update['@ALERTCOUNT'] !== undefined) {
       this.alert_count = update['@ALERTCOUNT'];
-      this.api.log.debug(strings.alertCount, this.deviceName, this.alert_count);
+      this.log.ifVerbose(strings.alertCount, this.deviceName, this.alert_count);
     }
+  }
+
+  publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string) {
+    this.api.publish(payload, deviceId, serialNumber);
   }
 }

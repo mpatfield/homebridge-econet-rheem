@@ -110,33 +110,33 @@ export class Thermostat extends Equipment {
 
     if (data['@HUMIDITY'] !== undefined) {
       this.current_humidity = data['@HUMIDITY'];
-      this.api.log.debug(strings.humidityState, this.deviceName, this.current_humidity);
+      this.log.ifVerbose(strings.humidityState, this.deviceName, this.current_humidity);
     }
 
     if (data['@SETPOINT'] !== undefined) {
       this.current_temp = data['@SETPOINT'];
-      this.api.log.debug(strings.currentTempState, this.deviceName, this.current_temp);
+      this.log.ifVerbose(strings.currentTempState, this.deviceName, this.current_temp);
     }
 
     if (data['@COOLSETPOINT'] !== undefined) {
       this.cool_set_point = data['@COOLSETPOINT'];
-      this.api.log.debug(strings.coolSetpoint, this.deviceName, this.cool_set_point);
+      this.log.ifVerbose(strings.coolSetpoint, this.deviceName, this.cool_set_point);
     }
 
     if (data['@HEATSETPOINT'] !== undefined) {
       this.heat_set_point = data['@HEATSETPOINT'];
-      this.api.log.debug(strings.heatSetpoint, this.deviceName, this.heat_set_point);
+      this.log.ifVerbose(strings.heatSetpoint, this.deviceName, this.heat_set_point);
     }
 
     if (data['@MODE'] !== undefined) {
       const modeIndex = getValue(data['@MODE']);
       this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
-      this.api.log.debug(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
+      this.log.ifVerbose(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
     }
 
     if (data['@RUNNINGSTATUS'] !== undefined) {
       this.running = data['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
-      this.api.log.debug(strings.runningState, this.deviceName, this.running);
+      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();
@@ -158,7 +158,7 @@ export class Thermostat extends Equipment {
     case 'EMERGENCYHEAT':
       return ThermostatOperationMode.EMERGENCY_HEAT;
     default:
-      this.api.log.error(strings.unknownMode, strValue);
+      this.log.error(strings.unknownMode, strValue);
       return ThermostatOperationMode.UNKNOWN;
     }
   }
@@ -192,9 +192,9 @@ export class Thermostat extends Equipment {
     }
 
     if (Object.keys(payload).length > 0) {
-      this.api.publish(payload, this.deviceId, this.serialNumber);
+      this.publish(payload, this.deviceId, this.serialNumber);
     } else {
-      this.api.log.error(strings.unknownMode, mode);
+      this.log.error(strings.unknownMode, mode);
     }
   }
 
@@ -208,7 +208,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         coolPayload['@COOLSETPOINT'] = temp;
       } else {
-        this.api.log.error(strings.outOfRangeCool, lower, upper, temp);
+        this.log.error(strings.outOfRangeCool, lower, upper, temp);
       }
     }
 
@@ -218,17 +218,17 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         heatPayload['@HEATSETPOINT'] = temp;
       } else {
-        this.api.log.error(strings.outOfRangeHeat, lower, upper, temp);
+        this.log.error(strings.outOfRangeHeat, lower, upper, temp);
       }
     }
 
     let hasSetTemp = false;
     if (coolPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.COOLING].includes(this.mode)) {
-      this.api.publish(coolPayload, this.deviceId, this.serialNumber);
+      this.publish(coolPayload, this.deviceId, this.serialNumber);
       hasSetTemp = true;
     }
     if (heatPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
-      this.api.publish(heatPayload, this.deviceId, this.serialNumber);
+      this.publish(heatPayload, this.deviceId, this.serialNumber);
       hasSetTemp = true;
     }
     if (targetTemp && !hasSetTemp) {
@@ -238,10 +238,10 @@ export class Thermostat extends Equipment {
       } else if ([ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
         payload = heatPayload;
       } else {
-        this.api.log.error(strings.setpointUnknown, this.mode);
+        this.log.error(strings.setpointUnknown, this.mode);
       }
       if (Object.keys(payload).length > 0) {
-        this.api.publish(payload, this.deviceId, this.serialNumber);
+        this.publish(payload, this.deviceId, this.serialNumber);
       }
     }
   }

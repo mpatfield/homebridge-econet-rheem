@@ -2,7 +2,7 @@ import { EconetApi } from './api.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
-import { EquipmentData, MQTTData, WaterHeaterData } from './types.js';
+import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
 
 
 import strings from '../lang/en.js';
@@ -94,7 +94,7 @@ export class WaterHeater extends Equipment {
   protected didUpdate() {
 
     if (!this.recoverySimulator) {
-      this.recoverySimulator = new RecoverySimulator(this.api, this, () => {
+      this.recoverySimulator = new RecoverySimulator(this, () => {
         super.didUpdate();
       });
     }
@@ -108,33 +108,33 @@ export class WaterHeater extends Equipment {
     super.updateFromMQTT(data);
  
     if (data['@ENABLED'] !== undefined) {
-      this.enabled = data['@ENABLED'].value === 1;
-      this.api.log.debug(strings.enabledState, this.deviceName, this.enabled);
+      this.enabled = getValue(data['@ENABLED']) === 1;
+      this.log.ifVerbose(strings.enabledState, this.deviceName, this.enabled);
     }
 
     if (data['@SETPOINT'] !== undefined) {
       this.set_point = data['@SETPOINT'];
-      this.api.log.debug(strings.setpointState, this.deviceName, this.set_point);
+      this.log.ifVerbose(strings.setpointState, this.deviceName, this.set_point);
     }
 
     if (data['@HOTWATER'] !== undefined) {
       this.availability_icon = data['@HOTWATER'];
-      this.api.log.debug(strings.availabilityState, this.deviceName, this.availability_icon);
+      this.log.ifVerbose(strings.availabilityState, this.deviceName, this.availability_icon);
     }
 
     if (data['@RUNNING'] !== undefined) {
       this.running = data['@RUNNING'].replace(/\s/g, '').length > 0;
-      this.api.log.debug(strings.runningState, this.deviceName, this.running);
+      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();  
   }
 
   setEnabled(enabled: boolean): void {
-    this.api.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
+    this.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
   }
 
   setSetPoint(setPoint: number): void {
-    this.api.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
+    this.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
   }
 }

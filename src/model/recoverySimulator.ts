@@ -1,4 +1,3 @@
-import { EconetApi } from './api.js';
 import { TemperatureUnits } from './constants.js';
 import { WaterHeater } from './waterHeater.js';
 
@@ -32,7 +31,6 @@ export class RecoverySimulator {
   private recoveryStartTemp: number | null = null;
 
   constructor(
-    private readonly api: EconetApi,
     readonly waterHeater: WaterHeater,
     private readonly onUpdate: () => void,
   ) {
@@ -171,18 +169,18 @@ export class RecoverySimulator {
     this._saveRecoveryRates();
   }
 
-  private get recoveryRatesMap(): Map<string, number[]> | null {
-    const mapString = safeGetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES);
-    return  mapString ? JSON.parse(mapString) : null;
+  private get recoveryRatesObject(): Record<string, number[]> {
+    const objectString = safeGetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES);
+    return  objectString ? JSON.parse(objectString) : {};
   }
 
-  private _loadRecoveryRates(): number[] | undefined {
-    return this.recoveryRatesMap?.get(this.serialNumber);
+  private _loadRecoveryRates(): number[] | null {
+    return this.recoveryRatesObject[this.serialNumber];
   }
 
   private _saveRecoveryRates(): void {
-    const ratesMap = this.recoveryRatesMap ?? new Map();
-    ratesMap.set(this.serialNumber, this.recoveryRates);
-    safeSetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesMap));
+    const ratesObject = this.recoveryRatesObject;
+    ratesObject[this.serialNumber] = this.recoveryRates;
+    safeSetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
   }
 }
