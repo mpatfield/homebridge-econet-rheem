@@ -68,8 +68,9 @@ export class ThermostatAccessory {
     const maxHeatTemp = toCelsius(this.thermostat.heatSetPointLimits[1], this.thermostat.units);
     const heatSetpoint = toCelsius(this.thermostat.heatSetPoint, this.thermostat.units);
     this.service.getCharacteristic(this.Characteristic.HeatingThresholdTemperature)
+      .setProps({ maxValue: maxHeatTemp, minStep: 0.1 })
       .setValue(heatSetpoint)
-      .setProps({ minValue: minHeatTemp, maxValue: maxHeatTemp, minStep: 0.1 })
+      .setProps({ minValue: minHeatTemp })
       .onGet(this.getHeatingThresholdTemperature.bind(this))
       .onSet(this.setHeatingThresholdTemperature.bind(this));
 
@@ -77,8 +78,9 @@ export class ThermostatAccessory {
     const maxCoolTemp = toCelsius(this.thermostat.coolSetPointLimits[1], this.thermostat.units);
     const coolSetpoint = toCelsius(thermostat.coolSetPoint, this.thermostat.units);
     this.service.getCharacteristic(this.Characteristic.CoolingThresholdTemperature)
+      .setProps({ maxValue: maxCoolTemp, minStep: 0.1 })
       .setValue(coolSetpoint)
-      .setProps({ minValue: minCoolTemp, maxValue: maxCoolTemp, minStep: 0.1 })
+      .setProps({ minValue: minCoolTemp })
       .onGet(this.getCoolingThresholdTemperature.bind(this))
       .onSet(this.setCoolingThresholdTemperature.bind(this));
 

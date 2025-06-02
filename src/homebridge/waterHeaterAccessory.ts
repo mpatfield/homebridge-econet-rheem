@@ -58,8 +58,9 @@ export class WaterHeaterAccessory {
     const maxTemp = toCelsius(this.waterHeater.limits[1], this.waterHeater.units);
     const setpoint = toCelsius(this.waterHeater.setPoint, this.waterHeater.units);
     this.service.getCharacteristic(this.Characteristic.HeatingThresholdTemperature)
+      .setProps({ maxValue: maxTemp, minStep: 0.1 })
       .setValue(setpoint)
-      .setProps({ minValue: minTemp, maxValue: maxTemp, minStep: 0.1 })
+      .setProps({ minValue: minTemp })
       .onGet(this.getHeatingThresholdTemperature.bind(this))
       .onSet(this.setHeatingThresholdTemperature.bind(this));
 
