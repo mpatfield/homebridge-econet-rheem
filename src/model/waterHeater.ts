@@ -1,33 +1,50 @@
 import { EconetApi } from './api.js';
+import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
+import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
+
 
 import strings from '../lang/en.js';
+import { fromCelsius } from '../tools/temperature.js';
+
+const DEFAULT_LOWER_LIMIT = 35;
+const DEFAULT_UPPER_LIMIT = 65;
+const DEFAULT_SETPOINT = 50;
 
 export class WaterHeater extends Equipment {
 
   private enabled: boolean = true;
 
-  private lower_limit = 100;
-  private upper_limit = 150;
+  private lower_limit = 0;
+  private upper_limit = 0;
   private set_point = 0;
 
   private availability_icon: string | null = null;
 
   private recoverySimulator: RecoverySimulator | null = null;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(api: EconetApi, restUpdate: any) {
-    super(api);
-    this.updateFromREST(restUpdate);
+  constructor(api: EconetApi, data: WaterHeaterData, readonly storageFilePath: string) {
+    super(api, data as unknown as EquipmentData);
+
+    this.running = data['@RUNNING'] ? data['@RUNNING']?.replace(/\s/g, '').length > 0 : false;
+    this.enabled = data['@ENABLED']?.value === 1;
+
+    this.lower_limit = data['@SETPOINT']?.constraints.lowerLimit ?? fromCelsius(DEFAULT_LOWER_LIMIT, this.units);
+    this.upper_limit = data['@SETPOINT']?.constraints.upperLimit ?? fromCelsius(DEFAULT_UPPER_LIMIT, this.units);
+    this.set_point = data['@SETPOINT']?.value ?? fromCelsius(DEFAULT_SETPOINT, this.units);
+
+    this.availability_icon = data['@HOTWATER'] ?? '';
+
+    this.didUpdate();
+  }
+
+  get type(): EquipmentType {
+    return EquipmentType.WATER_HEATER;
   }
 
   get isEnabled(): boolean {
     return this.enabled;
-  }
-
-  protected get runningKey(): string {
-    return '@RUNNING';
   }
 
   get limits(): [number, number] {
@@ -77,7 +94,7 @@ export class WaterHeater extends Equipment {
   protected didUpdate() {
 
     if (!this.recoverySimulator) {
-      this.recoverySimulator = new RecoverySimulator(this._api, this, () => {
+      this.recoverySimulator = new RecoverySimulator(this, () => {
         super.didUpdate();
       });
     }
@@ -86,55 +103,38 @@ export class WaterHeater extends Equipment {
 
     super.didUpdate();
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected updateFromREST(update: any): void {
-    super.updateFromREST(update);
-
-    if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'].value === 1;
-    }
-
-    if ('@SETPOINT' in update) {
-      this.lower_limit = update['@SETPOINT'].constraints.lowerLimit || 100;
-      this.upper_limit = update['@SETPOINT'].constraints.upperLimit || 150;
-      this.set_point = update['@SETPOINT'].value || 0;
-    }
-
-    if ('@HOTWATER' in update) {
-      this.availability_icon = update['@HOTWATER'];
-    }
-
-    this.didUpdate();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateFromMQTT(update: any): void {
-    super.updateFromMQTT(update);
  
-    if ('@ENABLED' in update) {
-      this.enabled = update['@ENABLED'] === 1 || update['@ENABLED'].value === 1;
-      this._api.log.debug(strings.enabledState, this.deviceName, this.enabled);
+  updateFromMQTT(data: MQTTData): void {
+    super.updateFromMQTT(data);
+ 
+    if (data['@ENABLED'] !== undefined) {
+      this.enabled = getValue(data['@ENABLED']) === 1;
+      this.log.ifVerbose(strings.enabledState, this.deviceName, this.enabled);
     }
 
-    if ('@SETPOINT' in update) {
-      this.set_point = update['@SETPOINT'];
-      this._api.log.debug(strings.setpointState, this.deviceName, this.set_point);
+    if (data['@SETPOINT'] !== undefined) {
+      this.set_point = data['@SETPOINT'];
+      this.log.ifVerbose(strings.setpointState, this.deviceName, this.set_point);
     }
 
-    if ('@HOTWATER' in update) {
-      this.availability_icon = update['@HOTWATER'];
-      this._api.log.debug(strings.availabilityState, this.deviceName, this.availability_icon);
+    if (data['@HOTWATER'] !== undefined) {
+      this.availability_icon = data['@HOTWATER'];
+      this.log.ifVerbose(strings.availabilityState, this.deviceName, this.availability_icon);
+    }
+
+    if (data['@RUNNING'] !== undefined) {
+      this.running = data['@RUNNING'].replace(/\s/g, '').length > 0;
+      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();  
   }
 
   setEnabled(enabled: boolean): void {
-    this._api.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
+    this.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
   }
 
   setSetPoint(setPoint: number): void {
-    this._api.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
+    this.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
   }
 }

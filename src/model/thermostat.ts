@@ -1,8 +1,16 @@
 import { EconetApi } from './api.js';
-import { ThermostatOperationMode } from './enums.js';
+import { EquipmentType, ThermostatOperationMode } from './constants.js';
 import { Equipment } from './equipment.js';
+import { EquipmentData, getValue, MQTTData, ThermostatData } from './types.js';
 
 import strings from '../lang/en.js';
+
+import { fromCelsius } from '../tools/temperature.js';
+
+const DEFAULT_HUMIDITY = 50;
+const DEFAULT_LOWER_LIMIT = 10;
+const DEFAULT_UPPER_LIMIT = 30;
+const DEFAULT_SETPOINT = 20;
 
 export class Thermostat extends Equipment {
 
@@ -22,14 +30,47 @@ export class Thermostat extends Equipment {
   private modes: Map<number, ThermostatOperationMode> = new Map();
   private current_mode = ThermostatOperationMode.UNKNOWN;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  constructor(api: EconetApi, restUpdate: any) {
-    super(api);
-    this.updateFromREST(restUpdate);
+  constructor(api: EconetApi, data: ThermostatData) {
+    super(api, data as unknown as EquipmentData);
+
+    const defaultLowerLimit = fromCelsius(DEFAULT_LOWER_LIMIT, this.units);
+    const defaultUpperLimit = fromCelsius(DEFAULT_UPPER_LIMIT, this.units);
+    const defaultSetpoint = fromCelsius(DEFAULT_SETPOINT, this.units);
+
+    this.running = data['@RUNNINGSTATUS'] ? data['@RUNNINGSTATUS']?.replace(/\s/g, '').length > 0 : false;
+
+    this.current_humidity = data['@HUMIDITY']?.value ?? DEFAULT_HUMIDITY;
+    this.current_temp = data['@SETPOINT']?.value ?? defaultSetpoint;
+
+    this.cool_lower_limit = data['@COOLSETPOINT']?.constraints.lowerLimit ?? defaultLowerLimit;
+    this.cool_upper_limit = data['@COOLSETPOINT']?.constraints.upperLimit ?? defaultUpperLimit;
+    this.cool_set_point = data['@COOLSETPOINT']?.value ?? defaultSetpoint;
+
+    this.heat_lower_limit = data['@HEATSETPOINT']?.constraints.lowerLimit ?? defaultLowerLimit;
+    this.heat_upper_limit = data['@HEATSETPOINT']?.constraints.upperLimit ?? defaultUpperLimit;
+    this.heat_set_point = data['@HEATSETPOINT']?.value ?? defaultSetpoint;
+
+    this.dead_band = data['@DEADBAND']?.value ?? 0;
+
+    const text_modes = data['@MODE']?.constraints?.enumText ?? [];
+
+    this.modes.clear();
+    if (text_modes) {
+      text_modes.forEach((textMode: string, index: number) => {
+        const mode = this._modeFromString(textMode);
+        if (mode !== ThermostatOperationMode.UNKNOWN) {
+          this.modes.set(index, mode);
+        }
+      });
+    }
+
+    this.current_mode = this.modes.get(data['@MODE']?.value ?? -1) ?? ThermostatOperationMode.UNKNOWN;
+
+    this.didUpdate();
   }
 
-  protected get runningKey(): string {
-    return '@RUNNINGSTATUS';
+  get type(): EquipmentType {
+    return EquipmentType.THERMOSTAT;
   }
 
   get humidity(): number {
@@ -64,77 +105,38 @@ export class Thermostat extends Equipment {
     return this.current_mode;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  protected updateFromREST(update: any): void {
-    super.updateFromREST(update);
+  updateFromMQTT(data: MQTTData): void {
+    super.updateFromMQTT(data);
 
-    if ('@HUMIDITY' in update) {
-      this.current_humidity = update['@HUMIDITY'].value || 0;
+    if (data['@HUMIDITY'] !== undefined) {
+      this.current_humidity = data['@HUMIDITY'];
+      this.log.ifVerbose(strings.humidityState, this.deviceName, this.current_humidity);
     }
 
-    if ('@SETPOINT' in update) {
-      this.current_temp = update['@SETPOINT'].value || 70;
+    if (data['@SETPOINT'] !== undefined) {
+      this.current_temp = data['@SETPOINT'];
+      this.log.ifVerbose(strings.currentTempState, this.deviceName, this.current_temp);
     }
 
-    if ('@COOLSETPOINT' in update) {
-      this.cool_lower_limit = update['@COOLSETPOINT'].constraints.lowerLimit || 50;
-      this.cool_upper_limit = update['@COOLSETPOINT'].constraints.upperLimit || 90;
-      this.cool_set_point = update['@COOLSETPOINT'].value || 70;
+    if (data['@COOLSETPOINT'] !== undefined) {
+      this.cool_set_point = data['@COOLSETPOINT'];
+      this.log.ifVerbose(strings.coolSetpoint, this.deviceName, this.cool_set_point);
     }
 
-    if ('@HEATSETPOINT' in update) {
-      this.heat_lower_limit = update['@HEATSETPOINT'].constraints.lowerLimit || 50;
-      this.heat_upper_limit = update['@HEATSETPOINT'].constraints.upperLimit || 90;
-      this.heat_set_point = update['@HEATSETPOINT'].value || 70;
+    if (data['@HEATSETPOINT'] !== undefined) {
+      this.heat_set_point = data['@HEATSETPOINT'];
+      this.log.ifVerbose(strings.heatSetpoint, this.deviceName, this.heat_set_point);
     }
 
-    this.dead_band = update['@DEADBAND']?.value || 0;
-
-    const text_modes = update['@MODE']?.constraints.enumText;
-
-    this.modes.clear();
-    if (text_modes) {
-      text_modes.forEach((textMode: string, index: number) => {
-        const mode = this._modeFromString(textMode);
-        if (mode !== ThermostatOperationMode.UNKNOWN) {
-          this.modes.set(index, mode);
-        }
-      });
-    }
-
-    this.current_mode = this.modes.get(update['@MODE']?.value) ?? ThermostatOperationMode.UNKNOWN;
-
-    this.didUpdate();
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  updateFromMQTT(update: any): void {
-    super.updateFromMQTT(update);
-
-    if ('@HUMIDITY' in update) {
-      this.current_humidity = update['@HUMIDITY'] || 0;
-      this._api.log.debug(strings.humidityState, this.deviceName, this.current_humidity);
-    }
-
-    if ('@SETPOINT' in update) {
-      this.current_temp = update['@SETPOINT'] || 70;
-      this._api.log.debug(strings.currentTempState, this.deviceName, this.current_temp);
-    }
-
-    if ('@COOLSETPOINT' in update) {
-      this.cool_set_point = update['@COOLSETPOINT'] || 70;
-      this._api.log.debug(strings.coolSetpoint, this.deviceName, this.cool_set_point);
-    }
-
-    if ('@HEATSETPOINT' in update) {
-      this.heat_set_point = update['@HEATSETPOINT'] || 70;
-      this._api.log.debug(strings.heatSetpoint, this.deviceName, this.heat_set_point);
-    }
-
-    if ('@MODE' in update) {
-      const modeIndex = update['@MODE'] ?? update['@MODE'].value;
+    if (data['@MODE'] !== undefined) {
+      const modeIndex = getValue(data['@MODE']);
       this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
-      this._api.log.debug(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
+      this.log.ifVerbose(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
+    }
+
+    if (data['@RUNNINGSTATUS'] !== undefined) {
+      this.running = data['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
+      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();
@@ -156,7 +158,7 @@ export class Thermostat extends Equipment {
     case 'EMERGENCYHEAT':
       return ThermostatOperationMode.EMERGENCY_HEAT;
     default:
-      this._api.log.error(strings.unknownMode, strValue);
+      this.log.error(strings.unknownMode, strValue);
       return ThermostatOperationMode.UNKNOWN;
     }
   }
@@ -190,9 +192,9 @@ export class Thermostat extends Equipment {
     }
 
     if (Object.keys(payload).length > 0) {
-      this._api.publish(payload, this.deviceId, this.serialNumber);
+      this.publish(payload, this.deviceId, this.serialNumber);
     } else {
-      this._api.log.error(strings.unknownMode, mode);
+      this.log.error(strings.unknownMode, mode);
     }
   }
 
@@ -206,7 +208,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         coolPayload['@COOLSETPOINT'] = temp;
       } else {
-        this._api.log.error(strings.outOfRangeCool, lower, upper, temp);
+        this.log.error(strings.outOfRangeCool, lower, upper, temp);
       }
     }
 
@@ -216,17 +218,17 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         heatPayload['@HEATSETPOINT'] = temp;
       } else {
-        this._api.log.error(strings.outOfRangeHeat, lower, upper, temp);
+        this.log.error(strings.outOfRangeHeat, lower, upper, temp);
       }
     }
 
     let hasSetTemp = false;
     if (coolPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.COOLING].includes(this.mode)) {
-      this._api.publish(coolPayload, this.deviceId, this.serialNumber);
+      this.publish(coolPayload, this.deviceId, this.serialNumber);
       hasSetTemp = true;
     }
     if (heatPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
-      this._api.publish(heatPayload, this.deviceId, this.serialNumber);
+      this.publish(heatPayload, this.deviceId, this.serialNumber);
       hasSetTemp = true;
     }
     if (targetTemp && !hasSetTemp) {
@@ -236,10 +238,10 @@ export class Thermostat extends Equipment {
       } else if ([ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
         payload = heatPayload;
       } else {
-        this._api.log.error(strings.setpointUnknown, this.mode);
+        this.log.error(strings.setpointUnknown, this.mode);
       }
       if (Object.keys(payload).length > 0) {
-        this._api.publish(payload, this.deviceId, this.serialNumber);
+        this.publish(payload, this.deviceId, this.serialNumber);
       }
     }
   }

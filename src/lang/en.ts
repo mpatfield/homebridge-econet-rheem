@@ -2,12 +2,12 @@ const langEn = {
   
   // General
   brand: 'EcoNet',
+  redacted: '****redacted****',
+  undefined: 'undefined',
 
   // Startup
   badConfig: 'One or more required variables are missing from the config. Please check the documentation. https://github.com/mpatfield/homebridge-econet-rheem',
-  invalidCredentials: 'Invalid credentials',
-  newThermostat: 'Adding new thermostat:',
-  newWaterHeater: 'Adding new water heater:',
+  newEquipment: 'Adding new device:',
   removeDevice: 'Removing device:',
   restoringDevice: 'Restoring device:',
   setupComplete: '✓ Setup complete.',
@@ -20,36 +20,35 @@ const langEn = {
   ],
 
   // Equipment
-  thermostat: 'Thermostat',
-  waterHeater: 'Water Heater',
-  equipmentError: 'Equipment error:',
   outOfRangeCool: 'Cool setpoint out of range, lower: %s, upper: %s, setpoint: %s',
   outOfRangeHeat: 'Heat setpoint out of range, lower: %s, upper: %s, setpoint: %s',
   setpointUnknown: 'Cannot determine desired setpoint when mode is %s',
+  thermostat: 'Thermostat',
   unknownMode: 'Unknown thermostat mode:',
+  unsupportedEquipment: 'Unsupported equipment type: %s',
   unsupportedState: 'Unsupported state:',
+  waterHeater: 'Water Heater',
 
   // HTTP
   authSuccess: 'Successfully authenticated',
-  creatingEquipment: 'Creating equipment with data:',
-  httpError: 'HTTP error:',
-  invalidResponse: 'Invalid response format',
-  noEquipment: 'No equipment',
+  httpRetryMinutes: 'Request failed. Retrying in %s minutes…',
+  httpRetrySeconds: 'Request failed. Retrying in %s seconds…',
+  noDataReceived: 'No data received from EcoNet',
+  noEquipment: 'No equipment found',
   reauthenticate: 'Attempting to re-authenticate',
   reauthFailed: 'Re-authentication failed:',
 
   // MQTT
+  authMissing: 'MQTT is missing auth',
   connected: 'Connected and listening for updates…',
   connectionClosed: 'Connection closed',
+  connectionError: 'MQTT cannot connect',
   clientError: 'Client error:',
   clientNotConnected: 'Client not connected',
   idleConnection: 'Idle connection',
-  noMQTTOptions: 'MQTT options are undefined',
   parseFailed: 'Failed to parse message:',
   reconnectInMinutes: 'Will attempt to reconnect in %s minutes…',
   reconnectInSeconds: 'Will attempt to reconnect in %s seconds…',
-  topicPublish: 'Publishing message to topic: %s\n',
-  topicUpdate: 'Received message from topic: %s\n',
   unstableConnection: 'Having trouble staying connected',
 
   // Debug
@@ -64,7 +63,6 @@ const langEn = {
   modeState: '%s mode = %s',
   runningState: '%s running = %s',
   setpointState: '%s setpoint = %s',
-  updateReceived: 'Received update for %s',
 };
 
 export default langEn;

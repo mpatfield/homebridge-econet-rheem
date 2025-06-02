@@ -2,11 +2,13 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import { TemperatureUnits } from '../model/enums.js';
-import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
+import strings from '../lang/en.js';
+
+import { TemperatureUnits } from '../model/constants.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
-import strings from '../lang/en.js';
+import { toCelsius, fromCelsius } from '../tools/temperature.js';
+import getVersion from '../tools/version.js';
 
 export class WaterHeaterAccessory {
   private service: Service;
@@ -44,6 +46,7 @@ export class WaterHeaterAccessory {
       .onGet(this.getCurrentState.bind(this));
 
     this.service.getCharacteristic(this.Characteristic.TargetHeaterCoolerState)
+      .setValue(this.Characteristic.TargetHeaterCoolerState.HEAT)
       .setProps({ validValues: [this.Characteristic.TargetHeaterCoolerState.HEAT] })
       .onGet(this.getTargetState.bind(this))
       .onSet(this.setTargetState.bind(this));
@@ -53,7 +56,9 @@ export class WaterHeaterAccessory {
 
     const minTemp = toCelsius(this.waterHeater.limits[0], this.waterHeater.units);
     const maxTemp = toCelsius(this.waterHeater.limits[1], this.waterHeater.units);
+    const setpoint = toCelsius(this.waterHeater.setPoint, this.waterHeater.units);
     this.service.getCharacteristic(this.Characteristic.HeatingThresholdTemperature)
+      .setValue(setpoint)
       .setProps({ minValue: minTemp, maxValue: maxTemp, minStep: 0.1 })
       .onGet(this.getHeatingThresholdTemperature.bind(this))
       .onSet(this.setHeatingThresholdTemperature.bind(this));
@@ -66,7 +71,6 @@ export class WaterHeaterAccessory {
   private handleEquipmentUpdate(serial: string): void {
     if (serial === this.waterHeater.serialNumber) {
       this.updateCharacteristics();
-      this.platform.log.debug(strings.updateReceived, serial);
     }
   }
 

@@ -2,11 +2,13 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import { TemperatureUnits, ThermostatOperationMode } from '../model/enums.js';
-import { Thermostat } from '../model/thermostat.js';
-import getVersion, { toCelsius, fromCelsius } from '../model/utils.js';
-
 import strings from '../lang/en.js';
+
+import { TemperatureUnits, ThermostatOperationMode } from '../model/constants.js';
+import { Thermostat } from '../model/thermostat.js';
+
+import { toCelsius, fromCelsius } from '../tools/temperature.js';
+import getVersion from '../tools/version.js';
 
 export class ThermostatAccessory {
   private service: Service;
@@ -64,14 +66,18 @@ export class ThermostatAccessory {
 
     const minHeatTemp = toCelsius(this.thermostat.heatSetPointLimits[0], this.thermostat.units);
     const maxHeatTemp = toCelsius(this.thermostat.heatSetPointLimits[1], this.thermostat.units);
+    const heatSetpoint = toCelsius(this.thermostat.heatSetPoint, this.thermostat.units);
     this.service.getCharacteristic(this.Characteristic.HeatingThresholdTemperature)
+      .setValue(heatSetpoint)
       .setProps({ minValue: minHeatTemp, maxValue: maxHeatTemp, minStep: 0.1 })
       .onGet(this.getHeatingThresholdTemperature.bind(this))
       .onSet(this.setHeatingThresholdTemperature.bind(this));
 
     const minCoolTemp = toCelsius(this.thermostat.coolSetPointLimits[0], this.thermostat.units);
     const maxCoolTemp = toCelsius(this.thermostat.coolSetPointLimits[1], this.thermostat.units);
+    const coolSetpoint = toCelsius(thermostat.coolSetPoint, this.thermostat.units);
     this.service.getCharacteristic(this.Characteristic.CoolingThresholdTemperature)
+      .setValue(coolSetpoint)
       .setProps({ minValue: minCoolTemp, maxValue: maxCoolTemp, minStep: 0.1 })
       .onGet(this.getCoolingThresholdTemperature.bind(this))
       .onSet(this.setCoolingThresholdTemperature.bind(this));
@@ -84,7 +90,6 @@ export class ThermostatAccessory {
   private handleEquipmentUpdate(serial: string): void {
     if (serial === this.thermostat.serialNumber) {
       this.updateCharacteristics();
-      this.platform.log.debug(strings.updateReceived, serial);
     }
   }
 
