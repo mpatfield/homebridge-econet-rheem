@@ -1,10 +1,17 @@
-### HELP NEEDED!
+### HELP NEEDED! (no coding experience required)
 
-Do you have a leak sensor and/or shut off valve on your water heater? I would like to add support for these but I don't have access. Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) if you'd like to see these features added.
+Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions.
+
+Would you like to see Homebridge Econet Rheem in your language? Comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/35) if you'd like to help.
 
 # Change Log
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
+
+## 1.5.13 (####-##-##)
+
+### Changed
+- Dynamic translations
 
 ## 1.5.12 (2025-06-04)
 
