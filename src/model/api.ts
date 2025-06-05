@@ -276,8 +276,9 @@ export class EconetApi {
     this.log.always(strings.connected);
 
     if (isStartup) {
-      const randIndex = Math.floor(Math.random() * strings.welcomeMessages.length);
-      this.log.always(strings.setupComplete, strings.welcomeMessages[randIndex]);
+      const welcomeMessages = [strings.welcomeMessage_1, strings.welcomeMessage_2, strings.welcomeMessage_3, strings.welcomeMessage_4];
+      const randIndex = Math.floor(Math.random() * welcomeMessages.length);
+      this.log.always(strings.setupComplete, welcomeMessages[randIndex]);
     }
   }
 

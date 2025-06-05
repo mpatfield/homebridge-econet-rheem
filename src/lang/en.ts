@@ -12,12 +12,10 @@ const langEn = {
   restoringDevice: 'Restoring device:',
   setupComplete: '✓ Setup complete.',
   setupFailed: 'Setup failed:',
-  welcomeMessages: [
-    'Please ★ this plugin on GitHub if you\'re finding it useful! https://github.com/mpatfield/homebridge-econet-rheem',
-    'Would you like to sponsor this plugin? https://github.com/sponsors/mpatfield',
-    'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
-    'Want to see this plugin in your own language? Please create a ticket! https://github.com/mpatfield/homebridge-econet-rheem/issues',
-  ],
+  welcomeMessage_1: 'Please ★ this plugin on GitHub if you\'re finding it useful! https://github.com/mpatfield/homebridge-econet-rheem',
+  welcomeMessage_2: 'Would you like to sponsor this plugin? https://github.com/sponsors/mpatfield',
+  welcomeMessage_3: 'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
+  welcomeMessage_4: 'Want to see this plugin in your own language? Please create a ticket! https://github.com/mpatfield/homebridge-econet-rheem/issues',
 
   // Equipment
   outOfRangeCool: 'Cool setpoint out of range, lower: %s, upper: %s, setpoint: %s',
