@@ -9,7 +9,6 @@
     "required": ["email", "password"],
     "properties": {
       "name": {
-        "title": "Plugin Name",
         "type": "string",
         "default": "Econet Rheem"
       },

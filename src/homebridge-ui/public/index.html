@@ -39,13 +39,23 @@
 
     let replaced = false
 
-    window.parent.document.querySelectorAll('label,legend,option,p,span').forEach(element => {
+    const tags = ['span', 'label', 'legend', 'option', 'p'];
+    const elements = Array.from(
+      window.parent.document.querySelectorAll(tags.join(','))
+    ).sort((a, b) => {
+      return tags.indexOf(a.tagName.toLowerCase()) - tags.indexOf(b.tagName.toLowerCase());
+    });
+
+    elements.forEach(element => {
       let newHtml = element.innerHTML;
 
       newHtml = newHtml.replaceAll(
         /\$\{config\.(title|description|enumNames)\.([^\}]+)\}/g,
         (match, type, key) => {
-          return strings.config[type][key] //[`config.${type}.${key}`];
+          if (strings.config[type] && strings.config[type][key]) {
+            return strings.config[type][key];
+          }
+          return match;
         }
       );
 
@@ -53,7 +63,7 @@
         element.innerHTML = newHtml
         replaced = true
       }
-    })
+    });
 
     if (replaced) observer?.disconnect()
   }
