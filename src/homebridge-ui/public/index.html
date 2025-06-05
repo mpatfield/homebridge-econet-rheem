@@ -24,46 +24,46 @@
   const translateHtml = (strings) => {
     document.querySelectorAll('[i18n]').forEach(element => {
 
-      let string = strings.config[element.getAttribute('i18n')];
+      let string = strings.config[element.getAttribute('i18n')]
 
       const token = element.getAttribute('i18n_replace')
       if (token) {
         string = string.replace('%s', i18n_replacements[token])
       }
 
-      element.innerHTML = string;
-    });
+      element.innerHTML = string
+    })
   }
 
   const translateSchema = (strings, observer) => {
 
     let replaced = false
 
-    const tags = ['span', 'label', 'legend', 'option', 'p'];
+    const tags = ['span', 'label', 'legend', 'option', 'p']
     const elements = Array.from(
       window.parent.document.querySelectorAll(tags.join(','))
     ).sort((a, b) => {
-      return tags.indexOf(a.tagName.toLowerCase()) - tags.indexOf(b.tagName.toLowerCase());
-    });
+      return tags.indexOf(a.tagName.toLowerCase()) - tags.indexOf(b.tagName.toLowerCase())
+    })
 
     elements.forEach(element => {
-      let newHtml = element.innerHTML;
+      let newHtml = element.innerHTML
 
       newHtml = newHtml.replaceAll(
         /\$\{config\.(title|description|enumNames)\.([^\}]+)\}/g,
         (match, type, key) => {
           if (strings.config[type] && strings.config[type][key]) {
-            return strings.config[type][key];
+            return strings.config[type][key]
           }
-          return match;
+          return match
         }
-      );
+      )
 
       if (element.innerHTML !== newHtml) {
         element.innerHTML = newHtml
         replaced = true
       }
-    });
+    })
 
     if (replaced) observer?.disconnect()
   }
@@ -88,12 +88,12 @@
 
     const observer = new window.parent.MutationObserver(() => {
       translateSchema(strings, observer)
-    });
+    })
 
     observer.observe(
       window.parent.document.body,
       { childList: true, subtree: true }
-    );
+    )
 
     await homebridge.showSchemaForm()
 
