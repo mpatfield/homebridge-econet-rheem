@@ -6,7 +6,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { ThermostatAccessory } from '../homebridge/thermostatAccessory.js';
 import { WaterHeaterAccessory } from '../homebridge/waterHeaterAccessory.js';
 
-import strings from '../lang/en.js';
+import { setLanguage, strings } from '../i18n/i18n.js';
 
 import { EconetApi  } from '../model/api.js';
 import { EquipmentType } from '../model/constants.js';
@@ -33,6 +33,9 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     public readonly api: API,
   ) {
 
+    const userLang = Intl.DateTimeFormat().resolvedOptions().locale.split('-')[0];
+    setLanguage(userLang);
+
     this.Service = this.api.hap.Service;
     this.Characteristic = this.api.hap.Characteristic;
 
@@ -57,7 +60,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   configureAccessory(accessory: PlatformAccessory): void {
-    this.log.always(strings.restoringDevice, accessory.displayName);
+    this.log.always(strings.startup.restoringDevice, accessory.displayName);
     this.accessories.set(accessory.context.serialNumber, accessory);
   }
 
@@ -71,7 +74,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const debugMQTT = this.config.mqtt_debug as boolean;
 
     if (!email || !password) {
-      this.log.error(strings.badConfig);
+      this.log.error(strings.startup.badConfig);
       return;
     }
 
@@ -83,7 +86,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       const equipments = Array.from(this.econetApi.equipments.values());
 
       if (equipments.length === 0) {
-        this.log.warning(strings.noEquipment);
+        this.log.warning(strings.startup.noEquipment);
         this.accessories.forEach(accessory => this.removeAccessory(accessory));
         this.teardown();
         return;
@@ -103,7 +106,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       });
 
     } catch (error) {
-      this.log.error(strings.setupFailed, error instanceof Error ? error.message : String(error));
+      this.log.error(strings.startup.setupFailed, error instanceof Error ? error.message : String(error));
     }
   }
 
@@ -113,7 +116,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     if (!accessory) {
 
       const deviceName = equipment.deviceName;
-      this.log.always(strings.newEquipment, deviceName);
+      this.log.always(strings.startup.newEquipment, deviceName);
 
       const uuid = this.api.hap.uuid.generate(equipment.serialNumber);
 
@@ -135,7 +138,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   private removeAccessory(accessory: PlatformAccessory) {
-    this.log.always(strings.removeDevice, accessory.displayName);
+    this.log.always(strings.startup.removeDevice, accessory.displayName);
     this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     this.accessories.delete(accessory.context.serialNumber);
   }

@@ -1,4 +1,4 @@
-import { ThermostatOperationMode } from './constants';
+import { ThermostatOperationMode } from './constants.js';
 
 export const SENSITIVE_KEYS = [
   'address',

@@ -19,7 +19,7 @@
   },
   "main": "dist/homebridge/index.js",
   "scripts": {
-    "build": "rimraf ./dist && tsc",
+    "build": "rimraf ./dist && tsc && mkdir ./dist/homebridge-ui/public && cp -r ./src/homebridge-ui/public/* ./dist/homebridge-ui/public/",
     "lint": "eslint . --max-warnings=0",
     "prepublishOnly": "npm run lint && npm run build",
     "watch": "npm run build && npm link && nodemon"
@@ -44,10 +44,12 @@
     "@homebridge/plugin-ui-utils": "^2.0.2",
     "axios": "^1.7.2",
     "homebridge-lib": "^7.1.4",
+    "lodash.merge": "^4.6.2",
     "mqtt": "^5.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",
+    "@types/lodash.merge": "^4.6.9",
     "@types/node": "^22.13.5",
     "@types/ws": "^8.18.1",
     "eslint": "^9.24.0",

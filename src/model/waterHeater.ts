@@ -4,8 +4,8 @@ import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
 import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
 
+import { strings } from '../i18n/i18n.js';
 
-import strings from '../lang/en.js';
 import { fromCelsius } from '../tools/temperature.js';
 
 const DEFAULT_LOWER_LIMIT = 35;
@@ -109,22 +109,22 @@ export class WaterHeater extends Equipment {
  
     if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
-      this.log.ifVerbose(strings.enabledState, this.deviceName, this.enabled);
+      this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
     }
 
     if (data['@SETPOINT'] !== undefined) {
       this.set_point = data['@SETPOINT'];
-      this.log.ifVerbose(strings.setpointState, this.deviceName, this.set_point);
+      this.log.ifVerbose(strings.debug.setpointState, this.deviceName, this.set_point);
     }
 
     if (data['@HOTWATER'] !== undefined) {
       this.availability_icon = data['@HOTWATER'];
-      this.log.ifVerbose(strings.availabilityState, this.deviceName, this.availability_icon);
+      this.log.ifVerbose(strings.debug.availabilityState, this.deviceName, this.availability_icon);
     }
 
     if (data['@RUNNING'] !== undefined) {
       this.running = data['@RUNNING'].replace(/\s/g, '').length > 0;
-      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
+      this.log.ifVerbose(strings.debug.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();  

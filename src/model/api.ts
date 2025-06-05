@@ -9,7 +9,7 @@ import * as Types from './types.js';
 import { Thermostat } from './thermostat.js';
 import { WaterHeater } from './waterHeater.js';
 
-import strings from '../lang/en.js';
+import { strings } from '../i18n/i18n.js';
 
 import { safeGetItem, safeSetItem, STORAGE_KEY_MQTT } from '../tools/storage.js';
 import { MINUTE, SECOND } from '../tools/time.js';
@@ -100,12 +100,12 @@ export class EconetApi {
   publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {
     
     if (!this.mqttClient || !this.mqttClient.connected) {
-      this.log.error(strings.clientNotConnected);
+      this.log.error(strings.mqtt.notConnected);
       return;
     }
 
     if (!this.auth?.accountId) {
-      this.log.error(strings.authMissing);
+      this.log.error(strings.mqtt.authMissing);
       return;
     }
 
@@ -171,7 +171,7 @@ export class EconetApi {
 
       if (!res.data) {
         this.log.warning(caller, this.desensitize(res.data));
-        throw new Error(strings.noDataReceived);
+        throw new Error(strings.http.noDataReceived);
       }
 
       this.logDebug(caller, url.substring(BASE_URL.length + 1), res.data);
@@ -201,9 +201,9 @@ export class EconetApi {
     
     const retryDelay = DELAYS[Math.min(this.retryIndex, DELAYS.length - 1)];
     if (retryDelay <= MINUTE) {
-      this.log.ifVerbose(strings.httpRetrySeconds, retryDelay / SECOND);
+      this.log.ifVerbose(strings.http.retryInSeconds, retryDelay / SECOND);
     } else {
-      this.log.ifVerbose(strings.httpRetryMinutes, retryDelay / MINUTE);
+      this.log.ifVerbose(strings.http.retryInMinutes, retryDelay / MINUTE);
     }
 
     await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -224,7 +224,7 @@ export class EconetApi {
     
     this.auth = new Auth(tokenData);
 
-    this.log.always(strings.authSuccess);
+    this.log.always(strings.http.authSuccess);
 
     return true;
   }
@@ -236,7 +236,7 @@ export class EconetApi {
     }
   
     if (!this.auth?.token) {
-      this.log.error(strings.authMissing);
+      this.log.error(strings.mqtt.authMissing);
       return;
     }
 
@@ -260,25 +260,24 @@ export class EconetApi {
 
     this.mqttClient.on('close', () => this.mqttConnectionClosed());
 
-    this.mqttClient.on('error', (error: Types.MQTTError) => this.log.ifVerbose(LogType.WARNING, strings.clientError, error));
+    this.mqttClient.on('error', (error: Types.MQTTError) => this.log.ifVerbose(LogType.WARNING, strings.mqtt.clientError, error));
   }
 
   private mqttSubscribe(isStartup: boolean) {
     
     if (!this.mqttClient || !this.auth?.accountId) {
-      this.log.error(strings.connectionError);
+      this.log.error(strings.mqtt.connectionError);
       return;
     }
       
     this.mqttClient.subscribe(MQTT_TOPIC_REPORTED.replace('%s', this.auth.accountId));
     this.mqttClient.subscribe(MQTT_TOPIC_DESIRED.replace('%s', this.auth.accountId));
       
-    this.log.always(strings.connected);
+    this.log.always(strings.mqtt.connected);
 
     if (isStartup) {
-      const welcomeMessages = [strings.welcomeMessage_1, strings.welcomeMessage_2, strings.welcomeMessage_3, strings.welcomeMessage_4];
-      const randIndex = Math.floor(Math.random() * welcomeMessages.length);
-      this.log.always(strings.setupComplete, welcomeMessages[randIndex]);
+      const randIndex = Math.floor(Math.random() * strings.startup.welcome.length);
+      this.log.always(strings.startup.setupComplete, strings.startup.welcome[randIndex]);
     }
   }
 
@@ -303,12 +302,12 @@ export class EconetApi {
         }
       }
     } catch (e) {
-      this.log.warning(strings.parseFailed, this.desensitize(message));
+      this.log.warning(strings.mqtt.parseFailed, this.desensitize(message));
     }
   }
 
   private mqttConnectionClosed() {
-    this.log.ifVerbose(strings.connectionClosed);
+    this.log.ifVerbose(strings.mqtt.connectionClosed);
     this.mqttReconnect();
   }
 
@@ -319,7 +318,7 @@ export class EconetApi {
     }
 
     this.idleMQTTTimer = setTimeout(()=>{
-      this.log.ifVerbose(strings.idleConnection);
+      this.log.ifVerbose(strings.mqtt.idleConnection);
       this.mqttReconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
@@ -340,19 +339,19 @@ export class EconetApi {
     this.reconnectCount++;
     if (this.reconnectCount % DELAYS.length === 0) {
       try {
-        this.log.ifVerbose(strings.unstableConnection);
-        this.log.ifVerbose(strings.reauthenticate);
+        this.log.ifVerbose(strings.mqtt.unstableConnection);
+        this.log.ifVerbose(strings.http.reauthenticate);
         await this.authenticate();
       } catch (error) {
-        this.log.ifVerbose(strings.reauthFailed, error);
+        this.log.ifVerbose(strings.http.reauthFailed, error);
       }
     }
 
     const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
     if (reconnectDelay < MINUTE) {
-      this.log.ifVerbose(strings.reconnectInSeconds, reconnectDelay / SECOND);
+      this.log.ifVerbose(strings.mqtt.reconnectInSeconds, reconnectDelay / SECOND);
     } else {
-      this.log.ifVerbose(strings.reconnectInMinutes, reconnectDelay / MINUTE);
+      this.log.ifVerbose(strings.mqtt.reconnectInMinutes, reconnectDelay / MINUTE);
     }
 
     setTimeout(() => {
@@ -386,7 +385,7 @@ export class EconetApi {
           equipment = new WaterHeater(this, equipmentData as unknown as Types.WaterHeaterData, this.storageFilePath);
           break;
         default:
-          this.log.error(strings.unsupportedEquipment, equipmentData.device_type);
+          this.log.error(strings.equipment.unsupported, equipmentData.device_type);
         }
 
         if (equipment) {
@@ -450,14 +449,14 @@ export class EconetApi {
 
       Types.SENSITIVE_KEYS.forEach(key => {
         const regex = new RegExp(`"${key}"\\s*:\\s*(".*?"|\\d+|true|false|null)`, 'gi');
-        output = output.replace(regex, `"${key}": "${strings.redacted}"`);
+        output = output.replace(regex, `"${key}": "${strings.general.redacted}"`);
       });
     }
 
     if (this.auth) {
-      output = output.replaceAll(this.auth.accountId, strings.redacted);
-      output = output.replaceAll(this.auth.token, strings.redacted);
-      output = output.replaceAll(this.auth.userId, strings.redacted);
+      output = output.replaceAll(this.auth.accountId, strings.general.redacted);
+      output = output.replaceAll(this.auth.token, strings.general.redacted);
+      output = output.replaceAll(this.auth.userId, strings.general.redacted);
     }
 
     return output;

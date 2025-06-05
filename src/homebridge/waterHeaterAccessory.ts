@@ -2,7 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import strings from '../lang/en.js';
+import { strings } from '../i18n/i18n.js';
 
 import { TemperatureUnits } from '../model/constants.js';
 import { WaterHeater } from '../model/waterHeater.js';
@@ -25,8 +25,8 @@ export class WaterHeaterAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, strings.brand)
-      .setCharacteristic(this.Characteristic.Model, strings.waterHeater)
+      .setCharacteristic(this.Characteristic.Manufacturer, strings.general.brand)
+      .setCharacteristic(this.Characteristic.Model, strings.equipment.waterHeater)
       .setCharacteristic(this.Characteristic.SerialNumber, this.waterHeater.serialNumber)
       .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 

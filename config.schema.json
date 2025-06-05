@@ -3,7 +3,7 @@
   "pluginType": "platform",
   "singular": true,
   "customUi": true,
-  "customUiPath": "./src/homebridge-ui",
+  "customUiPath": "./dist/homebridge-ui",
   "schema": {
     "type": "object",
     "required": ["email", "password"],
@@ -14,27 +14,27 @@
         "default": "Econet Rheem"
       },
       "email": {
-        "title": "Email",
+        "title": "${config.title.email}",
         "type": "string",
         "format": "email",
-        "description": "Rheem/Econet account email (Homebridge dedicated account recommended)"
+        "description": "${config.description.email}"
       },
       "password": {
-        "title": "Password",
+        "title": "${config.title.password}",
         "type": "string",
-        "description": "Rheem/Econet account password"
+        "description": "${config.description.password}"
       },
       "wh_sim_disable": {
-        "title": "Disable Water Heater Temperature Simulator",
+        "title": "${config.title.wh_sim_disable}",
         "type": "boolean",
         "required": false,
-        "description": "See documentation for details"
+        "description": "${config.description.wh_sim_disable}"
       },
       "verbose": {
-        "title": "Verbose",
+        "title": "${config.title.verbose}",
         "type": "boolean",
         "required": false,
-        "description": "Enable additional debug logging"
+        "description": "${config.description.verbose}"
       }
     }
   },

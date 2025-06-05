@@ -3,7 +3,7 @@ import { EquipmentType, ThermostatOperationMode } from './constants.js';
 import { Equipment } from './equipment.js';
 import { EquipmentData, getValue, MQTTData, ThermostatData } from './types.js';
 
-import strings from '../lang/en.js';
+import { strings } from '../i18n/i18n.js';
 
 import { fromCelsius } from '../tools/temperature.js';
 
@@ -110,33 +110,33 @@ export class Thermostat extends Equipment {
 
     if (data['@HUMIDITY'] !== undefined) {
       this.current_humidity = data['@HUMIDITY'];
-      this.log.ifVerbose(strings.humidityState, this.deviceName, this.current_humidity);
+      this.log.ifVerbose(strings.debug.humidityState, this.deviceName, this.current_humidity);
     }
 
     if (data['@SETPOINT'] !== undefined) {
       this.current_temp = data['@SETPOINT'];
-      this.log.ifVerbose(strings.currentTempState, this.deviceName, this.current_temp);
+      this.log.ifVerbose(strings.debug.currentTempState, this.deviceName, this.current_temp);
     }
 
     if (data['@COOLSETPOINT'] !== undefined) {
       this.cool_set_point = data['@COOLSETPOINT'];
-      this.log.ifVerbose(strings.coolSetpoint, this.deviceName, this.cool_set_point);
+      this.log.ifVerbose(strings.debug.coolSetpoint, this.deviceName, this.cool_set_point);
     }
 
     if (data['@HEATSETPOINT'] !== undefined) {
       this.heat_set_point = data['@HEATSETPOINT'];
-      this.log.ifVerbose(strings.heatSetpoint, this.deviceName, this.heat_set_point);
+      this.log.ifVerbose(strings.debug.heatSetpoint, this.deviceName, this.heat_set_point);
     }
 
     if (data['@MODE'] !== undefined) {
       const modeIndex = getValue(data['@MODE']);
       this.current_mode = this.modes.get(modeIndex) ?? ThermostatOperationMode.UNKNOWN;
-      this.log.ifVerbose(strings.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
+      this.log.ifVerbose(strings.debug.modeState, this.deviceName, this._stringFromMode(this.current_mode) ?? 'UNKNOWN');
     }
 
     if (data['@RUNNINGSTATUS'] !== undefined) {
       this.running = data['@RUNNINGSTATUS'].replace(/\s/g, '').length > 0;
-      this.log.ifVerbose(strings.runningState, this.deviceName, this.running);
+      this.log.ifVerbose(strings.debug.runningState, this.deviceName, this.running);
     }
 
     this.didUpdate();
@@ -158,7 +158,7 @@ export class Thermostat extends Equipment {
     case 'EMERGENCYHEAT':
       return ThermostatOperationMode.EMERGENCY_HEAT;
     default:
-      this.log.error(strings.unknownMode, strValue);
+      this.log.error(strings.equipment.unknownMode, strValue);
       return ThermostatOperationMode.UNKNOWN;
     }
   }
@@ -194,7 +194,7 @@ export class Thermostat extends Equipment {
     if (Object.keys(payload).length > 0) {
       this.publish(payload, this.deviceId, this.serialNumber);
     } else {
-      this.log.error(strings.unknownMode, mode);
+      this.log.error(strings.equipment.unknownMode, mode);
     }
   }
 
@@ -208,7 +208,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         coolPayload['@COOLSETPOINT'] = temp;
       } else {
-        this.log.error(strings.outOfRangeCool, lower, upper, temp);
+        this.log.error(strings.equipment.outOfRangeCool, lower, upper, temp);
       }
     }
 
@@ -218,7 +218,7 @@ export class Thermostat extends Equipment {
       if (lower <= temp && temp <= upper) {
         heatPayload['@HEATSETPOINT'] = temp;
       } else {
-        this.log.error(strings.outOfRangeHeat, lower, upper, temp);
+        this.log.error(strings.equipment.outOfRangeHeat, lower, upper, temp);
       }
     }
 
@@ -238,7 +238,7 @@ export class Thermostat extends Equipment {
       } else if ([ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
         payload = heatPayload;
       } else {
-        this.log.error(strings.setpointUnknown, this.mode);
+        this.log.error(strings.equipment.setpointUnknown, this.mode);
       }
       if (Object.keys(payload).length > 0) {
         this.publish(payload, this.deviceId, this.serialNumber);

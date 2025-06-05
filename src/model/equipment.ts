@@ -2,7 +2,7 @@ import { EconetApi } from './api.js';
 import { EquipmentType, TemperatureUnits } from './constants.js';
 import { EquipmentData, MQTTData } from './types.js';
 
-import strings from '../lang/en.js';
+import { strings } from '../i18n/i18n.js';
 
 import { Log } from '../tools/log.js';
 
@@ -19,7 +19,7 @@ export abstract class Equipment {
   constructor(private readonly api: EconetApi, data: EquipmentData) {
     this.device_id = data.device_name;
     this.serial_number = data.serial_number;
-    this.device_name = data['@NAME']?.value ?? strings.brand;
+    this.device_name = data['@NAME']?.value ?? strings.general.brand;
     this.alert_count = data['@ALERTCOUNT'] ?? 0;
     this.temp_units = data['@SETPOINT']?.constraints?.units?.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
   }
@@ -27,15 +27,15 @@ export abstract class Equipment {
   abstract get type(): EquipmentType;
 
   get deviceId(): string {
-    return this.device_id || strings.undefined;
+    return this.device_id || strings.general.undefined;
   }
 
   get serialNumber(): string {
-    return this.serial_number || strings.undefined;
+    return this.serial_number || strings.general.undefined;
   }
 
   get deviceName(): string {
-    return this.device_name || strings.undefined;
+    return this.device_name || strings.general.undefined;
   }
 
   get hasAlert(): boolean {
@@ -68,7 +68,7 @@ export abstract class Equipment {
 
     if (update['@ALERTCOUNT'] !== undefined) {
       this.alert_count = update['@ALERTCOUNT'];
-      this.log.ifVerbose(strings.alertCount, this.deviceName, this.alert_count);
+      this.log.ifVerbose(strings.debug.alertCount, this.deviceName, this.alert_count);
     }
   }
 

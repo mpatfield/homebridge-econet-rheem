@@ -2,7 +2,7 @@ import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
 import { EconetRheemPlatform } from '../homebridge/platform.js';
 
-import strings from '../lang/en.js';
+import { strings } from '../i18n/i18n.js';
 
 import { TemperatureUnits, ThermostatOperationMode } from '../model/constants.js';
 import { Thermostat } from '../model/thermostat.js';
@@ -24,8 +24,8 @@ export class ThermostatAccessory {
     const Service = platform.api.hap.Service;
 
     this.accessory.getService(Service.AccessoryInformation)!
-      .setCharacteristic(this.Characteristic.Manufacturer, strings.brand)
-      .setCharacteristic(this.Characteristic.Model, strings.thermostat)
+      .setCharacteristic(this.Characteristic.Manufacturer, strings.general.brand)
+      .setCharacteristic(this.Characteristic.Model, strings.equipment.thermostat)
       .setCharacteristic(this.Characteristic.SerialNumber, this.thermostat.serialNumber)
       .setCharacteristic(this.Characteristic.FirmwareRevision, getVersion());
 
@@ -167,7 +167,7 @@ export class ThermostatAccessory {
       mode = ThermostatOperationMode.AUTO;
       break;
     default:
-      this.platform.log.error(strings.unsupportedState, state);
+      this.platform.log.error(strings.equipment.unsupportedState, state);
       return;
     }
     this.thermostat.setMode(mode);
