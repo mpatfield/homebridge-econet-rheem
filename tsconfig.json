@@ -19,5 +19,9 @@
   "include": [
     "eslint.config.js",
     "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/homebridge-ui/ui.ts"
   ]
 }

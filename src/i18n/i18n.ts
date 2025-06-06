@@ -11,7 +11,7 @@ const Translations: Record<Language, Translation> = {
   [Language.ZZ]: zz,
 };
 
-type Translation = typeof en;
+export type Translation = typeof en;
 
 let currentLanguage: Language = Language.EN;
 

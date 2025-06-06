@@ -19,10 +19,11 @@
   },
   "main": "dist/homebridge/index.js",
   "scripts": {
-    "build": "rimraf ./dist && tsc && mkdir ./dist/homebridge-ui/public && cp -r ./src/homebridge-ui/public/* ./dist/homebridge-ui/public/",
+    "build": "rimraf ./dist && tsc && npm run build:html && npm run build:ui",
+    "build:html": "mkdir ./dist/homebridge-ui/public && cp -r ./src/homebridge-ui/public/* ./dist/homebridge-ui/public/",
+    "build:ui": "esbuild src/homebridge-ui/ui.ts --bundle --outfile=dist/homebridge-ui/public/ui.js --minify",
     "lint": "eslint . --max-warnings=0",
-    "prepublishOnly": "npm run lint && npm run build",
-    "watch": "npm run build && npm link && nodemon"
+    "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
     "homebridge",
@@ -48,16 +49,13 @@
     "mqtt": "^5.7.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.21.0",
     "@types/lodash.merge": "^4.6.9",
-    "@types/node": "^22.13.5",
     "@types/ws": "^8.18.1",
+    "esbuild": "^0.25.5",
     "eslint": "^9.24.0",
     "homebridge": "^2.0.0-beta.0",
-    "nodemon": "^3.1.9",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.1"
   },
   "homebridge": {
