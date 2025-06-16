@@ -11,7 +11,7 @@ import { WaterHeater } from './waterHeater.js';
 
 import { strings } from '../i18n/i18n.js';
 
-import { safeGetItem, safeSetItem, STORAGE_KEY_MQTT } from '../tools/storage.js';
+import { storageGet, storageSet, STORAGE_KEY_MQTT } from '../tools/storage.js';
 import { MINUTE, SECOND } from '../tools/time.js';
 import { Log, LogType } from '../tools/log.js';
 
@@ -65,14 +65,14 @@ export class EconetApi {
     public readonly log: Log,
     private readonly email: string,
     private readonly password: string,
-    readonly storageFilePath: string,
+    readonly persistPath: string,
     private readonly debugMQTT: boolean,
-  ) {
-    this.auth = Auth.load(this.storageFilePath, email);
-  }
+  ) {}
 
-  static async connect(log: Log, email: string, password: string, storageFilePath: string, debugMQTT: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, storageFilePath, debugMQTT);
+  static async connect(log: Log, email: string, password: string, persistPath: string, debugMQTT: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, persistPath, debugMQTT);
+
+    api._auth = await Auth.load(persistPath, email);
 
     let shouldContinue = true;
     if (!api.auth) {
@@ -131,11 +131,11 @@ export class EconetApi {
     return this._auth ?? null;
   }
   
-  private set auth(value: Auth | null) {
-    this._auth = value;
+  private async saveTokenData(tokenData: Types.TokenData) {
+    this._auth = new Auth(tokenData);
 
     if (this._auth) {
-      this._auth.save(this.storageFilePath, this.email);
+      await this._auth.save(this.persistPath, this.email);
     }
   }
 
@@ -222,7 +222,7 @@ export class EconetApi {
       return false;
     } 
     
-    this.auth = new Auth(tokenData);
+    await this.saveTokenData(tokenData);
 
     this.log.always(strings.http.authSuccess);
 
@@ -374,7 +374,7 @@ export class EconetApi {
     }
 
     locationsData.results.locations.forEach(location => {
-      location.equiptments.forEach(equipmentData => {
+      location.equiptments.forEach(async equipmentData => {
 
         let equipment: Equipment | null = null;
         switch(equipmentData.device_type) {
@@ -382,7 +382,7 @@ export class EconetApi {
           equipment = new Thermostat(this, equipmentData as unknown as Types.ThermostatData);
           break;
         case EquipmentType.WATER_HEATER:
-          equipment = new WaterHeater(this, equipmentData as unknown as Types.WaterHeaterData, this.storageFilePath);
+          equipment = await WaterHeater.create(this, equipmentData as unknown as Types.WaterHeaterData, this.persistPath);
           break;
         default:
           this.log.error(strings.equipment.unsupported, equipmentData.device_type);
@@ -402,11 +402,11 @@ export class EconetApi {
     });
   }
 
-  private saveMQTT(data: Types.MQTTData) {
+  private async saveMQTT(data: Types.MQTTData) {
 
     const ignoreKeys = new Set(['transactionId', 'device_name', 'serial_number']);
 
-    const objectString = safeGetItem(this.storageFilePath, STORAGE_KEY_MQTT);
+    const objectString = await storageGet(this.persistPath, STORAGE_KEY_MQTT);
     const valuesObject = objectString ? JSON.parse(objectString) : {};
 
     for (const [key, value] of Object.entries(data)) {
@@ -425,7 +425,7 @@ export class EconetApi {
       valuesObject[key] = valuesArray;
     }
 
-    safeSetItem(this.storageFilePath, STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
+    await storageSet(this.persistPath, STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
   }
 
   

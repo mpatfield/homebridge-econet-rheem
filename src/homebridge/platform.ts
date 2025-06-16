@@ -1,5 +1,4 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
-import path from 'path';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
@@ -15,7 +14,6 @@ import { Thermostat } from '../model/thermostat.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
 import { Log } from '../tools/log.js';
-import { STORAGE_FILE_NAME } from '../tools/storage.js';
 import getVersion from '../tools/version.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
@@ -80,8 +78,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     try {
 
-      const storageFilePath = path.join(this.api.user.storagePath(), STORAGE_FILE_NAME);
-      this.econetApi = await EconetApi.connect(this.log, email, password, storageFilePath, debugMQTT);
+      this.econetApi = await EconetApi.connect(this.log, email, password, this.api.user.persistPath(), debugMQTT);
 
       const equipments = Array.from(this.econetApi.equipments.values());
 

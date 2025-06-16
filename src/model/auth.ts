@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { TokenData } from './types.js';
 
-import { safeGetItem, safeSetItem, STORAGE_KEY_AUTH } from '../tools/storage.js';
+import { storageGet, storageSet, STORAGE_KEY_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
@@ -26,29 +26,33 @@ export class Auth {
     return crypto.createHash('sha256').update(encryptionKey).digest();
   }
 
-  save(filePath: string, encryptionKey: string): void {
-
-    const serailzed = JSON.stringify({
-      data: this.data,
-    });
-
-    const digest = Auth.digest(encryptionKey);
-    const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', digest, iv);
-    const encrypted = Buffer.concat([cipher.update(serailzed, 'utf8'), cipher.final()]);
-    const final = iv.toString('hex') + ':' + encrypted.toString('hex');
-
-    safeSetItem(filePath, STORAGE_KEY_AUTH, final);
-  }
-
-  static load(filePath: string, encryptionKey: string): Auth | null {
-
-    const final = safeGetItem(filePath, STORAGE_KEY_AUTH);
-    if (!final) {
-      return null;
-    }
+  async save(filePath: string, encryptionKey: string): Promise<void> {
 
     try {
+      const serailzed = JSON.stringify({
+        data: this.data,
+      });
+
+      const digest = Auth.digest(encryptionKey);
+      const iv = crypto.randomBytes(16);
+      const cipher = crypto.createCipheriv('aes-256-cbc', digest, iv);
+      const encrypted = Buffer.concat([cipher.update(serailzed, 'utf8'), cipher.final()]);
+      const final = iv.toString('hex') + ':' + encrypted.toString('hex');
+
+      await storageSet(filePath, STORAGE_KEY_AUTH, final);
+    } catch (err) {
+      // Nothing
+    }
+  }
+
+  static async load(filePath: string, encryptionKey: string): Promise<Auth | null> {
+
+    try {
+
+      const final = await storageGet(filePath, STORAGE_KEY_AUTH);
+      if (!final) {
+        return null;
+      }
 
       const digest = Auth.digest(encryptionKey);
       const [ivHex, encryptedHex] = final.split(':');

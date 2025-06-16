@@ -1,29 +1,27 @@
-import fs from 'fs';
-
-export const STORAGE_FILE_NAME = 'econetRheem.json';
+import storage from 'node-persist';
 
 export const STORAGE_KEY_AUTH = 'auth';
 export const STORAGE_KEY_MQTT = 'mqtt';
 export const STORAGE_KEY_RECOVERY_RATES = 'rates';
 
-function readStorage(filePath: string): Record<string, string> {
-  if (!fs.existsSync(filePath)) {
-    return {};
+async function init(dir: string) {
+  await storage.init({ dir: dir, forgiveParseErrors: true });
+}
+
+export async function storageGet(dir: string, key: string): Promise<string | null> {
+  try {
+    await init(dir);
+    return await storage.get(key);
+  } catch (err) {
+    return null;
   }
-  const data = fs.readFileSync(filePath, 'utf-8');
-  return JSON.parse(data);
-}
-function writeStorage(filePath: string, storage: Record<string, string>): void {
-  fs.writeFileSync(filePath, JSON.stringify(storage, null, 2));
 }
 
-export function safeGetItem(filePath: string, key: string): string | null {
-  const storage = readStorage(filePath);
-  return storage[key] ?? null;
-}
-
-export function safeSetItem(filePath: string, key: string, value: string): void {
-  const storage = readStorage(filePath);
-  storage[key] = value;
-  writeStorage(filePath, storage);
+export async function storageSet(dir: string, key: string, value: string): Promise<void> {
+  try {
+    await init(dir);
+    storage.set(key, value);
+  } catch {
+    // Nothing
+  }
 }

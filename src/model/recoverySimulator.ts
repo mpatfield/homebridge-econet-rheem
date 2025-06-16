@@ -2,7 +2,7 @@ import { TemperatureUnits } from './constants.js';
 import { WaterHeater } from './waterHeater.js';
 
 import { HOUR, MINUTE } from '../tools/time.js';
-import { safeGetItem, safeSetItem, STORAGE_KEY_RECOVERY_RATES } from '../tools/storage.js';
+import { storageSet, STORAGE_KEY_RECOVERY_RATES, storageGet } from '../tools/storage.js';
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
@@ -14,7 +14,7 @@ export class RecoverySimulator {
 
   private readonly minRecoveryRate: number;
   private readonly defaultRecoveryRate: number;
-  private recoveryRates: number[];
+  private recoveryRates: number[] = [DEFAULT_RECOVERY_RATE];
 
   private recoveryTimer: NodeJS.Timeout | null = null;
 
@@ -30,7 +30,13 @@ export class RecoverySimulator {
   private recoveryStartTime: number | null = null;
   private recoveryStartTemp: number | null = null;
 
-  constructor(
+  static async create(waterHeater: WaterHeater, onUpdate: () => void): Promise<RecoverySimulator> {
+    const simulator = new RecoverySimulator(waterHeater, onUpdate);
+    simulator.recoveryRates = await simulator._loadRecoveryRates() ?? [simulator.defaultRecoveryRate];
+    return simulator;
+  }
+
+  private constructor(
     readonly waterHeater: WaterHeater,
     private readonly onUpdate: () => void,
   ) {
@@ -45,7 +51,6 @@ export class RecoverySimulator {
 
     this.minRecoveryRate = MINIMUM_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
     this.defaultRecoveryRate = DEFAULT_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
-    this.recoveryRates = this._loadRecoveryRates() ?? [this.defaultRecoveryRate];
   }
 
   currentTemp(inputTemp: number): number {
@@ -169,18 +174,19 @@ export class RecoverySimulator {
     this._saveRecoveryRates();
   }
 
-  private get recoveryRatesObject(): Record<string, number[]> {
-    const objectString = safeGetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES);
+  private async getStoredRecoveryRates(): Promise<Record<string, number[]>> {
+    const objectString = await storageGet(this.waterHeater.persistPath, STORAGE_KEY_RECOVERY_RATES);
     return  objectString ? JSON.parse(objectString) : {};
   }
 
-  private _loadRecoveryRates(): number[] | null {
-    return this.recoveryRatesObject[this.serialNumber];
+  private async _loadRecoveryRates(): Promise<number[] | null> {
+    const ratesObject = await this.getStoredRecoveryRates();
+    return ratesObject[this.serialNumber];
   }
 
-  private _saveRecoveryRates(): void {
-    const ratesObject = this.recoveryRatesObject;
+  private async _saveRecoveryRates() {
+    const ratesObject = await this.getStoredRecoveryRates();
     ratesObject[this.serialNumber] = this.recoveryRates;
-    safeSetItem(this.waterHeater.storageFilePath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
+    await storageSet(this.waterHeater.persistPath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
   }
 }

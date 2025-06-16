@@ -2,7 +2,7 @@
   "name": "homebridge-econet-rheem",
   "platform": "HomebridgeEconetRheem",
   "displayName": "Homebridge Econet Rheem",
-  "description": "Homebridge plugin based on pyeconet for control of Rheem water heaters",
+  "description": "Homebridge plugin for control of Rheem thermostats and water heaters",
   "type": "module",
   "version": "1.5.13",
   "homepage": "https://github.com/mpatfield/homebridge-econet-rheem#readme",
@@ -50,11 +50,13 @@
   },
   "devDependencies": {
     "@types/lodash.merge": "^4.6.9",
+    "@types/node-persist": "^3.1.8",
     "@types/ws": "^8.18.1",
     "esbuild": "^0.25.5",
     "eslint": "^9.24.0",
-    "jiti": "^2.4.2",
     "homebridge": "^2.0.0-beta.0",
+    "jiti": "^2.4.2",
+    "node-persist": "^4.0.4",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "typescript-eslint": "^8.24.1"

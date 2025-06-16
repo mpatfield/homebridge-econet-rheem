@@ -12,6 +12,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Changed
 - Dynamic translations
+- Use node-persist for auth token caching
 
 ## 1.5.12 (2025-06-04)
 

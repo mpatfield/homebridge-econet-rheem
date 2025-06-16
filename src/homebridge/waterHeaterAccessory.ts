@@ -15,7 +15,7 @@ export class WaterHeaterAccessory {
   private readonly Characteristic: typeof import('homebridge').Characteristic;
 
   constructor(
-    private readonly platform: EconetRheemPlatform,
+    platform: EconetRheemPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly waterHeater: WaterHeater,
     private readonly alwaysUseCurrentTemp: boolean,
