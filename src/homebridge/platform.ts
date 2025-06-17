@@ -1,5 +1,4 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
-import path from 'path';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
@@ -79,8 +78,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     try {
 
-      const persistPath = path.join(this.api.user.persistPath(), PLUGIN_NAME);
-      this.econetApi = await EconetApi.connect(this.log, email, password, persistPath, debugMQTT);
+      this.econetApi = await EconetApi.connect(this.log, email, password, this.api.user.persistPath(), debugMQTT);
 
       const equipments = Array.from(this.econetApi.equipments.values());
 
