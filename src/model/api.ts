@@ -373,8 +373,8 @@ export class EconetApi {
       return;
     }
 
-    locationsData.results.locations.forEach(location => {
-      location.equiptments.forEach(async equipmentData => {
+    for (const location of locationsData.results.locations) {
+      for (const equipmentData of location.equiptments) {
 
         let equipment: Equipment | null = null;
         switch(equipmentData.device_type) {
@@ -398,8 +398,8 @@ export class EconetApi {
             });
           }
         }
-      });
-    });
+      };
+    };
   }
 
   private async saveMQTT(data: Types.MQTTData) {
