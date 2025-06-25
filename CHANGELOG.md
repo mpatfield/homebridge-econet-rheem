@@ -8,7 +8,7 @@ Would you like to see Homebridge Econet Rheem in your language? Comment [here](h
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.5.13 (####-##-##)
+## 1.5.13 (2025-06-25)
 
 ### Changed
 - Dynamic translations

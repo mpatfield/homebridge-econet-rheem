@@ -11,7 +11,7 @@ const en = {
     },
 
     needed: 'You will need your Rheem username and password',
-    support: 'For help and support please visit %s',
+    support: 'For documentation and support please visit %s',
     thankYou: 'Thank you for installing Homebridge Econet Rheem',
 
     title: {
