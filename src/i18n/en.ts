@@ -88,7 +88,7 @@ const en = {
       'Please ★ this plugin on GitHub if you\'re finding it useful! https://github.com/mpatfield/homebridge-econet-rheem',
       'Would you like to sponsor this plugin? https://github.com/sponsors/mpatfield',
       'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
-      'Want to see this plugin in your own language? Please create a ticket! https://github.com/mpatfield/homebridge-econet-rheem/issues',
+      'Want to see this plugin in your own language? Please visit https://github.com/mpatfield/homebridge-econet-rheem/issues/35',
     ],
   },
 };
