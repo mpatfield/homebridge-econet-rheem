@@ -1,5 +1,10 @@
-# Ignore source code
-src/**/*.ts
+# source code
+src/
+scripts/
+
+# assets
+example_responses/
+img/
 
 # ------------- Defaults ------------- #
 
@@ -8,6 +13,7 @@ src/**/*.ts
 
 # eslint
 eslint.config.js
+eslint.config.ts
 
 # typescript
 tsconfig.json

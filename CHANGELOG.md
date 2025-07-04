@@ -8,6 +8,11 @@ Would you like to see Homebridge Econet Rheem in your language? Comment [here](h
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.5.XX (XXXX-XX-XX)
+
+### Changed
+- Force ui.js cache miss in config ui on each new version
+
 ## 1.5.13 (2025-06-25)
 
 ### Changed
