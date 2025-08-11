@@ -1,12 +1,20 @@
+# Change Log
+
+All notable changes to homebridge-econet-rheem will be documented in this file.
+
+## 1.5.15 (2025-08-11)
+
 ### HELP NEEDED! (no coding experience required)
 
 Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions.
 
 Would you like to see Homebridge Econet Rheem in your language? Comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/35) if you'd like to help.
 
-# Change Log
+### Fixed
+- Broken header image in config UI
 
-All notable changes to homebridge-econet-rheem will be documented in this file.
+### Changed
+- Update dependencies
 
 ## 1.5.14 (2025-07-14)
 

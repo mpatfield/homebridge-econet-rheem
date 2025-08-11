@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://github.com/mpatfield/homebridge-econet-rheem/blob/latest/img/banner.png?raw=true" width="600">
+<img src="https://raw.githubusercontent.com/mpatfield/homebridge-econet-rheem/refs/heads/latest/img/banner.png" width="600">
 </p>
 
 <span align="center">
