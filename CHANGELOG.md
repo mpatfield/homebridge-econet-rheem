@@ -8,8 +8,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions.
 
-Would you like to see Homebridge Econet Rheem in your language? Comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/35) if you'd like to help.
-
 ### Fixed
 - Broken header image in config UI
 
