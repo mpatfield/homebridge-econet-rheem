@@ -84,7 +84,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
       if (equipments.length === 0) {
         this.log.warning(strings.startup.noEquipment);
-        this.accessories.forEach(accessory => this.removeAccessory(accessory));
         this.teardown();
         return;
       }
