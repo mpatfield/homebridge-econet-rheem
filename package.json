@@ -2,7 +2,7 @@
   "name": "homebridge-econet-rheem",
   "platform": "HomebridgeEconetRheem",
   "displayName": "Homebridge Econet Rheem",
-  "description": "Homebridge plugin for control of Rheem thermostats and water heaters",
+  "description": "Homebridge plugin for control of Rheem and Ruud thermostats and water heaters",
   "type": "module",
   "version": "1.5.15",
   "homepage": "https://github.com/mpatfield/homebridge-econet-rheem#readme",
@@ -34,6 +34,7 @@
     "homekit",
     "econet",
     "rheem",
+    "ruud",
     "water heater",
     "thermostat"
   ],
