@@ -6,13 +6,13 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### HELP NEEDED! (no coding experience required)
 
-Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions.
+Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions on how you can help add this feature.
 
 ### Fixed
 - Devices could be unnecessarily removed on startup if device fetch fails
 
 ### Changed
-- Dependency update
+- Update dependencies
 
 ## 1.5.15 (2025-08-11)
 
