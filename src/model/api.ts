@@ -362,11 +362,14 @@ export class EconetApi {
 
   private async getLocations(): Promise<void> {
       
-    const data = {
-      location_only: false,
-      type: 'com.econet.econetconsumerandroid',
-      version: '6.0.0-375-01b4870e',
-    };
+    // TODO remove when sure below works
+    // const data = {
+    //   location_only: false,
+    //   type: 'com.econet.econetconsumerandroid',
+    //   version: '6.0.0-375-01b4870e',
+    // };
+
+    const data = { 'resource': 'friedrich' };
 
     const locationsData = await this.httpRequest<Types.LocationsResponse>(this.getLocations.name, data, LOCATIONS_URL);
     if (!locationsData) {
