@@ -16,6 +16,10 @@ export const SENSITIVE_KEYS = [
   'user_id',
   'user_token',
   'zipcode',
+  'location_id',
+  '@USER_SHARED_WITH_ME',
+  'city',
+  '@LOCATION_INFO',
 ];
 
 export type ValueOrObject<T> = T | { value: T };

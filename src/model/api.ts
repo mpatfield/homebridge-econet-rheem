@@ -381,6 +381,8 @@ export class EconetApi {
 
         let equipment: Equipment | null = null;
         switch(equipmentData.device_type) {
+        case undefined:
+          break;
         case EquipmentType.THERMOSTAT:
           equipment = new Thermostat(this, equipmentData as unknown as Types.ThermostatData);
           break;
