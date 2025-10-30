@@ -2,16 +2,16 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.5.19-alpha.1 (2025-10-27)
+## 1.5.19-beta.0 (2025-10-30)
 
 ### ⚠️ Feedback Request
-
 Are you using a Friedrich HVAC device with this plugin? If so, please comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/85) indicating whether or not it is working corretly.
 
 ### Fixed
 - Minor issues with Friedrich devices
 
 ### Changed
+- ⚠️ Dropped [official support](https://github.com/homebridge/homebridge/wiki/How-To-Update-Node.js) for Node.js v18 and added Node.js v24
 - Updated dependencies
 
 ### Notes
