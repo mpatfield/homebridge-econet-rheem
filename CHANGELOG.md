@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.5.19-beta.0 (2025-10-30)
+## 1.5.19 (2025-11-01)
 
 ### ⚠️ Feedback Request
 Are you using a Friedrich HVAC device with this plugin? If so, please comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/85) indicating whether or not it is working corretly.
