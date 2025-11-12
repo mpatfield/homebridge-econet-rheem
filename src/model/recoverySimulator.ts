@@ -30,14 +30,8 @@ export class RecoverySimulator {
   private recoveryStartTime: number | null = null;
   private recoveryStartTemp: number | null = null;
 
-  static async create(waterHeater: WaterHeater, onUpdate: () => void): Promise<RecoverySimulator> {
-    const simulator = new RecoverySimulator(waterHeater, onUpdate);
-    simulator.recoveryRates = await simulator._loadRecoveryRates() ?? [simulator.defaultRecoveryRate];
-    return simulator;
-  }
-
-  private constructor(
-    readonly waterHeater: WaterHeater,
+  constructor(
+    private readonly waterHeater: WaterHeater,
     private readonly onUpdate: () => void,
   ) {
 
@@ -51,6 +45,8 @@ export class RecoverySimulator {
 
     this.minRecoveryRate = MINIMUM_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
     this.defaultRecoveryRate = DEFAULT_RECOVERY_RATE * (waterHeater.units === TemperatureUnits.FAHRENHEIT ? 1.8 : 1);
+
+    this.recoveryRates = this._loadRecoveryRates() ?? [this.defaultRecoveryRate];
   }
 
   currentTemp(inputTemp: number): number {
@@ -174,19 +170,19 @@ export class RecoverySimulator {
     this._saveRecoveryRates();
   }
 
-  private async getStoredRecoveryRates(): Promise<Record<string, number[]>> {
-    const objectString = await Storage.get(STORAGE_KEY_RECOVERY_RATES);
+  private getStoredRecoveryRates(): Record<string, number[]> {
+    const objectString = Storage.get(STORAGE_KEY_RECOVERY_RATES);
     return  objectString ? JSON.parse(objectString) : {};
   }
 
-  private async _loadRecoveryRates(): Promise<number[] | null> {
-    const ratesObject = await this.getStoredRecoveryRates();
+  private _loadRecoveryRates(): number[] | undefined {
+    const ratesObject = this.getStoredRecoveryRates();
     return ratesObject[this.serialNumber];
   }
 
-  private async _saveRecoveryRates() {
-    const ratesObject = await this.getStoredRecoveryRates();
+  private _saveRecoveryRates() {
+    const ratesObject = this.getStoredRecoveryRates();
     ratesObject[this.serialNumber] = this.recoveryRates;
-    await Storage.set(STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
+    Storage.set(STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
   }
 }

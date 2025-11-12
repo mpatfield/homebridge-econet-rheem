@@ -1,14 +1,11 @@
-import crypto from 'crypto';
-
 import { TokenData } from './types.js';
 
-import { Storage, STORAGE_KEY_AUTH } from '../tools/storage.js';
+import { Storage, LEGACY_STORAGE_KEY_AUTH, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
-  constructor(
-    private readonly data: TokenData,
-  ){}
+  constructor(private readonly data: TokenData) {
+  }
 
   get token(): string {
     return this.data.user_token;
@@ -22,50 +19,34 @@ export class Auth {
     return this.data.options.account_id;
   }
 
-  private static digest(encryptionKey: string): Buffer {
-    return crypto.createHash('sha256').update(encryptionKey).digest();
-  }
-
   async save(encryptionKey: string): Promise<void> {
 
     try {
-      const serailzed = JSON.stringify({
+      const serialized = JSON.stringify({
         data: this.data,
       });
 
-      const digest = Auth.digest(encryptionKey);
-      const iv = crypto.randomBytes(16);
-      const cipher = crypto.createCipheriv('aes-256-cbc', digest, iv);
-      const encrypted = Buffer.concat([cipher.update(serailzed, 'utf8'), cipher.final()]);
-      const final = iv.toString('hex') + ':' + encrypted.toString('hex');
-
-      await Storage.set(STORAGE_KEY_AUTH, final);
-    } catch (err) {
-      // Nothing
+      Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
+  
+    } catch {
+      // nothing
     }
   }
 
-  static async load(encryptionKey: string): Promise<Auth | null> {
+  static load(encryptionKey: string): Auth | undefined {
 
-    try {
+    let decrypted = Storage.get(STORAGE_KEY_USER_AUTH, encryptionKey);
+    if (decrypted === undefined) {
 
-      const final = await Storage.get(STORAGE_KEY_AUTH);
-      if (!final) {
-        return null;
+      decrypted = Storage.get(LEGACY_STORAGE_KEY_AUTH, encryptionKey);
+      if (decrypted === undefined) {
+        return;
       }
 
-      const digest = Auth.digest(encryptionKey);
-      const [ivHex, encryptedHex] = final.split(':');
-      const iv = Buffer.from(ivHex, 'hex');
-      const encrypted = Buffer.from(encryptedHex, 'hex');
-      const decipher = crypto.createDecipheriv('aes-256-cbc', digest, iv);
-      const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
-
-      const obj = JSON.parse(decrypted) as { data: TokenData, created: number };
-      return new Auth(obj.data);
-      
-    } catch {
-      return null;
+      Storage.set(STORAGE_KEY_USER_AUTH, decrypted, encryptionKey);
     }
+
+    const obj = JSON.parse(decrypted) as { data: TokenData };
+    return new Auth(obj.data);
   }
 }

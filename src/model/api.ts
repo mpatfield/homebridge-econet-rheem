@@ -379,7 +379,7 @@ export class EconetApi {
           equipment = new Thermostat(this, equipmentData as unknown as Types.ThermostatData);
           break;
         case EquipmentType.WATER_HEATER:
-          equipment = await WaterHeater.create(this, equipmentData as unknown as Types.WaterHeaterData);
+          equipment = new WaterHeater(this, equipmentData as unknown as Types.WaterHeaterData);
           break;
         default:
           this.log.error(strings.equipment.unsupported, equipmentData.device_type);
@@ -406,6 +406,8 @@ export class EconetApi {
     const objectString = await Storage.get(STORAGE_KEY_MQTT);
     const valuesObject = objectString ? JSON.parse(objectString) : {};
 
+    let changed = false;
+
     for (const [key, value] of Object.entries(data)) {
 
       if (ignoreKeys.has(key) || value.toString.length === 0) {
@@ -420,9 +422,13 @@ export class EconetApi {
       valuesArray = Array.from(valuesSet);
 
       valuesObject[key] = valuesArray;
+
+      changed = true;
     }
 
-    await Storage.set(STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
+    if (changed) {
+      Storage.set(STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
+    }
   }
 
   

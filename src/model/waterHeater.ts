@@ -22,18 +22,14 @@ export class WaterHeater extends Equipment {
 
   private availability_icon: string | null = null;
 
-  private recoverySimulator: RecoverySimulator | null = null;
+  private recoverySimulator: RecoverySimulator;
 
-  static async create(api: EconetApi, data: WaterHeaterData): Promise<WaterHeater> {
-    const waterHeater = new WaterHeater(api, data);
-    waterHeater.recoverySimulator = await RecoverySimulator.create(waterHeater, () => {
-      waterHeater.didUpdate();
-    });
-    return waterHeater;
-  }
-
-  private constructor(api: EconetApi, data: WaterHeaterData) {
+  constructor(api: EconetApi, data: WaterHeaterData) {
     super(api, data as unknown as EquipmentData);
+
+    this.recoverySimulator = new RecoverySimulator(this, () => {
+      this.didUpdate();
+    });
 
     this.running = data['@RUNNING'] ? data['@RUNNING']?.replace(/\s/g, '').length > 0 : false;
     this.enabled = data['@ENABLED']?.value === 1;
