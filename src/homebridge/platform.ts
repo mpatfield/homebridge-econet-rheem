@@ -14,6 +14,7 @@ import { Thermostat } from '../model/thermostat.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
 import { Log } from '../tools/log.js';
+import { Storage } from '../tools/storage.js';
 import getVersion from '../tools/version.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
@@ -67,6 +68,8 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   private async setup(): Promise<void> {
+    await Storage.init(this.api.user.persistPath());
+
     const email = this.config.email as string;
     const password = this.config.password as string;
     const debugMQTT = this.config.mqtt_debug as boolean;
@@ -78,7 +81,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     try {
 
-      this.econetApi = await EconetApi.connect(this.log, email, password, this.api.user.persistPath(), debugMQTT);
+      this.econetApi = await EconetApi.connect(this.log, email, password, debugMQTT);
 
       const equipments = Array.from(this.econetApi.equipments.values());
 

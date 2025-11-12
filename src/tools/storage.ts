@@ -6,24 +6,17 @@ export const STORAGE_KEY_AUTH = 'auth';
 export const STORAGE_KEY_MQTT = 'mqtt';
 export const STORAGE_KEY_RECOVERY_RATES = 'rates';
 
-async function init(dir: string) {
-  await storage.init({ dir: dir, forgiveParseErrors: true });
-}
+export class Storage {
 
-export async function storageGet(dir: string, key: string): Promise<string | null> {
-  try {
-    await init(dir);
-    return await storage.get(`${PLUGIN_NAME}:${key}`);
-  } catch (err) {
-    return null;
+  public static async init(persistPath: string) {
+    await storage.init({ dir: persistPath, forgiveParseErrors: true });
   }
-}
 
-export async function storageSet(dir: string, key: string, value: string): Promise<void> {
-  try {
-    await init(dir);
+  public static async get(key: string): Promise<string | null> {
+    return await storage.get(`${PLUGIN_NAME}:${key}`);
+  }
+
+  public static async set(key: string, value: string): Promise<void> {
     storage.set(`${PLUGIN_NAME}:${key}`, value);
-  } catch {
-    // Nothing
   }
 }

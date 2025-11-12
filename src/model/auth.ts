@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 import { TokenData } from './types.js';
 
-import { storageGet, storageSet, STORAGE_KEY_AUTH } from '../tools/storage.js';
+import { Storage, STORAGE_KEY_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
@@ -26,7 +26,7 @@ export class Auth {
     return crypto.createHash('sha256').update(encryptionKey).digest();
   }
 
-  async save(filePath: string, encryptionKey: string): Promise<void> {
+  async save(encryptionKey: string): Promise<void> {
 
     try {
       const serailzed = JSON.stringify({
@@ -39,17 +39,17 @@ export class Auth {
       const encrypted = Buffer.concat([cipher.update(serailzed, 'utf8'), cipher.final()]);
       const final = iv.toString('hex') + ':' + encrypted.toString('hex');
 
-      await storageSet(filePath, STORAGE_KEY_AUTH, final);
+      await Storage.set(STORAGE_KEY_AUTH, final);
     } catch (err) {
       // Nothing
     }
   }
 
-  static async load(filePath: string, encryptionKey: string): Promise<Auth | null> {
+  static async load(encryptionKey: string): Promise<Auth | null> {
 
     try {
 
-      const final = await storageGet(filePath, STORAGE_KEY_AUTH);
+      const final = await Storage.get(STORAGE_KEY_AUTH);
       if (!final) {
         return null;
       }

@@ -11,7 +11,7 @@ import { WaterHeater } from './waterHeater.js';
 
 import { strings } from '../i18n/i18n.js';
 
-import { storageGet, storageSet, STORAGE_KEY_MQTT } from '../tools/storage.js';
+import { Storage, STORAGE_KEY_MQTT } from '../tools/storage.js';
 import { MINUTE, SECOND } from '../tools/time.js';
 import { Log, LogType } from '../tools/log.js';
 
@@ -65,14 +65,13 @@ export class EconetApi {
     public readonly log: Log,
     private readonly email: string,
     private readonly password: string,
-    readonly persistPath: string,
     private readonly debugMQTT: boolean,
   ) {}
 
-  static async connect(log: Log, email: string, password: string, persistPath: string, debugMQTT: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, persistPath, debugMQTT);
+  static async connect(log: Log, email: string, password: string, debugMQTT: boolean): Promise<EconetApi> {
+    const api = new EconetApi(log, email, password, debugMQTT);
 
-    api._auth = await Auth.load(persistPath, email);
+    api._auth = await Auth.load(email);
 
     let shouldContinue = true;
     if (!api.auth) {
@@ -135,7 +134,7 @@ export class EconetApi {
     this._auth = new Auth(tokenData);
 
     if (this._auth) {
-      await this._auth.save(this.persistPath, this.email);
+      await this._auth.save(this.email);
     }
   }
 
@@ -361,13 +360,6 @@ export class EconetApi {
   }
 
   private async getLocations(): Promise<void> {
-      
-    // TODO remove when sure below works
-    // const data = {
-    //   location_only: false,
-    //   type: 'com.econet.econetconsumerandroid',
-    //   version: '6.0.0-375-01b4870e',
-    // };
 
     const data = { 'resource': 'friedrich' };
 
@@ -387,7 +379,7 @@ export class EconetApi {
           equipment = new Thermostat(this, equipmentData as unknown as Types.ThermostatData);
           break;
         case EquipmentType.WATER_HEATER:
-          equipment = await WaterHeater.create(this, equipmentData as unknown as Types.WaterHeaterData, this.persistPath);
+          equipment = await WaterHeater.create(this, equipmentData as unknown as Types.WaterHeaterData);
           break;
         default:
           this.log.error(strings.equipment.unsupported, equipmentData.device_type);
@@ -411,7 +403,7 @@ export class EconetApi {
 
     const ignoreKeys = new Set(['transactionId', 'device_name', 'serial_number']);
 
-    const objectString = await storageGet(this.persistPath, STORAGE_KEY_MQTT);
+    const objectString = await Storage.get(STORAGE_KEY_MQTT);
     const valuesObject = objectString ? JSON.parse(objectString) : {};
 
     for (const [key, value] of Object.entries(data)) {
@@ -430,7 +422,7 @@ export class EconetApi {
       valuesObject[key] = valuesArray;
     }
 
-    await storageSet(this.persistPath, STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
+    await Storage.set(STORAGE_KEY_MQTT, JSON.stringify(valuesObject));
   }
 
   

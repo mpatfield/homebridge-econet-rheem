@@ -2,7 +2,7 @@ import { TemperatureUnits } from './constants.js';
 import { WaterHeater } from './waterHeater.js';
 
 import { HOUR, MINUTE } from '../tools/time.js';
-import { storageSet, STORAGE_KEY_RECOVERY_RATES, storageGet } from '../tools/storage.js';
+import { Storage, STORAGE_KEY_RECOVERY_RATES } from '../tools/storage.js';
 
 // in degrees Celsius per hour
 const DEFAULT_RECOVERY_RATE = 20;
@@ -175,7 +175,7 @@ export class RecoverySimulator {
   }
 
   private async getStoredRecoveryRates(): Promise<Record<string, number[]>> {
-    const objectString = await storageGet(this.waterHeater.persistPath, STORAGE_KEY_RECOVERY_RATES);
+    const objectString = await Storage.get(STORAGE_KEY_RECOVERY_RATES);
     return  objectString ? JSON.parse(objectString) : {};
   }
 
@@ -187,6 +187,6 @@ export class RecoverySimulator {
   private async _saveRecoveryRates() {
     const ratesObject = await this.getStoredRecoveryRates();
     ratesObject[this.serialNumber] = this.recoveryRates;
-    await storageSet(this.waterHeater.persistPath, STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
+    await Storage.set(STORAGE_KEY_RECOVERY_RATES, JSON.stringify(ratesObject));
   }
 }
