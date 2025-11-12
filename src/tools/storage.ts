@@ -3,11 +3,9 @@ import storage from 'node-persist';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from '../homebridge/settings.js';
 
-export const STORAGE_KEY_USER_AUTH = 'user';
+export const STORAGE_KEY_USER_AUTH = 'auth';
 export const STORAGE_KEY_MQTT = 'mqtt';
 export const STORAGE_KEY_RECOVERY_RATES = 'rates';
-
-export const LEGACY_STORAGE_KEY_AUTH = 'auth';
 
 const STORAGE = new Map<string, string>();
 
@@ -55,10 +53,10 @@ export class Storage {
 
   private static async initLegacy() {
 
-    const auth = await storage.get(`${PLUGIN_NAME}:${LEGACY_STORAGE_KEY_AUTH}`);
+    const auth = await storage.get(`${PLUGIN_NAME}:${STORAGE_KEY_USER_AUTH}`);
     if (auth !== undefined) {
-      STORAGE.set(LEGACY_STORAGE_KEY_AUTH, auth);
-      storage.removeItem(`${PLUGIN_NAME}:${LEGACY_STORAGE_KEY_AUTH}`);
+      Storage.set(STORAGE_KEY_USER_AUTH, auth);
+      storage.removeItem(`${PLUGIN_NAME}:${STORAGE_KEY_USER_AUTH}`);
     }
 
     const recoveryRates = await storage.get(`${PLUGIN_NAME}:${STORAGE_KEY_RECOVERY_RATES}`);

@@ -1,6 +1,6 @@
 import { TokenData } from './types.js';
 
-import { Storage, LEGACY_STORAGE_KEY_AUTH, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
+import { Storage, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
@@ -20,30 +20,15 @@ export class Auth {
   }
 
   async save(encryptionKey: string): Promise<void> {
-
-    try {
-      const serialized = JSON.stringify({
-        data: this.data,
-      });
-
-      Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
-  
-    } catch {
-      // nothing
-    }
+    const serialized = JSON.stringify({ data: this.data });
+    Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
   }
 
   static load(encryptionKey: string): Auth | undefined {
 
-    let decrypted = Storage.get(STORAGE_KEY_USER_AUTH, encryptionKey);
+    const decrypted = Storage.get(STORAGE_KEY_USER_AUTH, encryptionKey);
     if (decrypted === undefined) {
-
-      decrypted = Storage.get(LEGACY_STORAGE_KEY_AUTH, encryptionKey);
-      if (decrypted === undefined) {
-        return;
-      }
-
-      Storage.set(STORAGE_KEY_USER_AUTH, decrypted, encryptionKey);
+      return;
     }
 
     const obj = JSON.parse(decrypted) as { data: TokenData };
