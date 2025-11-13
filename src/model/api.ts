@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, AxiosResponse, isAxiosError } from 'axios';
 import mqtt from 'mqtt';
 
-import { Auth } from './auth.js';
+import { UserAuth } from './auth.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import * as Types from './types.js';
@@ -50,7 +50,7 @@ const HTTP_RETRY_CODES = [
 ];
 
 export class EconetApi {
-  private _auth?: Auth | null;
+  private _auth?: UserAuth | null;
   private retryIndex: number = 0;
 
   readonly equipments: Map<string, Equipment> = new Map();
@@ -71,7 +71,7 @@ export class EconetApi {
   static async connect(log: Log, email: string, password: string, debugMQTT: boolean): Promise<EconetApi> {
     const api = new EconetApi(log, email, password, debugMQTT);
 
-    api._auth = Auth.load(email);
+    api._auth = UserAuth.load(email);
 
     let shouldContinue = true;
     if (!api.auth) {
@@ -126,7 +126,7 @@ export class EconetApi {
     this.logDebug(this.publish.name, topic, data);
   }
 
-  private get auth(): Auth | null {
+  private get auth(): UserAuth | null {
     return this._auth ?? null;
   }
 
@@ -213,7 +213,7 @@ export class EconetApi {
       return false;
     } 
     
-    this._auth = new Auth(tokenData);
+    this._auth = new UserAuth(tokenData);
     this._auth.save(this.email);
 
     this.log.always(strings.http.authSuccess);

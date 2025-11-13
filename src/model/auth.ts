@@ -2,7 +2,7 @@ import { UserTokenData } from './types.js';
 
 import { Storage, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
 
-export class Auth {
+export class UserAuth {
 
   constructor(private readonly data: UserTokenData) {
   }
@@ -24,7 +24,7 @@ export class Auth {
     Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
   }
 
-  static load(encryptionKey: string): Auth | undefined {
+  static load(encryptionKey: string): UserAuth | undefined {
 
     const decrypted = Storage.get(STORAGE_KEY_USER_AUTH, encryptionKey);
     if (decrypted === undefined) {
@@ -32,6 +32,6 @@ export class Auth {
     }
 
     const obj = JSON.parse(decrypted) as { data: UserTokenData };
-    return new Auth(obj.data);
+    return new UserAuth(obj.data);
   }
 }
