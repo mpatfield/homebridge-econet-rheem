@@ -1,10 +1,10 @@
-import { TokenData } from './types.js';
+import { UserTokenData } from './types.js';
 
 import { Storage, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
 
 export class Auth {
 
-  constructor(private readonly data: TokenData) {
+  constructor(private readonly data: UserTokenData) {
   }
 
   get token(): string {
@@ -19,7 +19,7 @@ export class Auth {
     return this.data.options.account_id;
   }
 
-  async save(encryptionKey: string): Promise<void> {
+  save(encryptionKey: string) {
     const serialized = JSON.stringify({ data: this.data });
     Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
   }
@@ -31,7 +31,7 @@ export class Auth {
       return;
     }
 
-    const obj = JSON.parse(decrypted) as { data: TokenData };
+    const obj = JSON.parse(decrypted) as { data: UserTokenData };
     return new Auth(obj.data);
   }
 }

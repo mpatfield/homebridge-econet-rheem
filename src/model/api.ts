@@ -71,7 +71,7 @@ export class EconetApi {
   static async connect(log: Log, email: string, password: string, debugMQTT: boolean): Promise<EconetApi> {
     const api = new EconetApi(log, email, password, debugMQTT);
 
-    api._auth = await Auth.load(email);
+    api._auth = Auth.load(email);
 
     let shouldContinue = true;
     if (!api.auth) {
@@ -128,14 +128,6 @@ export class EconetApi {
 
   private get auth(): Auth | null {
     return this._auth ?? null;
-  }
-  
-  private async saveTokenData(tokenData: Types.TokenData) {
-    this._auth = new Auth(tokenData);
-
-    if (this._auth) {
-      await this._auth.save(this.email);
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,13 +207,14 @@ export class EconetApi {
   private async authenticate(): Promise<boolean> {
 
     const data = { email: this.email, password: this.password };
-    const tokenData = await this.httpRequest<Types.TokenData>(this.authenticate.name, data, AUTH_URL);
+    const tokenData = await this.httpRequest<Types.UserTokenData>(this.authenticate.name, data, AUTH_URL);
 
     if (!tokenData) {
       return false;
     } 
     
-    await this.saveTokenData(tokenData);
+    this._auth = new Auth(tokenData);
+    this._auth.save(this.email);
 
     this.log.always(strings.http.authSuccess);
 

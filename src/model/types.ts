@@ -30,7 +30,7 @@ export function getValue<T>(input: ValueOrObject<T>): T {
     : (input as T);
 }
 
-export type TokenData = {
+export type UserTokenData = {
   user_id: string;
   user_token: string;
   options: { account_id: string};
