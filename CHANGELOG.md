@@ -2,10 +2,21 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.5.19 (2025-11-01)
+## 1.6.0-beta.0 (2025-11-13)
 
 ### ⚠️ Feedback Request
 Are you using a Friedrich HVAC device with this plugin? If so, please comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/85) indicating whether or not it is working corretly.
+
+### Added
+TODO Device details
+
+### Changed
+TODO storage consolidation
+
+### Notes
+Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions on how you can help add this feature.
+
+## 1.5.19 (2025-11-01)
 
 ### Fixed
 - Minor issues with Friedrich devices
@@ -13,9 +24,6 @@ Are you using a Friedrich HVAC device with this plugin? If so, please comment [h
 ### Changed
 - ⚠️ Dropped [official support](https://github.com/homebridge/homebridge/wiki/How-To-Update-Node.js) for Node.js v18 and added Node.js v24
 - Updated dependencies
-
-### Notes
-Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions on how you can help add this feature.
 
 ## 1.5.18 (2025-10-21)
 

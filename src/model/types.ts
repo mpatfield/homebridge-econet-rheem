@@ -1,27 +1,5 @@
 import { ThermostatOperationMode } from './constants.js';
 
-export const SENSITIVE_KEYS = [
-  'address',
-  'coordinates',
-  'email',
-  'last_name',
-  'loc',
-  'mac_address',
-  'macAddress',
-  'name',
-  'phone_number',
-  'serial_number',
-  'serialNumber',
-  'street',
-  'user_id',
-  'user_token',
-  'zipcode',
-  'location_id',
-  '@USER_SHARED_WITH_ME',
-  'city',
-  '@LOCATION_INFO',
-];
-
 export type ValueOrObject<T> = T | { value: T };
 
 export function getValue<T>(input: ValueOrObject<T>): T {
@@ -35,6 +13,11 @@ export type UserTokenData = {
   user_token: string;
   options: { account_id: string};
 };
+
+export type DeviceTokenData = {
+  deviceName: string;
+  deviceToken: string;
+}
 
 export type StringValue = {
   value: string;
@@ -68,6 +51,7 @@ export type EquipmentData = {
   device_type?: string;
   device_name?: string;
   serial_number?: string;
+  mac_address?: string,
   '@NAME'?: StringValue;
   '@ALERTCOUNT'?: number;
   '@SETPOINT'?: Setpoint;

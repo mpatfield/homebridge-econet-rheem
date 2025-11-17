@@ -100,8 +100,8 @@ export class WaterHeater extends Equipment {
     super.didUpdate();
   }
  
-  updateFromMQTT(data: MQTTData): void {
-    super.updateFromMQTT(data);
+  updateFromUserMQTT(data: MQTTData): void {
+    super.updateFromUserMQTT(data);
  
     if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;

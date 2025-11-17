@@ -19,27 +19,47 @@ Homebridge plugin for HomeKit control of Rheem water heaters and thermostats
 
 This plugin is independently developed and is not in any way affiliated with or endorsed by Rheem. Any issues or damage resulting from use of this plugin are not the fault of the developer. Use at your own risk.
 
-> [!NOTE]
-> This plugin uses an unofficial EcoNet API and could stop working at any time without warning.
+It uses an unofficial EcoNet API and could stop working at any time without warning.
 
 ## Limitations
 
 * Water Heaters
-  * Current temperature is not supported by the API so recovery temperature is simulated
-  * It is not possible to switch modes, only enable/disable and adjust the desired temperature
+  * Switching modes is not possible, only enable/disable and adjusting desired temperature
 * Celcius should work but is untested
   * *Let me know if you have successfully used ºC so I can remove this*
 
 ## Account Sharing
 
-> [!NOTE]
-> It is recommended to use a dedicated account for use with Homebridge.
+⚠️ It is recommended to use a dedicated account for use with Homebridge.
 
 This is because Rheem only allows one device to be subscribed to real-time updates, so if you open the Rheem app then the Homebridge plugin will silently stop receiving updates.
 
 The plugin will eventually resubscribe after being idle for an extended period, but you could miss updates in the meantime. Using a separate account will avoid this issue.
 
 To get started, visit "Account Sharing" in the Rheem app menu.
+
+## Device Details
+
+TODO
+
+  Only tested with Heat Pump Water Heater
+
+  * Current temperature is not supported by the API so recovery temperature is simulated
+
+    https://community.hubitat.com/t/rheem-econet-integration-maintained-by-kris-linquist/116913/72
+
+    To obtain these credentials, connect to your water heater's wifi and go to https://192.168.10.1/cred
+
+    1.	Put it in Wi-Fi setup mode
+    •	On most Rheem EcoNet controllers, press and hold the Wi-Fi or Settings → Wi-Fi Setup option until the screen shows “Ready to Connect.”
+    •	The heater will broadcast an EcoNet-XXXX network.
+    2.	Connect to that network
+    •	Use your phone/laptop to join the EcoNet network.
+    •	Retrieve any info you need (e.g., by visiting 192.168.10.1).
+    3.	Reconnect it to your home network
+    •	Open the Rheem EcoNet app.
+    •	Choose Add Device → Water Heater → Connect to Wi-Fi → select your home SSID and enter your Wi-Fi password.
+    •	Wait until the heater display says “Connected.”
 
 ## Configuration
 

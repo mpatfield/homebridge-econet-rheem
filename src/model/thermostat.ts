@@ -105,8 +105,8 @@ export class Thermostat extends Equipment {
     return this.current_mode;
   }
 
-  updateFromMQTT(data: MQTTData): void {
-    super.updateFromMQTT(data);
+  updateFromUserMQTT(data: MQTTData): void {
+    super.updateFromUserMQTT(data);
 
     if (data['@HUMIDITY'] !== undefined) {
       this.current_humidity = data['@HUMIDITY'];
