@@ -105,6 +105,8 @@ Your contributions will help enhance the plugin's functionality and device suppo
 
 [@w1ll1am23](https://github.com/sponsors/w1ll1am23) for earlier work done in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API
 
+[@klinquist](https://github.com/sponsors/klinquist) for his comment [here](https://community.hubitat.com/t/rheem-econet-integration-maintained-by-kris-linquist/116913/72) which lead to [better realtime updates](#device-details)
+
 [@r3tr3ad](https://github.com/r3tr3ad) for helping debug the thermostat implementation.
 
 [Keryan Belahcene](https://www.instagram.com/keryan.me) for creating the [Flume](https://github.com/homebridge-plugins/homebridge-flume) header logo which I adapted for this plugin
