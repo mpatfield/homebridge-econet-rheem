@@ -1,6 +1,6 @@
 import { EconetApi } from './api.js';
 import { EquipmentType, TemperatureUnits } from './constants.js';
-import { EquipmentData, MQTTData } from './types.js';
+import { DeviceMQTTData, EquipmentData, UserMQTTData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -70,13 +70,15 @@ export abstract class Equipment {
     }
   }
 
-  updateFromUserMQTT(update: MQTTData): void {
+  updateFromUserMQTT(update: UserMQTTData): void {
 
     if (update['@ALERTCOUNT'] !== undefined) {
       this.alert_count = update['@ALERTCOUNT'];
       this.log.ifVerbose(strings.debug.alertCount, this.deviceName, this.alert_count);
     }
   }
+
+  abstract updateFromDeviceMQTT(_update: DeviceMQTTData): void;
 
   publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string) {
     this.api.publish(payload, deviceId, serialNumber);

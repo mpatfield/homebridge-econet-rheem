@@ -83,7 +83,7 @@ export type WaterHeaterData = {
   '@HOTWATER'?: string;
 }
 
-export type MQTTData = {
+export type UserMQTTData = {
   serial_number?: string;
   '@ALERTCOUNT'?: number;
   '@ENABLED'?: ValueOrObject<number>;
@@ -95,6 +95,10 @@ export type MQTTData = {
   '@COOLSETPOINT'?: number;
   '@HEATSETPOINT'?: number;
   '@MODE'?: NumberValue;
+}
+
+export type DeviceMQTTData = {
+  UPHTRTMP?: number;
 }
 
 export interface MQTTError extends Error {

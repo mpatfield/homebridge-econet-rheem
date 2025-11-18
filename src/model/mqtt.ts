@@ -3,7 +3,7 @@ import storage from 'node-persist';
 
 import { DeviceAuth, UserAuth } from './auth.js';
 import { Equipment } from './equipment.js';
-import { MQTTData, MQTTError } from './types.js';
+import { UserMQTTData, MQTTError } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -15,7 +15,7 @@ import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
 const BROKER_URL = `mqtts://${CLEARBLADE_HOST}:1884`;
 const TOPIC_REPORTED = 'user/%s/device/reported';
 const TOPIC_DESIRED = 'user/%s/device/desired';
-const TOPIC_DEVICE = 'device/%s/%s/4736/reported'; // TODO always 4736?
+const TOPIC_DEVICE = 'device/%s/%s/4736/reported'; // TODO
 
 const KEEPALIVE = 90;
 
@@ -165,12 +165,12 @@ export class EconetMQTT {
 
     try {
 
-      const data = JSON.parse(message) as MQTTData;
+      const data = JSON.parse(message);
 
       switch (this.type) {
       case Type.DEVICE: {
-        //const equipment = this.equipments.entries().next()!;
-        // TODO equipment.updateFromDeviceMQTT(data);
+        const equipment = this.equipments.entries().next().value?.[1];
+        equipment!.updateFromDeviceMQTT(data);
         break;
       }
       case Type.USER: {
@@ -257,7 +257,7 @@ export class EconetMQTT {
     }
   }
 
-  private async saveData(data: MQTTData) {
+  private async saveData(data: UserMQTTData) {
   
     const objectString = await storage.get('mqtt');
     const valuesObject = objectString ? JSON.parse(objectString) : {};

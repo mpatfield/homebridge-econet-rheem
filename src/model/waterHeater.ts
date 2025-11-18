@@ -2,7 +2,7 @@ import { EconetApi } from './api.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { RecoverySimulator } from './recoverySimulator.js';
-import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
+import { DeviceMQTTData, EquipmentData, getValue, UserMQTTData, WaterHeaterData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -19,6 +19,8 @@ export class WaterHeater extends Equipment {
   private lower_limit = 0;
   private upper_limit = 0;
   private set_point = 0;
+
+  private current_temp?: number;
 
   private availability_icon: string | null = null;
 
@@ -84,6 +86,10 @@ export class WaterHeater extends Equipment {
 
   currentTemp(inputTemp?: number | null): number {
 
+    if (this.current_temp !== undefined) {
+      return this.current_temp;
+    }
+
     if (!inputTemp) {
       return this.set_point;
     }
@@ -100,7 +106,7 @@ export class WaterHeater extends Equipment {
     super.didUpdate();
   }
  
-  updateFromUserMQTT(data: MQTTData): void {
+  updateFromUserMQTT(data: UserMQTTData): void {
     super.updateFromUserMQTT(data);
  
     if (data['@ENABLED'] !== undefined) {
@@ -124,6 +130,16 @@ export class WaterHeater extends Equipment {
     }
 
     this.didUpdate();  
+  }
+
+  override updateFromDeviceMQTT(update: DeviceMQTTData): void {
+    
+    if (update.UPHTRTMP !== undefined) {
+      this.current_temp = update.UPHTRTMP;
+      this.log.ifVerbose(strings.debug.currentTempState, this.deviceName, this.current_temp);
+    }
+
+    this.didUpdate();
   }
 
   setEnabled(enabled: boolean): void {
