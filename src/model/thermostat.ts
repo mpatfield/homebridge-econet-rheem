@@ -142,6 +142,7 @@ export class Thermostat extends Equipment {
     this.didUpdate();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   override updateFromDeviceMQTT(update: DeviceMQTTData): void {
     // TODO
   }
