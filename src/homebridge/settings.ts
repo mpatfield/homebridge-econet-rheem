@@ -1,9 +1,6 @@
-/**
- * This is the name of the platform that users will use to register the plugin in the Homebridge config.json
- */
 export const PLATFORM_NAME = 'HomebridgeEconetRheem';
-
-/**
- * This must match the name of your plugin as defined the package.json `name` property
- */
 export const PLUGIN_NAME = 'homebridge-econet-rheem';
+
+export const CLEARBLADE_HOST = 'rheem.clearblade.com';
+export const CLEARBLADE_KEY = 'e2e699cb0bb0bbb88fc8858cb5a401';
+export const CLEARBLADE_SECRET = 'E2E699CB0BE6C6FADDB1B0BC9A20';

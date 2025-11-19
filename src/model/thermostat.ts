@@ -1,7 +1,7 @@
 import { EconetApi } from './api.js';
 import { EquipmentType, ThermostatOperationMode } from './constants.js';
 import { Equipment } from './equipment.js';
-import { EquipmentData, getValue, MQTTData, ThermostatData } from './types.js';
+import { EquipmentData, getValue, UserMQTTData, ThermostatData, DeviceMQTTData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -105,8 +105,8 @@ export class Thermostat extends Equipment {
     return this.current_mode;
   }
 
-  updateFromMQTT(data: MQTTData): void {
-    super.updateFromMQTT(data);
+  updateFromUserMQTT(data: UserMQTTData): void {
+    super.updateFromUserMQTT(data);
 
     if (data['@HUMIDITY'] !== undefined) {
       this.current_humidity = data['@HUMIDITY'];
@@ -140,6 +140,10 @@ export class Thermostat extends Equipment {
     }
 
     this.didUpdate();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  override updateFromDeviceMQTT(data: DeviceMQTTData): void {
   }
 
   private _modeFromString(strValue: string): ThermostatOperationMode {

@@ -1,8 +1,7 @@
 import { EconetApi } from './api.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
-import { RecoverySimulator } from './recoverySimulator.js';
-import { EquipmentData, getValue, MQTTData, WaterHeaterData } from './types.js';
+import { DeviceMQTTData, EquipmentData, getValue, UserMQTTData, WaterHeaterData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -20,16 +19,14 @@ export class WaterHeater extends Equipment {
   private upper_limit = 0;
   private set_point = 0;
 
+  private current_temp?: number;
+
   private availability_icon: string | null = null;
 
-  private recoverySimulator: RecoverySimulator;
+  private isUsingDeviceMQTT: boolean = false;
 
   constructor(api: EconetApi, data: WaterHeaterData) {
     super(api, data as unknown as EquipmentData);
-
-    this.recoverySimulator = new RecoverySimulator(this, () => {
-      this.didUpdate();
-    });
 
     this.running = data['@RUNNING'] ? data['@RUNNING']?.replace(/\s/g, '').length > 0 : false;
     this.enabled = data['@ENABLED']?.value === 1;
@@ -82,27 +79,26 @@ export class WaterHeater extends Equipment {
     return 100;
   }
 
-  currentTemp(inputTemp?: number | null): number {
+  get currentTemp(): number {
 
-    if (!inputTemp) {
-      return this.set_point;
+    if (this.current_temp !== undefined) {
+      return this.current_temp;
     }
 
-    return this.recoverySimulator?.currentTemp(inputTemp) || this.set_point;
+    return this.set_point;
   }
 
   get setPoint(): number {
     return this.set_point;
   }
 
-  protected didUpdate() {
-    this.recoverySimulator?.handleUpdate(this);
-    super.didUpdate();
-  }
+  updateFromUserMQTT(data: UserMQTTData): void {
+    super.updateFromUserMQTT(data);
  
-  updateFromMQTT(data: MQTTData): void {
-    super.updateFromMQTT(data);
- 
+    if (!this.isUsingDeviceMQTT) {
+      return;
+    }
+
     if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
       this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
@@ -124,6 +120,33 @@ export class WaterHeater extends Equipment {
     }
 
     this.didUpdate();  
+  }
+
+  override updateFromDeviceMQTT(data: DeviceMQTTData): void {
+    
+    this.isUsingDeviceMQTT = true;
+
+    if (data.COMP_RLY !== undefined) {
+      this.running = data.COMP_RLY === 1;
+      this.log.ifVerbose(strings.debug.runningState, this.deviceName, this.running);
+    }
+
+    if (data.WHTRENAB !== undefined) {
+      this.enabled = data.WHTRENAB === 1;
+      this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
+    }
+
+    if (data.UPHTRTMP !== undefined) {
+      this.current_temp = data.UPHTRTMP;
+      this.log.ifVerbose(strings.debug.currentTempState, this.deviceName, this.current_temp);
+    }
+
+    if (data.WHTRSETP !== undefined) {
+      this.set_point = data.WHTRSETP;
+      this.log.ifVerbose(strings.debug.setpointState, this.deviceName, this.set_point);
+    }
+
+    this.didUpdate();
   }
 
   setEnabled(enabled: boolean): void {

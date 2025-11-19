@@ -1,6 +1,6 @@
 import { EconetApi } from './api.js';
 import { EquipmentType, TemperatureUnits } from './constants.js';
-import { EquipmentData, MQTTData } from './types.js';
+import { DeviceMQTTData, EquipmentData, UserMQTTData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -9,6 +9,7 @@ import { Log } from '../tools/log.js';
 export abstract class Equipment {
   private device_id?: string | null;
   private serial_number?: string | null;
+  private mac_address?: string | null;
   private device_name?: string | null;
   private alert_count: number = 0;
   private temp_units = TemperatureUnits.CELSIUS;
@@ -19,6 +20,7 @@ export abstract class Equipment {
   constructor(private readonly api: EconetApi, data: EquipmentData) {
     this.device_id = data.device_name;
     this.serial_number = data.serial_number;
+    this.mac_address = data.mac_address;
     this.device_name = data['@NAME']?.value ?? strings.general.brand;
     this.alert_count = data['@ALERTCOUNT'] ?? 0;
     this.temp_units = data['@SETPOINT']?.constraints?.units?.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
@@ -32,6 +34,10 @@ export abstract class Equipment {
 
   get serialNumber(): string {
     return this.serial_number || strings.general.undefined;
+  }
+
+  get macAddress(): string {
+    return this.mac_address || strings.general.undefined;
   }
 
   get deviceName(): string {
@@ -64,13 +70,15 @@ export abstract class Equipment {
     }
   }
 
-  updateFromMQTT(update: MQTTData): void {
+  updateFromUserMQTT(update: UserMQTTData): void {
 
     if (update['@ALERTCOUNT'] !== undefined) {
       this.alert_count = update['@ALERTCOUNT'];
       this.log.ifVerbose(strings.debug.alertCount, this.deviceName, this.alert_count);
     }
   }
+
+  abstract updateFromDeviceMQTT(_update: DeviceMQTTData): void;
 
   publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string) {
     this.api.publish(payload, deviceId, serialNumber);

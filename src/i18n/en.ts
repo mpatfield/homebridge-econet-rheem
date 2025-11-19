@@ -4,10 +4,9 @@ const en = {
     continue: 'Continue %s',
 
     description: {
-      email: 'Econet/Rheem account email (dedicated account recommended)',
-      password: 'Econet/Rheem account password',
+      account: 'Dedicated account recommended. See documentation.',
+      devices: 'Providing additional device details gives a better experience. See documentation for details.',
       verbose: 'Enable additional debug logging',
-      wh_sim_disable: 'See documentation for details',
     },
 
     needed: 'You will need your Rheem username and password',
@@ -15,10 +14,14 @@ const en = {
     thankYou: 'Thank you for installing Homebridge Econet Rheem',
 
     title: {
+      activeKey: 'Active Key',
+      device: 'Device',
+      devices: 'Devices',
+      deviceName: 'Device Name',
       email: 'Email',
       password: 'Password',
+      serialNumber: 'Serial Number',
       verbose: 'Verbose',
-      wh_sim_disable: 'Disable Water Heater Temperature Simulator',
     },
   },
 
@@ -63,17 +66,27 @@ const en = {
   },
 
   mqtt: {
-    authMissing: 'MQTT is missing auth',
-    clientError: 'Client error:',
-    connected: 'Connected and listening for updates…',
-    connectionClosed: 'Connection closed',
-    connectionError: 'MQTT cannot connect',
-    idleConnection: 'Idle connection',
-    notConnected: 'Client not connected',
-    parseFailed: 'Failed to parse message:',
-    reconnectInMinutes: 'Will attempt to reconnect in %s minutes…',
-    reconnectInSeconds: 'Will attempt to reconnect in %s seconds…',
-    unstableConnection: 'Having trouble staying connected',
+    deviceAuthMissing: 'MQTT is missing device auth',
+    deviceClientError: 'Device client error:',
+    deviceConnected: 'Device client connected and listening for updates…',
+    deviceConnectionClosed: 'Device client connection closed',
+    deviceConnectionError: 'Device client cannot connect',
+    deviceIdleConnection: 'Idle device client connection',
+    deviceNotConnected: 'Device client not connected',
+    deviceParseFailed: 'Failed to parse device client message:',
+    deviceReconnectInMinutes: 'Will attempt to device client reconnect in %s minutes…',
+    deviceReconnectInSeconds: 'Will attempt to device client reconnect in %s seconds…',
+    userAuthMissing: 'MQTT is missing user auth',
+    userClientError: 'User client error:',
+    userConnected: 'User client connected and listening for updates…',
+    userConnectionClosed: 'User client connection closed',
+    userConnectionError: 'User client cannot connect',
+    userIdleConnection: 'Idle user client connection',
+    userNotConnected: 'User client not connected',
+    userParseFailed: 'Failed to parse user client message:',
+    userReconnectInMinutes: 'Will attempt to user client reconnect in %s minutes…',
+    userReconnectInSeconds: 'Will attempt to user client reconnect in %s seconds…',
+    unstableConnection: 'MQTT trouble staying connected',
   },
 
   startup: {

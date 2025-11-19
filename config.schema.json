@@ -6,7 +6,6 @@
   "customUiPath": "./dist/homebridge-ui",
   "schema": {
     "type": "object",
-    "required": ["email", "password"],
     "properties": {
       "name": {
         "type": "string",
@@ -15,39 +14,135 @@
       "email": {
         "title": "${config.title.email}",
         "type": "string",
-        "format": "email",
-        "description": "${config.description.email}"
+        "format": "email"
       },
       "password": {
         "title": "${config.title.password}",
-        "type": "string",
-        "description": "${config.description.password}"
+        "type": "string"
       },
-      "wh_sim_disable": {
-        "title": "${config.title.wh_sim_disable}",
-        "type": "boolean",
-        "required": false,
-        "description": "${config.description.wh_sim_disable}"
+      "devices": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "serialNumber": {
+              "type": "string",
+              "title": "${config.title.serialNumber}"
+            },
+            "deviceName": {
+              "type": "string",
+              "title": "${config.title.deviceName}"
+            },
+            "activeKey": {
+              "type": "string",
+              "title": "${config.title.activeKey}"
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": ["serialNumber"]
+              },
+              "then": {
+                  "required": ["deviceName", "activeKey"]
+              }
+            },
+            {
+              "if": {
+                "required": ["deviceName"]
+              },
+              "then": {
+                  "required": ["serialNumber", "activeKey"]
+              }
+            },
+            {
+              "if": {
+                "required": ["activeKey"]
+              },
+              "then": {
+                  "required": ["serialNumber", "deviceName"]
+              }
+            }
+          ]
+        }
       },
       "verbose": {
         "title": "${config.title.verbose}",
         "type": "boolean",
-        "required": false,
         "description": "${config.description.verbose}"
       }
-    }
+    },
+    "allOf": [
+      { "required": ["email", "password"] }
+    ] 
   },
   "layout": [
     {
       "type": "fieldset",
-      "title": "Required Settings",
-      "items": ["email", "password"]
+      "description": "${config.description.account}",
+      "notitle": true,
+      "items": [
+        {
+          "type": "div",
+          "displayFlex": true,
+          "flex-direction": "row",
+          "items": [
+            {
+              "key": "email",
+              "flex": "0 0 50%"
+            },
+            {
+              "key": "password",
+              "flex": "0 0 50%"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "div",
+      "displayFlex": true,
+      "flex-direction": "row",
+      "items": [
+        {
+          "key": "verbose",
+          "flex": "0 1 auto"
+        }
+      ]
     },
     {
       "type": "fieldset",
-      "title": "Advanced Settings",
-      "expandable": true,
-      "items": ["verbose", "wh_sim_disable"]
+      "title": "${config.title.devices}",
+      "description": "${config.description.devices}",
+      "items": [
+        {
+          "type": "array",
+          "title": "${config.title.device}",
+          "notitle": true,
+          "key": "devices",
+          "items": [
+            {
+              "type": "div",
+              "displayFlex": true,
+              "flex-direction": "row",
+              "items": [
+                {
+                  "key": "devices[].serialNumber",
+                  "flex": "0 0 33%"
+                },
+                {
+                  "key": "devices[].deviceName",
+                  "flex": "0 0 33%"
+                },
+                {
+                  "key": "devices[].activeKey",
+                  "flex": "0 0 33%"
+                }
+              ]
+            }
+          ]
+        }
+      ]
     }
   ]
 }

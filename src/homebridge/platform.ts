@@ -70,9 +70,10 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   private async setup(): Promise<void> {
     await Storage.init(this.api.user.persistPath());
 
-    const email = this.config.email as string;
-    const password = this.config.password as string;
-    const debugMQTT = this.config.mqtt_debug as boolean;
+    const email = this.config.email;
+    const password = this.config.password;
+    const debugMQTT = this.config.mqtt_debug;
+    const devices = this.config.devices || [];
 
     if (!email || !password) {
       this.log.error(strings.startup.badConfig);
@@ -81,7 +82,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     try {
 
-      this.econetApi = await EconetApi.connect(this.log, email, password, debugMQTT);
+      this.econetApi = await EconetApi.connect(this.log, email, password, devices, debugMQTT);
 
       const equipments = Array.from(this.econetApi.equipments.values());
 
@@ -132,7 +133,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       new ThermostatAccessory(this, accessory, equipment as Thermostat);
       break;
     case EquipmentType.WATER_HEATER:
-      new WaterHeaterAccessory(this, accessory, equipment as WaterHeater, this.config.wh_sim_disable);
+      new WaterHeaterAccessory(this, accessory, equipment as WaterHeater);
     }
   }
 

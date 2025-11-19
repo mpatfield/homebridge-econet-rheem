@@ -1,27 +1,5 @@
 import { ThermostatOperationMode } from './constants.js';
 
-export const SENSITIVE_KEYS = [
-  'address',
-  'coordinates',
-  'email',
-  'last_name',
-  'loc',
-  'mac_address',
-  'macAddress',
-  'name',
-  'phone_number',
-  'serial_number',
-  'serialNumber',
-  'street',
-  'user_id',
-  'user_token',
-  'zipcode',
-  'location_id',
-  '@USER_SHARED_WITH_ME',
-  'city',
-  '@LOCATION_INFO',
-];
-
 export type ValueOrObject<T> = T | { value: T };
 
 export function getValue<T>(input: ValueOrObject<T>): T {
@@ -35,6 +13,11 @@ export type UserTokenData = {
   user_token: string;
   options: { account_id: string};
 };
+
+export type DeviceTokenData = {
+  deviceName: string;
+  deviceToken: string;
+}
 
 export type StringValue = {
   value: string;
@@ -68,6 +51,7 @@ export type EquipmentData = {
   device_type?: string;
   device_name?: string;
   serial_number?: string;
+  mac_address?: string,
   '@NAME'?: StringValue;
   '@ALERTCOUNT'?: number;
   '@SETPOINT'?: Setpoint;
@@ -99,7 +83,7 @@ export type WaterHeaterData = {
   '@HOTWATER'?: string;
 }
 
-export type MQTTData = {
+export type UserMQTTData = {
   serial_number?: string;
   '@ALERTCOUNT'?: number;
   '@ENABLED'?: ValueOrObject<number>;
@@ -111,6 +95,19 @@ export type MQTTData = {
   '@COOLSETPOINT'?: number;
   '@HEATSETPOINT'?: number;
   '@MODE'?: NumberValue;
+}
+
+export type DeviceDetails = {
+  serialNumber: string,
+  deviceName: string,
+  activeKey: string
+}
+
+export type DeviceMQTTData = {
+  COMP_RLY?: number; // compressor running
+  UPHTRTMP?: number; // current temperature
+  WHTRENAB?: number; // enabled
+  WHTRSETP?: number; // setpoint
 }
 
 export interface MQTTError extends Error {
