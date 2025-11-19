@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head><title>Get Econet Rheem Serial Numbers</title>
+  <style>
+    #spinner { display: none; }
+    .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<form id="loginForm">
+  <input type="email" id="email" placeholder="Email" required><br><br>
+  <input type="password" id="password" placeholder="Password"><br><br>
+  <button type="submit">Go</button>
+</form>
+
+<div id="spinner"><div class="spinner"></div></div>
+<pre id="result"></pre>
+
+<script>
+document.getElementById('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+
+  const form = document.getElementById('loginForm');
+  const spinner = document.getElementById('spinner');
+  const result = document.getElementById('result');
+
+  form.style.display = 'none';
+  spinner.style.display = 'block';
+
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+
+  let headers = {
+        'ClearBlade-SystemKey': 'e2e699cb0bb0bbb88fc8858cb5a401',
+        'ClearBlade-SystemSecret': 'E2E699CB0BE6C6FADDB1B0BC9A20',
+        'Content-Type': 'application/json; charset=UTF-8'
+      }
+
+  try {
+    const authResponse = await fetch('https://rheem.clearblade.com/api/v/1/user/auth', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email, password })
+    });
+
+    const auth = await authResponse.json();
+    
+    headers = { ...headers, 'ClearBlade-UserToken': auth.user_token }
+
+    const locationsResponse = await fetch('https://rheem.clearblade.com/api/v/1/code/e2e699cb0bb0bbb88fc8858cb5a401/getUserDataForApp', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ resource: 'friedrich' })
+    });
+
+    const data = await locationsResponse.json();
+
+    const devices = [];
+    for (const location of data.results.locations) {
+      for (const equipmentData of location.equiptments) {
+        devices.push( { name: equipmentData['@NAME'].value, serial_number: equipmentData.serial_number } )
+      }
+    };
+
+    result.textContent = JSON.stringify(devices, null, 2);
+  } catch (err) {
+    result.textContent = 'Error: ' + err.message;
+  } finally {
+    spinner.style.display = 'none';
+  }
+};
+</script>
+</body>
+</html>
