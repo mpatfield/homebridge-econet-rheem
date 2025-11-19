@@ -2,19 +2,17 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.6.0-beta.0 (2025-11-13)
-
-### ⚠️ Feedback Request
-Are you using a Friedrich HVAC device with this plugin? If so, please comment [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/85) indicating whether or not it is working corretly.
+## 1.6.0-beta.0 (2025-11-19)
 
 ### Added
-TODO Device details
+- Real-time current temperature for water heaters ([See Documentation](https://github.com/mpatfield/homebridge-econet-rheem#device-details))
 
 ### Changed
-TODO storage consolidation
+- Conslidated persistent storage into single file
+- Water heater recovery simulator removed in favor of real-time updates above
 
 ### Notes
-Do you have a leak sensor and/or shut off valve on your water heater? Click [here](https://github.com/mpatfield/homebridge-econet-rheem/issues/4) for instructions on how you can help add this feature.
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.5.19 (2025-11-01)
 

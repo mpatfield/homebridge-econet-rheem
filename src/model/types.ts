@@ -97,6 +97,12 @@ export type UserMQTTData = {
   '@MODE'?: NumberValue;
 }
 
+export type DeviceDetails = {
+  serialNumber: string,
+  deviceName: string,
+  activeKey: string
+}
+
 export type DeviceMQTTData = {
   COMP_RLY?: number; // compressor running
   UPHTRTMP?: number; // current temperature

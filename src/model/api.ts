@@ -4,7 +4,7 @@ import { DeviceAuth, UserAuth } from './auth.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
 import { EconetMQTT } from './mqtt.js';
-import { DeviceTokenData, LocationsResponse, ThermostatData, UserTokenData, WaterHeaterData } from './types.js';
+import { DeviceDetails, DeviceTokenData, LocationsResponse, ThermostatData, UserTokenData, WaterHeaterData } from './types.js';
 
 import { Thermostat } from './thermostat.js';
 import { WaterHeater } from './waterHeater.js';
@@ -24,7 +24,7 @@ const BASE_HEADERS = {
 
 const BASE_URL_V1 = `https://${CLEARBLADE_HOST}/api/v/1`;
 const BASE_URL_V2 = `https://${CLEARBLADE_HOST}/api/v/2`;
-const AUTH_URL = `${BASE_URL_V1}/user/auth`;
+const AUTH_USER_URL = `${BASE_URL_V1}/user/auth`;
 const AUTH_DEVICE_URL = `${BASE_URL_V2}/devices/${CLEARBLADE_KEY}/auth`;
 const LOCATIONS_URL = `${BASE_URL_V1}/code/${CLEARBLADE_KEY}/getUserDataForApp`;
 
@@ -40,8 +40,6 @@ const HTTP_RETRY_CODES = [
   '503',          // Service Unavailable
   '504',          // Gateway Timeout
 ];
-
-type DeviceDetails = { serialNumber: string, deviceName: string, activeKey: string }
 
 export class EconetApi {
   private userAuth?: UserAuth;
@@ -188,7 +186,7 @@ export class EconetApi {
   private async authenticateUser(): Promise<boolean> {
 
     const data = { email: this.email, password: this.password };
-    const tokenData = await this.httpRequest<UserTokenData>(this.authenticateUser.name, data, AUTH_URL);
+    const tokenData = await this.httpRequest<UserTokenData>(this.authenticateUser.name, data, AUTH_USER_URL);
 
     if (!tokenData) {
       return false;

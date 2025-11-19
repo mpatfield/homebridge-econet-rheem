@@ -15,7 +15,7 @@ import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
 const BROKER_URL = `mqtts://${CLEARBLADE_HOST}:1884`;
 const TOPIC_REPORTED = 'user/%s/device/reported';
 const TOPIC_DESIRED = 'user/%s/device/desired';
-const TOPIC_DEVICE = 'device/%s/%s/4736/reported'; // TODO
+const TOPIC_DEVICE = 'device/%s/%s/4736/reported';
 
 const KEEPALIVE = 90;
 
