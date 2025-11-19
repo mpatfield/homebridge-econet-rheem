@@ -4,7 +4,7 @@
 
 <span align="center">
 
-# homebridge-econet-rheem
+# Homebridge Econet Rheem
 
 Homebridge plugin for HomeKit control of Rheem water heaters and thermostats
 
@@ -40,26 +40,43 @@ To get started, visit "Account Sharing" in the Rheem app menu.
 
 ## Device Details
 
-TODO
+⚠️ This has only been tested with a Rheem Heat Pump Water Heater. You are welcome to try other equipment, but you may run into issues. If you do, please [open a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) and we can work together to support your equipment.
 
-  Only tested with Heat Pump Water Heater
+While optional, providing additional details about your device gives more accurate real-time info, such as true current water temperature for water heaters. However, it does require collecting additional info about your device: `serialNumber`, `deviceName`, and `activeKey`.
 
-  * Current temperature is not supported by the API so recovery temperature is simulated
+The easiest way to get the `serialNumber` is by visiting TODO. Enter your Econet username and password and it'll give you a list of serial numbers.
 
-    https://community.hubitat.com/t/rheem-econet-integration-maintained-by-kris-linquist/116913/72
+```json
+{
+  "name": "My Water Heater",
+  "serial_number": "00-11-22-33-44-aa-bb-cc-dd" <-- THIS IS YOUR SERIAL NUMBER
+}
+```
 
-    To obtain these credentials, connect to your water heater's wifi and go to https://192.168.10.1/cred
+For `deviceName` and `activeKey`, you will need to connect to your devices WiFi.
 
-    1.	Put it in Wi-Fi setup mode
-    •	On most Rheem EcoNet controllers, press and hold the Wi-Fi or Settings → Wi-Fi Setup option until the screen shows “Ready to Connect.”
-    •	The heater will broadcast an EcoNet-XXXX network.
-    2.	Connect to that network
-    •	Use your phone/laptop to join the EcoNet network.
-    •	Retrieve any info you need (e.g., by visiting 192.168.10.1).
-    3.	Reconnect it to your home network
-    •	Open the Rheem EcoNet app.
-    •	Choose Add Device → Water Heater → Connect to Wi-Fi → select your home SSID and enter your Wi-Fi password.
-    •	Wait until the heater display says “Connected.”
+- Put your equipment in WiFi setup mode — for most controllers, press and hold the WiFi button
+-	Connect to the WiFi network (e.g. *EcoNet-XXXX*)
+- Visit https://192.168.10.1/cred and you should see something like the following:
+
+```json
+{
+  "SYSTEM-KEY":"e2e699cb0bb0bbb88fc8858cb5a401",
+  "SYSTEM-SECRET":"E2E699CB0BE6C6FADDB1B0BC9A20",
+  "ACTIVE-KEY":"0123456789abcdef", <-- THIS IS YOUR ACTIVE KEY
+  "DEVICE-NAME":"fedcba9876543210", <-- THIS IS YOUR DEVICE NAME
+  "IDENTITY":"13577054-594d-48a3-b02a-e49ed0af8f5e",
+  "AUTH_URL":"rheem.clearblade.com",
+  "CLOUDURL":"rheem.clearblade.com",
+  "SAUTHPOR":8906,
+  "SCLODPOR":1884
+}
+```
+
+- Copy and paste the pieces you need
+- Reconnect your device to your WiFi network by opening the Rheem app and choosing "Add Product"
+
+Enter the `serialNumber`, `deviceName`, and `activeKey` you collected from above in the Homebridge Econet Rheem config UI and restart Homebridge. You should now see more accurate real-time information in the Home app!
 
 ## Configuration
 
