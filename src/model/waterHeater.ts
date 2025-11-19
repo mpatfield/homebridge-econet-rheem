@@ -24,6 +24,7 @@ export class WaterHeater extends Equipment {
 
   private availability_icon: string | null = null;
 
+  private isUsingDeviceMQTT: boolean = false;
   private recoverySimulator: RecoverySimulator;
 
   constructor(api: EconetApi, data: WaterHeaterData) {
@@ -109,17 +110,17 @@ export class WaterHeater extends Equipment {
   updateFromUserMQTT(data: UserMQTTData): void {
     super.updateFromUserMQTT(data);
  
-    if (data['@ENABLED'] !== undefined) {
+    if (!this.isUsingDeviceMQTT && data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
       this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
     }
 
-    if (data['@SETPOINT'] !== undefined) {
+    if (!this.isUsingDeviceMQTT && data['@SETPOINT'] !== undefined) {
       this.set_point = data['@SETPOINT'];
       this.log.ifVerbose(strings.debug.setpointState, this.deviceName, this.set_point);
     }
 
-    if (data['@HOTWATER'] !== undefined) {
+    if (!this.isUsingDeviceMQTT && data['@HOTWATER'] !== undefined) {
       this.availability_icon = data['@HOTWATER'];
       this.log.ifVerbose(strings.debug.availabilityState, this.deviceName, this.availability_icon);
     }
@@ -132,11 +133,23 @@ export class WaterHeater extends Equipment {
     this.didUpdate();  
   }
 
-  override updateFromDeviceMQTT(update: DeviceMQTTData): void {
+  override updateFromDeviceMQTT(data: DeviceMQTTData): void {
     
-    if (update.UPHTRTMP !== undefined) {
-      this.current_temp = update.UPHTRTMP;
+    this.isUsingDeviceMQTT = true;
+
+    if (data.WHTRENAB !== undefined) {
+      this.enabled = data.WHTRENAB === 1;
+      this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
+    }
+
+    if (data.UPHTRTMP !== undefined) {
+      this.current_temp = data.UPHTRTMP;
       this.log.ifVerbose(strings.debug.currentTempState, this.deviceName, this.current_temp);
+    }
+
+    if (data.WHTRSETP !== undefined) {
+      this.set_point = data.WHTRSETP;
+      this.log.ifVerbose(strings.debug.setpointState, this.deviceName, this.set_point);
     }
 
     this.didUpdate();

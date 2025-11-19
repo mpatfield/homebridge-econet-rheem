@@ -98,7 +98,9 @@ export type UserMQTTData = {
 }
 
 export type DeviceMQTTData = {
-  UPHTRTMP?: number;
+  UPHTRTMP?: number; // current temperature
+  WHTRENAB?: number; // enabled
+  WHTRSETP?: number; // setpoint
 }
 
 export interface MQTTError extends Error {
