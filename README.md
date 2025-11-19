@@ -44,7 +44,7 @@ To get started, visit "Account Sharing" in the Rheem app menu.
 
 While optional, providing additional details about your device gives more accurate real-time info, such as true current water temperature for water heaters. However, it does require collecting additional info about your device: `serialNumber`, `deviceName`, and `activeKey`.
 
-The easiest way to get the `serialNumber` is by visiting TODO. Enter your Econet username and password and it'll give you a list of serial numbers.
+The easiest way to get the `serialNumber` is by visiting [this site](https://mpatfield.github.io/homebridge-econet-rheem/serials.html). Enter your Econet username and password and it'll give you a list of serial numbers.
 
 ```json
 {
