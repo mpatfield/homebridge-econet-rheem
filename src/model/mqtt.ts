@@ -271,6 +271,9 @@ export class EconetMQTT {
       }
   
       let valuesArray = valuesObject[key] ?? [];
+      while (valuesArray.length > 4) {
+        valuesArray.shift();
+      }
   
       const valuesSet = new Set(valuesArray);
       valuesSet.add(value);
