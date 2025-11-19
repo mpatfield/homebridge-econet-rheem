@@ -44,7 +44,7 @@ const HTTP_RETRY_CODES = [
 type DeviceDetails = { serialNumber: string, deviceName: string, activeKey: string }
 
 export class EconetApi {
-  private auth?: UserAuth;
+  private userAuth?: UserAuth;
   private retryIndex: number = 0;
 
   readonly equipments: Map<string, Equipment> = new Map();
@@ -63,11 +63,11 @@ export class EconetApi {
   static async connect(log: Log, email: string, password: string, devices: DeviceDetails[], debugMQTT: boolean): Promise<EconetApi> {
     const api = new EconetApi(log, email, password, devices, debugMQTT);
 
-    api.auth = UserAuth.load(email);
+    api.userAuth = UserAuth.load(email);
 
     let shouldContinue = true;
-    if (!api.auth) {
-      shouldContinue = await api.authenticate();
+    if (!api.userAuth) {
+      shouldContinue = await api.authenticateUser();
     }
 
     if (shouldContinue) {
@@ -103,12 +103,12 @@ export class EconetApi {
       return;
     }
 
-    if (!this.auth?.accountId) {
+    if (!this.userAuth?.accountId) {
       this.log.error(strings.mqtt.userAuthMissing);
       return;
     }
 
-    this.userClient.publish(this.auth.accountId, payload, deviceId, serialNumber);
+    this.userClient.publish(this.userAuth.accountId, payload, deviceId, serialNumber);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -125,8 +125,8 @@ export class EconetApi {
     });
 
     let config: AxiosRequestConfig;
-    if (this.auth?.token) {
-      const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.auth?.token };
+    if (this.userAuth?.token) {
+      const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.userAuth?.token };
       config = { headers: headers, timeout: HTTP_TIMEOUT };
     } else {
       config = { headers: BASE_HEADERS, timeout: HTTP_TIMEOUT };
@@ -185,17 +185,17 @@ export class EconetApi {
     return await retry();
   }
 
-  private async authenticate(): Promise<boolean> {
+  private async authenticateUser(): Promise<boolean> {
 
     const data = { email: this.email, password: this.password };
-    const tokenData = await this.httpRequest<UserTokenData>(this.authenticate.name, data, AUTH_URL);
+    const tokenData = await this.httpRequest<UserTokenData>(this.authenticateUser.name, data, AUTH_URL);
 
     if (!tokenData) {
       return false;
     } 
     
-    this.auth = new UserAuth(tokenData);
-    this.auth.save(this.email);
+    this.userAuth = new UserAuth(tokenData);
+    this.userAuth.save(this.email);
 
     this.log.always(strings.http.authSuccess);
 
@@ -262,13 +262,13 @@ export class EconetApi {
       return;
     }
   
-    if (!this.auth?.token) {
+    if (!this.userAuth?.token) {
       this.log.error(strings.mqtt.userAuthMissing);
       return;
     }
 
-    this.userClient = EconetMQTT.connectUserClient(this.auth, this.email, this.equipments, this.log, this.debugMQTT, async () => {
-      await this.authenticate();
+    this.userClient = EconetMQTT.connectUserClient(this.userAuth, this.email, this.equipments, this.log, this.debugMQTT, async () => {
+      await this.authenticateUser();
     });
 
     for (const equipment of this.equipments.values()) {
@@ -284,7 +284,9 @@ export class EconetApi {
       }
 
       const equipments: [string, Equipment][] = [[equipment.serialNumber, equipment]];
-      const deviceClient = EconetMQTT.connectDeviceClient(auth, new Map(equipments), this.log, this.debugMQTT);
+      const deviceClient = EconetMQTT.connectDeviceClient(auth, new Map(equipments), this.log, this.debugMQTT, async () => {
+        await this.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
+      });
       this.deviceClients.push(deviceClient);
     }
   }

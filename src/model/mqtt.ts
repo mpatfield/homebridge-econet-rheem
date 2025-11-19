@@ -53,7 +53,7 @@ export class EconetMQTT {
     return mqtt;
   }
 
-  static connectDeviceClient(auth: DeviceAuth, equipments: Map<string, Equipment>, log: Log, debug: boolean) {
+  static connectDeviceClient(auth: DeviceAuth, equipments: Map<string, Equipment>, log: Log, debug: boolean, onUnstable: () => (Promise<void>)) {
 
     const equipment = equipments.entries().next().value?.[1];
     if (equipment === undefined) {
@@ -64,7 +64,7 @@ export class EconetMQTT {
       TOPIC_DEVICE.replace('%s', equipment.macAddress).replace('%s', equipment.serialNumber),
     ];
 
-    const mqtt = new EconetMQTT(Type.DEVICE, auth.token, topics, undefined, equipments, log, debug);
+    const mqtt = new EconetMQTT(Type.DEVICE, auth.token, topics, undefined, equipments, log, debug, onUnstable);
 
     mqtt.connect();
 
@@ -225,7 +225,7 @@ export class EconetMQTT {
     }
 
     this.reconnectCount++;
-    if (this.type === Type.USER && this.reconnectCount % DELAYS.length === 0) {
+    if (this.reconnectCount % DELAYS.length === 0) {
       try {
         this.log.ifVerbose(strings.mqtt.unstableConnection);
         this.log.ifVerbose(strings.http.reauthenticate);
