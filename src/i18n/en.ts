@@ -7,7 +7,6 @@ const en = {
       account: 'Dedicated account recommended. See documentation.',
       devices: 'Providing additional device details gives a better experience. See documentation for details.',
       verbose: 'Enable additional debug logging',
-      wh_sim_disable: 'See documentation for details',
     },
 
     needed: 'You will need your Rheem username and password',
@@ -23,7 +22,6 @@ const en = {
       password: 'Password',
       serialNumber: 'Serial Number',
       verbose: 'Verbose',
-      wh_sim_disable: 'Disable Water Heater Temperature Simulator',
     },
   },
 

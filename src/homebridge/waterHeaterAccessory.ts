@@ -4,7 +4,6 @@ import { EconetRheemPlatform } from '../homebridge/platform.js';
 
 import { strings } from '../i18n/i18n.js';
 
-import { TemperatureUnits } from '../model/constants.js';
 import { WaterHeater } from '../model/waterHeater.js';
 
 import { toCelsius, fromCelsius } from '../tools/temperature.js';
@@ -18,7 +17,6 @@ export class WaterHeaterAccessory {
     platform: EconetRheemPlatform,
     private readonly accessory: PlatformAccessory,
     private readonly waterHeater: WaterHeater,
-    private readonly alwaysUseCurrentTemp: boolean,
   ) {
     
     this.Characteristic = platform.api.hap.Characteristic;
@@ -90,7 +88,7 @@ export class WaterHeaterAccessory {
       this.Characteristic.TargetHeaterCoolerState.HEAT);
   
     this.service.updateCharacteristic(this.Characteristic.CurrentTemperature,
-      toCelsius(this.waterHeater.currentTemp(this.inputTemperature), this.waterHeater.units));
+      toCelsius(this.waterHeater.currentTemp, this.waterHeater.units));
 
     this.service.updateCharacteristic(this.Characteristic.HeatingThresholdTemperature,
       toCelsius(this.waterHeater.setPoint, this.waterHeater.units));
@@ -120,7 +118,7 @@ export class WaterHeaterAccessory {
   }
 
   async getCurrentTemperature(): Promise<CharacteristicValue> {
-    return toCelsius(this.waterHeater.currentTemp(this.inputTemperature), this.waterHeater.units);
+    return toCelsius(this.waterHeater.currentTemp, this.waterHeater.units);
   }
 
   async getHeatingThresholdTemperature(): Promise<CharacteristicValue> {
@@ -136,27 +134,5 @@ export class WaterHeaterAccessory {
   async setActive(value: CharacteristicValue): Promise<void> {
     const enabled = value as number === 1;
     this.waterHeater.setEnabled(enabled);
-  }
-
-  private get inputTemperature() : number | null {
-
-    if (this.alwaysUseCurrentTemp) {
-      return null;
-    }
-
-    const month = new Date().getMonth();
-  
-    // Coldest: Jan, Feb, Dec
-    if (month === 0 || month === 1 || month === 11) {
-      return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 50 : 10;
-    }
-
-    // Hottest: Jun, Jul, Aug
-    if (month === 5 || month === 6 || month === 7) {
-      return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 70 : 20;
-    }
-
-    // All other months
-    return this.waterHeater.units === TemperatureUnits.FAHRENHEIT ? 60 : 15;
   }
 }

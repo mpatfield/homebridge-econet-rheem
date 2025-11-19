@@ -70,11 +70,6 @@
         "title": "${config.title.verbose}",
         "type": "boolean",
         "description": "${config.description.verbose}"
-      },
-      "wh_sim_disable": {
-        "title": "${config.title.wh_sim_disable}",
-        "type": "boolean",
-        "description": "${config.description.wh_sim_disable}"
       }
     },
     "allOf": [

@@ -143,8 +143,7 @@ export class Thermostat extends Equipment {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  override updateFromDeviceMQTT(update: DeviceMQTTData): void {
-    // TODO
+  override updateFromDeviceMQTT(data: DeviceMQTTData): void {
   }
 
   private _modeFromString(strValue: string): ThermostatOperationMode {

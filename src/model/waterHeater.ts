@@ -1,7 +1,6 @@
 import { EconetApi } from './api.js';
 import { EquipmentType } from './constants.js';
 import { Equipment } from './equipment.js';
-import { RecoverySimulator } from './recoverySimulator.js';
 import { DeviceMQTTData, EquipmentData, getValue, UserMQTTData, WaterHeaterData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
@@ -25,14 +24,9 @@ export class WaterHeater extends Equipment {
   private availability_icon: string | null = null;
 
   private isUsingDeviceMQTT: boolean = false;
-  private recoverySimulator: RecoverySimulator;
 
   constructor(api: EconetApi, data: WaterHeaterData) {
     super(api, data as unknown as EquipmentData);
-
-    this.recoverySimulator = new RecoverySimulator(this, () => {
-      this.didUpdate();
-    });
 
     this.running = data['@RUNNING'] ? data['@RUNNING']?.replace(/\s/g, '').length > 0 : false;
     this.enabled = data['@ENABLED']?.value === 1;
@@ -85,28 +79,19 @@ export class WaterHeater extends Equipment {
     return 100;
   }
 
-  currentTemp(inputTemp?: number | null): number {
+  get currentTemp(): number {
 
     if (this.current_temp !== undefined) {
       return this.current_temp;
     }
 
-    if (!inputTemp) {
-      return this.set_point;
-    }
-
-    return this.recoverySimulator?.currentTemp(inputTemp) || this.set_point;
+    return this.set_point;
   }
 
   get setPoint(): number {
     return this.set_point;
   }
 
-  protected didUpdate() {
-    this.recoverySimulator?.handleUpdate(this);
-    super.didUpdate();
-  }
- 
   updateFromUserMQTT(data: UserMQTTData): void {
     super.updateFromUserMQTT(data);
  

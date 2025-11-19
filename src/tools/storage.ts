@@ -4,7 +4,6 @@ import storage from 'node-persist';
 import { PLATFORM_NAME, PLUGIN_NAME } from '../homebridge/settings.js';
 
 export const STORAGE_KEY_USER_AUTH = 'auth';
-export const STORAGE_KEY_RECOVERY_RATES = 'rates';
 
 const STORAGE = new Map<string, string>();
 
@@ -56,12 +55,6 @@ export class Storage {
     if (auth !== undefined) {
       Storage.set(STORAGE_KEY_USER_AUTH, auth);
       storage.removeItem(`${PLUGIN_NAME}:${STORAGE_KEY_USER_AUTH}`);
-    }
-
-    const recoveryRates = await storage.get(`${PLUGIN_NAME}:${STORAGE_KEY_RECOVERY_RATES}`);
-    if (recoveryRates !== undefined) {
-      Storage.set(STORAGE_KEY_RECOVERY_RATES, recoveryRates);
-      storage.removeItem(`${PLUGIN_NAME}:${STORAGE_KEY_RECOVERY_RATES}`);
     }
   }
 

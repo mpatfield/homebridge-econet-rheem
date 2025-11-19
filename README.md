@@ -72,7 +72,6 @@ Using the Homebridge Config UI is the easiest way to set up this plugin. However
          "platform": "HomebridgeEconetRheem",
          "email": "your_econet_email",
          "password": "your_econet_password",
-         "wh_sim_disable": false,
          "verbose": false
        }
      ]
@@ -82,7 +81,6 @@ Using the Homebridge Config UI is the easiest way to set up this plugin. However
 - `platform`: (Required) Must be "HomebridgeEconetRheem".
 - `email`: (Required) Your Econet account email.
 - `password`: (Required) Your Econet account password.
-- `wh_sim_disable`: (Optional) Set to `true` to disable and use set_point as the current temperature.
 - `verbose`: (Optional) Set to `true` to enable additional debug logging. Default is `false`.
 
 ## Contributing
