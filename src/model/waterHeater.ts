@@ -95,17 +95,21 @@ export class WaterHeater extends Equipment {
   updateFromUserMQTT(data: UserMQTTData): void {
     super.updateFromUserMQTT(data);
  
-    if (!this.isUsingDeviceMQTT && data['@ENABLED'] !== undefined) {
+    if (!this.isUsingDeviceMQTT) {
+      return;
+    }
+
+    if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
       this.log.ifVerbose(strings.debug.enabledState, this.deviceName, this.enabled);
     }
 
-    if (!this.isUsingDeviceMQTT && data['@SETPOINT'] !== undefined) {
+    if (data['@SETPOINT'] !== undefined) {
       this.set_point = data['@SETPOINT'];
       this.log.ifVerbose(strings.debug.setpointState, this.deviceName, this.set_point);
     }
 
-    if (!this.isUsingDeviceMQTT && data['@HOTWATER'] !== undefined) {
+    if (data['@HOTWATER'] !== undefined) {
       this.availability_icon = data['@HOTWATER'];
       this.log.ifVerbose(strings.debug.availabilityState, this.deviceName, this.availability_icon);
     }
@@ -121,6 +125,11 @@ export class WaterHeater extends Equipment {
   override updateFromDeviceMQTT(data: DeviceMQTTData): void {
     
     this.isUsingDeviceMQTT = true;
+
+    if (data.COMP_RLY !== undefined) {
+      this.running = data.COMP_RLY === 1;
+      this.log.ifVerbose(strings.debug.runningState, this.deviceName, this.running);
+    }
 
     if (data.WHTRENAB !== undefined) {
       this.enabled = data.WHTRENAB === 1;

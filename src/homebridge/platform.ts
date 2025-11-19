@@ -133,7 +133,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       new ThermostatAccessory(this, accessory, equipment as Thermostat);
       break;
     case EquipmentType.WATER_HEATER:
-      new WaterHeaterAccessory(this, accessory, equipment as WaterHeater); // TODO remove this from config
+      new WaterHeaterAccessory(this, accessory, equipment as WaterHeater);
     }
   }
 

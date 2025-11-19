@@ -98,6 +98,7 @@ export type UserMQTTData = {
 }
 
 export type DeviceMQTTData = {
+  COMP_RLY?: number; // compressor running
   UPHTRTMP?: number; // current temperature
   WHTRENAB?: number; // enabled
   WHTRSETP?: number; // setpoint
