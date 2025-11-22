@@ -17,26 +17,53 @@ Homebridge plugin for HomeKit control of Rheem water heaters and thermostats
 
 ## Disclaimer
 
-This plugin is independently developed and is not in any way affiliated with or endorsed by Rheem. Any issues or damage resulting from use of this plugin are not the fault of the developer. Use at your own risk.
+Homebridge Econet Rheem is independently developed and is not in any way affiliated with or endorsed by Rheem. Any issues or damage resulting from use of this plugin are not the fault of the developer. Use at your own risk.
 
-It uses an unofficial EcoNet API and could stop working at any time without warning.
+This plugin uses an unofficial EcoNet API and could stop working at any time without warning.
 
-## Limitations
+## Known Limitations
 
 * Water Heaters
   * Switching modes is not possible, only enable/disable and adjusting desired temperature
 * Celcius should work but is untested
-  * *Let me know if you have successfully used ºC so I can remove this*
+  * *Please let me know if you have successfully used ºC by [creating a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) so I can remove this*
 
 ## Account Sharing
 
 ⚠️ It is recommended to use a dedicated account for use with Homebridge.
 
-This is because Rheem only allows one device to be subscribed to real-time updates, so if you open the Rheem app then the Homebridge plugin will silently stop receiving updates.
+Rheem only allows one device to be subscribed to real-time updates, so if you open the Rheem app then the Homebridge plugin will silently stop receiving updates.
 
 The plugin will eventually resubscribe after being idle for an extended period, but you could miss updates in the meantime. Using a separate account will avoid this issue.
 
 To get started, visit "Account Sharing" in the Rheem app menu.
+
+## Configuration
+
+Using the Homebridge Config UI is the easiest way to set up this plugin. However, if you wish to do things manually then you will need to add the following to your Homebridge `config.json`:
+
+```json
+{
+  "name": "Econet Rheem",
+  "email": "string",
+  "password": "string",
+  "devices": [
+      {
+          "serialNumber": "string",
+          "deviceName": "string",
+          "activeKey": "string"
+      }
+      ...
+  ],
+  "verbose": false,
+  "platform": "HomebridgeEconetRheem"
+}
+```
+
+- `platform`: (Required) Must be "HomebridgeEconetRheem"
+- `email`: (Required) Your Econet account email
+- `password`: (Required) Your Econet account password
+- `verbose`: (Optional) Set to `true` to enable additional debug logging. Default is `false`
 
 ## Device Details
 
@@ -55,9 +82,9 @@ The easiest way to get the `serialNumber` is by visiting [this site](https://mpa
 
 For `deviceName` and `activeKey`, you will need to connect to your devices WiFi.
 
-- Put your equipment in WiFi setup mode — for most controllers, press and hold the WiFi button
--	Connect to the WiFi network (e.g. *EcoNet-XXXX*)
-- Visit https://192.168.10.1/cred and you should see something like the following:
+1. Put your equipment in WiFi setup mode — for most controllers, press and hold the WiFi button
+2. Connect to the WiFi network (e.g. *EcoNet-XXXX*)
+3. Visit https://192.168.10.1/cred and you should see something like the following:
 
 ```json
 {
@@ -73,48 +100,10 @@ For `deviceName` and `activeKey`, you will need to connect to your devices WiFi.
 }
 ```
 
-- Copy and paste the pieces you need
-- Reconnect your device to your WiFi network by opening the Rheem app and choosing "Add Product"
+4. Copy and paste the pieces you need
+5. Reconnect your device to your WiFi network by opening the Rheem app and choosing "Add Product"
 
 Enter the `serialNumber`, `deviceName`, and `activeKey` you collected from above in the Homebridge Econet Rheem config UI and restart Homebridge. You should now see more accurate real-time information in the Home app!
-
-## Configuration
-
-Using the Homebridge Config UI is the easiest way to set up this plugin. However, if you wish to do things manually then you will need to add the following to your Homebridge `config.json`:
-
-   ```json
-   {
-     "platforms": [
-       {
-         "platform": "HomebridgeEconetRheem",
-         "email": "your_econet_email",
-         "password": "your_econet_password",
-         "verbose": false
-       }
-     ]
-   }
-   ```
-
-- `platform`: (Required) Must be "HomebridgeEconetRheem".
-- `email`: (Required) Your Econet account email.
-- `password`: (Required) Your Econet account password.
-- `verbose`: (Optional) Set to `true` to enable additional debug logging. Default is `false`.
-
-## Contributing
-
-Ideas and bug reports are welcome. To assist:
-
-1. Turn on "Verbose" logging in the plugin config under "Advanced Settings"
-2. Run Homebridge in debug mode
-
-   ```
-   Homebridge Settings -> Startup & Environment -> Homebridge Debug Mode -D
-   ```
-
-3. Capture the JSON responses in the Logs for HTTP and MQTT state changes
-4. Submit the captured data via a GitHub [issue](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) or [pull request](https://github.com/mpatfield/homebridge-econet-rheem/pulls).
-
-Your contributions will help enhance the plugin's functionality and device support.
 
 ## Credits
 
