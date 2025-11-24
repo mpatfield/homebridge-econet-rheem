@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.6.0-beta.0 (2025-11-19)
+## 1.6.0 (2025-11-24)
 
 ### Added
 - Real-time current temperature for water heaters ([See Documentation](https://github.com/mpatfield/homebridge-econet-rheem#device-details))
@@ -10,6 +10,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ### Changed
 - Conslidated persistent storage into single file
 - Water heater recovery simulator removed in favor of real-time updates above
+- Updated dependencies
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
