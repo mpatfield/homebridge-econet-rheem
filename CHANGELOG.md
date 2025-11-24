@@ -5,7 +5,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ## 1.6.0 (2025-11-24)
 
 ### Added
-- Real-time current temperature for water heaters ([See Documentation](https://github.com/mpatfield/homebridge-econet-rheem#device-details))
+- Real-time current temperature for water heaters ([see documentation](https://github.com/mpatfield/homebridge-econet-rheem#device-details))
 
 ### Changed
 - Consolidated persistent storage into a single file
