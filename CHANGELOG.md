@@ -8,7 +8,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 - Real-time current temperature for water heaters ([See Documentation](https://github.com/mpatfield/homebridge-econet-rheem#device-details))
 
 ### Changed
-- Conslidated persistent storage into single file
+- Consolidated persistent storage into a single file
 - Water heater recovery simulator removed in favor of real-time updates above
 - Updated dependencies
 
