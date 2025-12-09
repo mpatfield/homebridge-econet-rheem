@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.6.1-beta.0 (2025-12-09)
+
+### Changed
+- Use device desired topics for publish when possible
+
+### Notes
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
+
 ## 1.6.0 (2025-11-24)
 
 ### Added
@@ -11,9 +19,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 - Consolidated persistent storage into a single file
 - Water heater recovery simulator removed in favor of real-time updates above
 - Updated dependencies
-
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.5.19 (2025-11-01)
 

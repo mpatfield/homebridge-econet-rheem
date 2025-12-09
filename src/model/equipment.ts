@@ -80,7 +80,13 @@ export abstract class Equipment {
 
   abstract updateFromDeviceMQTT(_update: DeviceMQTTData): void;
 
-  publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string) {
-    this.api.publish(payload, deviceId, serialNumber);
+  publish(userPayload: { [key: string]: number | string}, devicePayload: { [key: string]: number | string } | undefined) {
+    
+    userPayload = {
+      device_name: this.deviceId,
+      ...userPayload,
+    };
+
+    this.api.publish(this.serialNumber, userPayload, devicePayload);
   }
 }

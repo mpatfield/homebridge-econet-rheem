@@ -196,7 +196,7 @@ export class Thermostat extends Equipment {
     }
 
     if (Object.keys(payload).length > 0) {
-      this.publish(payload, this.deviceId, this.serialNumber);
+      this.publish(payload, undefined);
     } else {
       this.log.error(strings.equipment.unknownMode, mode);
     }
@@ -228,11 +228,11 @@ export class Thermostat extends Equipment {
 
     let hasSetTemp = false;
     if (coolPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.COOLING].includes(this.mode)) {
-      this.publish(coolPayload, this.deviceId, this.serialNumber);
+      this.publish(coolPayload, undefined);
       hasSetTemp = true;
     }
     if (heatPayload && [ThermostatOperationMode.AUTO, ThermostatOperationMode.HEATING, ThermostatOperationMode.EMERGENCY_HEAT].includes(this.mode)) {
-      this.publish(heatPayload, this.deviceId, this.serialNumber);
+      this.publish(heatPayload, undefined);
       hasSetTemp = true;
     }
     if (targetTemp && !hasSetTemp) {
@@ -245,7 +245,7 @@ export class Thermostat extends Equipment {
         this.log.error(strings.equipment.setpointUnknown, this.mode);
       }
       if (Object.keys(payload).length > 0) {
-        this.publish(payload, this.deviceId, this.serialNumber);
+        this.publish(payload, undefined);
       }
     }
   }

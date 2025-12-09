@@ -48,7 +48,7 @@ export class EconetApi {
   readonly equipments: Map<string, Equipment> = new Map();
 
   private userClient?: EconetMQTT;
-  private deviceClients: EconetMQTT[] = [];
+  private deviceClients = new Map<string, EconetMQTT>();
 
   constructor(
     public readonly log: Log,
@@ -88,25 +88,31 @@ export class EconetApi {
     this.userClient?.teardown();
     this.userClient = undefined;
 
-    while (this.deviceClients.length > 0) {
-      const client = this.deviceClients.shift();
-      client?.teardown();
-    }
+    this.deviceClients.forEach( (client) => {
+      client.teardown();
+    });
+    this.deviceClients.clear();
   }
 
-  publish(payload: { [key: string]: number }, deviceId: string, serialNumber: string): void {
-    
+  publish(serialNumber: string, userPayload: { [key: string]: number | string}, devicePayload: { [key: string]: number | string } | undefined): void {
+
+    const client = this.deviceClients.get(serialNumber);
+    if (client !== undefined && devicePayload !== undefined) {
+      client.publish(devicePayload);
+      return;
+    }
+
+    userPayload = {
+      serial_number: serialNumber,
+      ...userPayload,
+    };
+
     if (!this.userClient) {
       this.log.error(strings.mqtt.userNotConnected);
       return;
     }
 
-    if (!this.userAuth?.accountId) {
-      this.log.error(strings.mqtt.userAuthMissing);
-      return;
-    }
-
-    this.userClient.publish(this.userAuth.accountId, payload, deviceId, serialNumber);
+    this.userClient.publish(userPayload);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -265,11 +271,8 @@ export class EconetApi {
       return;
     }
 
-    this.userClient = EconetMQTT.connectUserClient(this.userAuth, this.email, this.equipments, this.log, this.debugMQTT, async () => {
-      await this.authenticateUser();
-    });
-
     for (const equipment of this.equipments.values()) {
+
       const device = this.devices.find( (device) => device.serialNumber === equipment.serialNumber);
       if (device === undefined) {
         continue;
@@ -285,7 +288,15 @@ export class EconetApi {
       const deviceClient = EconetMQTT.connectDeviceClient(auth, new Map(equipments), this.log, this.debugMQTT, async () => {
         await this.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
       });
-      this.deviceClients.push(deviceClient);
+      this.deviceClients.set(device.serialNumber, deviceClient);
     }
+
+    if (Array.from(this.equipments.keys()).sort().toString() === Array.from(this.deviceClients.keys()).sort().toString()) {
+      return;
+    }
+
+    this.userClient = EconetMQTT.connectUserClient(this.userAuth, this.email, this.equipments, this.log, this.debugMQTT, async () => {
+      await this.authenticateUser();
+    });
   }
 }

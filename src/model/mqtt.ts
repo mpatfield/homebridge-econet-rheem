@@ -13,9 +13,9 @@ import { Log, LogType } from '../tools/log.js';
 import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
 
 const BROKER_URL = `mqtts://${CLEARBLADE_HOST}:1884`;
-const TOPIC_REPORTED = 'user/%s/device/reported';
-const TOPIC_DESIRED = 'user/%s/device/desired';
-const TOPIC_DEVICE = 'device/%s/%s/4736/reported';
+
+const TOPIC_BASE_USER = 'user/%s/device/';
+const TOPIC_BASE_DEVICE = 'device/%s/%s/4736/';
 
 const KEEPALIVE = 90;
 
@@ -35,18 +35,18 @@ export class EconetMQTT {
   private isReconnecting = false;
   private reconnectCount = 0;
 
+  private readonly topicDesired: string;
+  private readonly topicReported: string;
+
   static connectUserClient(auth: UserAuth, email: string, equipments: Map<string, Equipment>,
     log: Log, debug: boolean, onUnstable: () => (Promise<void>)): EconetMQTT {
 
-    const topics = [
-      TOPIC_REPORTED.replace('%s', auth.accountId),
-      TOPIC_DESIRED.replace('%s', auth.accountId),
-    ];
-
+    
     const timeString = Date.now().toString().replace('.', '').slice(0, 13);
     const clientId = `${email}${timeString}_android`;
 
-    const mqtt = new EconetMQTT(Type.USER, auth.token, topics, clientId, equipments, log, debug, onUnstable);
+    const topicBase = TOPIC_BASE_USER.replace('%s', auth.accountId);
+    const mqtt = new EconetMQTT(Type.USER, auth.token, topicBase, clientId, equipments, log, debug, onUnstable);
 
     mqtt.connect(true);
 
@@ -60,11 +60,8 @@ export class EconetMQTT {
       throw new Error('Device client requires equipment');
     }
 
-    const topics = [
-      TOPIC_DEVICE.replace('%s', equipment.macAddress).replace('%s', equipment.serialNumber),
-    ];
-
-    const mqtt = new EconetMQTT(Type.DEVICE, auth.token, topics, undefined, equipments, log, debug, onUnstable);
+    const topicBase = TOPIC_BASE_DEVICE.replace('%s', equipment.macAddress).replace('%s', equipment.serialNumber);
+    const mqtt = new EconetMQTT(Type.DEVICE, auth.token, topicBase, undefined, equipments, log, debug, onUnstable);
 
     mqtt.connect();
 
@@ -74,13 +71,15 @@ export class EconetMQTT {
   private constructor(
     private readonly type: Type,
     private readonly token: string,
-    private readonly topics: string[],
+    topicBase: string,
     private readonly clientId: string | undefined,
     private readonly equipments: Map<string, Equipment>,
     private readonly log: Log,
     private readonly debug: boolean,
     private readonly onUnstable: (() => (Promise<void>)) | undefined = undefined,
   ) {
+    this.topicDesired = topicBase + 'desired';
+    this.topicReported = topicBase + 'reported';
   }
 
   private connect(showStartupMessage: boolean = false) {
@@ -105,7 +104,7 @@ export class EconetMQTT {
     this.client.on('error', (error: MQTTError) => this.log.ifVerbose(LogType.WARNING, this.string('deviceClientError', 'userClientError'), error));
   }
 
-  publish(accountId: string, payload: { [key: string]: number }, deviceId: string, serialNumber: string) {
+  publish(payload: { [key: string]: number | string }) {
 
     if (!this.client || !this.client.connected) {
       this.log.error(this.string('deviceNotConnected', 'userNotConnected'));
@@ -117,17 +116,14 @@ export class EconetMQTT {
 
     const data = {
       transactionId,
-      device_name: deviceId,
-      serial_number: serialNumber,
       ...payload,
     };
 
-    const topic = TOPIC_DESIRED.replace('%s', accountId);
     const message = JSON.stringify(data);
 
-    this.client.publish(topic, message);
+    this.client.publish(this.topicDesired, message);
 
-    this.log.ifVerbose(`${this.publish.name}() —`, topic, `\n${JSON.stringify(data)}`);
+    this.log.ifVerbose(`${this.publish.name}() —`, this.topicDesired, `\n${JSON.stringify(data)}`);
   }
 
   teardown() {
@@ -146,9 +142,8 @@ export class EconetMQTT {
       return;
     }
     
-    for (const topic of this.topics) {
-      this.client.subscribe(topic);
-    }
+    this.client.subscribe(this.topicDesired);
+    this.client.subscribe(this.topicReported);
 
     this.log.always(this.string('deviceConnected', 'userConnected'));
 

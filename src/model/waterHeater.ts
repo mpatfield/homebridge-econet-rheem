@@ -23,8 +23,6 @@ export class WaterHeater extends Equipment {
 
   private availability_icon: string | null = null;
 
-  private isUsingDeviceMQTT: boolean = false;
-
   constructor(api: EconetApi, data: WaterHeaterData) {
     super(api, data as unknown as EquipmentData);
 
@@ -94,10 +92,6 @@ export class WaterHeater extends Equipment {
 
   updateFromUserMQTT(data: UserMQTTData): void {
     super.updateFromUserMQTT(data);
- 
-    if (!this.isUsingDeviceMQTT) {
-      return;
-    }
 
     if (data['@ENABLED'] !== undefined) {
       this.enabled = getValue(data['@ENABLED']) === 1;
@@ -124,8 +118,6 @@ export class WaterHeater extends Equipment {
 
   override updateFromDeviceMQTT(data: DeviceMQTTData): void {
     
-    this.isUsingDeviceMQTT = true;
-
     if (data.COMP_RLY !== undefined) {
       this.running = data.COMP_RLY === 1;
       this.log.ifVerbose(strings.debug.runningState, this.deviceName, this.running);
@@ -150,10 +142,16 @@ export class WaterHeater extends Equipment {
   }
 
   setEnabled(enabled: boolean): void {
-    this.publish({ '@ENABLED': enabled ? 1 : 0 }, this.deviceId, this.serialNumber);
+    this.publish(
+      { '@ENABLED': enabled ? 1 : 0 },
+      { WHTRENAB: enabled ? 1 : 0 },
+    );
   }
 
   setSetPoint(setPoint: number): void {
-    this.publish({ '@SETPOINT': setPoint }, this.deviceId, this.serialNumber);
+    this.publish(
+      { '@SETPOINT': setPoint },
+      { WHTRSETP: setPoint },
+    );
   }
 }
