@@ -2,10 +2,10 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.6.1-beta.0 (2025-12-09)
+## 1.6.1 (2025-12-15)
 
 ### Changed
-- Use device desired topics for publish when possible
+- Use device topics for publish when possible
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
