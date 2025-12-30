@@ -150,7 +150,7 @@ export class EconetApi {
         throw new Error(strings.http.noDataReceived);
       }
 
-      this.log.ifVerbose(`${caller}() —`, url.substring(BASE_URL_V1.length + 1), `\n${JSON.stringify(res.data)}`);
+      this.log.ifVerbose(`${caller}() —`, `${url.substring(BASE_URL_V1.length + 1)}${data ? ` ${JSON.stringify(data)}` : ''}`, `\n${JSON.stringify(res.data)}`);
       this.retryIndex = 0;
 
       return res.data;
