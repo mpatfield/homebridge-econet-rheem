@@ -2,10 +2,10 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.6.2-beta.0 (2025-12-30)
+## 1.6.2-beta.1 (2025-12-30)
 
-### Changed
-- Additional verbose/debug logging
+### Fixed
+- Bad email/password can cause users to get stuck even after correcting login credentials ([#141](https://github.com/mpatfield/homebridge-econet-rheem/issues/141))
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!

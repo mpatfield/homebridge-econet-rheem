@@ -11,7 +11,7 @@ export function getValue<T>(input: ValueOrObject<T>): T {
 export type UserTokenData = {
   user_id: string;
   user_token: string;
-  options: { account_id: string};
+  options: { account_id: string, message: string, success: boolean };
 };
 
 export type DeviceTokenData = {

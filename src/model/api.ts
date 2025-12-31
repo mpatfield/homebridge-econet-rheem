@@ -197,7 +197,12 @@ export class EconetApi {
     if (!tokenData) {
       return false;
     } 
-    
+
+    if (tokenData.options.success === false) {
+      this.log.warning(tokenData.options.message);
+      return false;
+    }
+  
     this.userAuth = new UserAuth(tokenData);
     this.userAuth.save(this.email);
 
