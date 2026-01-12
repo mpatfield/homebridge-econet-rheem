@@ -1,5 +1,10 @@
 const en = {
 
+  accessory: {
+    badType: '%s config variable %s should have type %s but was %s', // accessory name, variable name, type, type
+    missingRequired: '%s is missing required config variable %s', // accessory name, variable name
+  },
+
   config: {
     continue: 'Continue %s',
 
