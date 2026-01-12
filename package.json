@@ -45,6 +45,7 @@
   "dependencies": {
     "@homebridge/plugin-ui-utils": "^2.0.2",
     "axios": "^1.7.2",
+    "fakegato-history": "file:./lib/fakegato-history",
     "homebridge-lib": "^7.1.7",
     "lodash.merge": "^4.6.2",
     "node-persist": "^4.0.4",
