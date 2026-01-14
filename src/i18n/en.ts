@@ -1,7 +1,7 @@
 const en = {
 
   characteristic: {
-    badValue: '%s expected a number for %s but received %s', // device name, characteristic name, value
+    badValue: '%s expected a %s for %s but received %s', // device name, value type, characteristic name, value
   },
 
   config: {
@@ -69,8 +69,10 @@ const en = {
   waterHeater: {
     disabled: '%s is disabled', // device name
     disabledSet: 'Setting %s to disabled…', // device name
+    idle: '%s is idle', // device name
     enabled: '%s is enabled', // device name
     enabledSet: 'Setting %s to enabled…', // device name
+    running: '%s is heating', // device name
   },
 
   startup: {

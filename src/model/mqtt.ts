@@ -242,17 +242,18 @@ export class MQTT {
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
 
-  private readonly KNOWN_KEYS = [...Object.keys(MQTTKey), 'transactionId'];
+  private static readonly KNOWN_KEYS = [...Object.keys(MQTTKey), 'device_name', 'serial_number', 'transactionId', '@SIGNAL'];
+  private static readonly STORAGE_KEY = `${PLATFORM_NAME}_MQTT`;
   private async saveData(data: Record<string, PrimitiveTypes | object>) {
   
-    const objectString = await storage.get(`${PLATFORM_NAME}_MQTT`);
+    const objectString = await storage.get(MQTT.STORAGE_KEY);
     const valuesObject = objectString ? JSON.parse(objectString) : {};
   
     let changed = false;
   
     for (const [key, valueOrObject] of Object.entries(data)) {
   
-      if (this.KNOWN_KEYS.includes(key)) {
+      if (MQTT.KNOWN_KEYS.includes(key)) {
         continue;
       }
   
@@ -274,7 +275,7 @@ export class MQTT {
     }
   
     if (changed) {
-      storage.set('mqtt', JSON.stringify(valuesObject));
+      storage.set(MQTT.STORAGE_KEY, JSON.stringify(valuesObject));
     }
   }
 }

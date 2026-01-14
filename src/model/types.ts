@@ -62,12 +62,24 @@ type StringValue = {
   value: string;
 }
 
+export type Setpoint = {
+  constraints: SetpointConstraints;
+  value: number;
+}
+
+export type SetpointConstraints = {
+  lowerLimit?: number;
+  upperLimit?: number;
+  units?: string;
+}
+
 export type EquipmentData = {
   device_type: EquipmentType,
   serial_number: string,
   device_name: string,
-  mac_address?: string,
+  mac_address: string,
   '@NAME'?: StringValue,
+  '@SETPOINT'?: Setpoint,
   zoning_devices?: EquipmentData[],
 }
 
@@ -75,5 +87,6 @@ export type ThermostatData = EquipmentData & {
 }
 
 export type WaterHeaterData = EquipmentData & {
+  '@RUNNING'?: string,
   '@ENABLED'?: NumberValue,
 }

@@ -11,7 +11,10 @@ export enum EquipmentType {
 export type CharacteristicKey = HKCharacteristicKey | EveCharacteristicKey;
 
 export enum HKCharacteristicKey {
-  Active = 'Active'
+  Active = 'Active',
+  CurrentHeaterCoolerState = 'CurrentHeaterCoolerState',
+  TargetHeaterCoolerState = 'TargetHeaterCoolerState',
+  TemperatureDisplayUnits = 'TemperatureDisplayUnits',
 }
 
 export enum EveCharacteristicKey {
@@ -21,6 +24,8 @@ export enum EveCharacteristicKey {
 export enum MQTTKey {
   ENABLED_D = 'WHTRENAB',
   ENABLED_U = '@ENABLED',
+  RUNNING_D = 'COMP_RLY',
+  RUNNING_U = '@RUNNING',
 }
 
 type MQTTKeyGroup = { device: MQTTKey, user: MQTTKey}

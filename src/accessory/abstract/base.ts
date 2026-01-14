@@ -15,7 +15,7 @@ import { Log, LogType } from '../../tools/log.js';
 import { Properties } from '../../tools/properties.js';
 import getVersion from '../../tools/version.js';
 
-type OnUpdateHandler = (valueOrObject: ValueOrObject<unknown>) => (Promise<void>);
+type OnUpdateHandler = (value: PrimitiveTypes) => (Promise<void>);
 
 type ValueOrObject<T> = T | { value: T };
 
@@ -45,11 +45,11 @@ export abstract class BaseAccessory implements MQTTListener {
 
     const mqttDependency: MQTTDependency = {
       log: dependency.log,
-      caller: this.name,
+      parentName: this.name,
       email: dependency.email,
       auth: dependency.auth,
       serialNumber: data.serial_number,
-      macAddress: data.mac_address ?? 'unknown',
+      macAddress: data.mac_address,
     };
 
     this.mqttClient = MQTT.connect(mqttDependency, this, dependency.debugMQTT);
@@ -85,20 +85,24 @@ export abstract class BaseAccessory implements MQTTListener {
     return this.dependency.disableLogging;
   }
 
+  protected get isDeviceAuth(): boolean {
+    return this.dependency.auth.type === AuthType.DEVICE;
+  }
+
   private getMQTTKey(mqttKeys: MQTTKeys): MQTTKey {
 
     if (typeof mqttKeys === 'string') {
       return mqttKeys;
     }
     
-    if (this.dependency.auth.type === AuthType.DEVICE) {
+    if (this.isDeviceAuth) {
       return mqttKeys.device;
     }
 
     return mqttKeys.user;      
   }
 
-  public mqttMessageReceived(message: Record<string, unknown>): void {    
+  public mqttMessageReceived(message: Record<string, ValueOrObject<PrimitiveTypes>>): void {    
 
     // TODO does this work for device messages also?
     if (message.serial_number !== this.identifier) {
@@ -106,7 +110,8 @@ export abstract class BaseAccessory implements MQTTListener {
     }
 
     for (const key of Object.keys(message)) {
-      this.updateHandlers.get(key)?.(message[key]);
+      const value = this.getValue(message[key]);
+      this.updateHandlers.get(key)?.(value);
     }
   }
 
@@ -115,7 +120,7 @@ export abstract class BaseAccessory implements MQTTListener {
     const payload: Record<string, PrimitiveTypes> = {};
     payload[mqttKey] = value;
 
-    if (this.dependency.auth.type === AuthType.USER) {
+    if (!this.isDeviceAuth) {
       payload.serial_number = this.data.serial_number;
       payload.device_name = this.data.device_name;
     }
@@ -127,10 +132,10 @@ export abstract class BaseAccessory implements MQTTListener {
     this.mqttClient?.teardown();
   }
 
-  protected setCharacteristicValue(key: HKCharacteristicKey, value: CharacteristicValue) {
-    this.accessoryService.getCharacteristic(this.Characteristic[key]).onGet( () => {
+  protected setCharacteristicValue(key: HKCharacteristicKey, value: CharacteristicValue): Characteristic {
+    return this.accessoryService.getCharacteristic(this.Characteristic[key]).onGet( () => {
       return value;
-    });
+    })?.setValue(value);
   }
 
   public getProperty(key: CharacteristicKey): CharacteristicValue | undefined {
@@ -151,12 +156,9 @@ export abstract class BaseAccessory implements MQTTListener {
     mqttKeys: MQTTKeys,
     onUpdateHandler: OnUpdateHandler,
     onSetHandler?: CharacteristicSetHandler,
-  ): Characteristic | undefined {
+  ): Characteristic {
 
     const characteristic = this.setupGet(characteristicKey, initialValue, mqttKeys, onUpdateHandler);
-    if (!characteristic) {
-      return;
-    }
 
     if (onSetHandler !== undefined) {
       this.setupSet(characteristicKey, onSetHandler);
@@ -202,10 +204,9 @@ export abstract class BaseAccessory implements MQTTListener {
   }
 
   protected bindOnUpdateNumericBoolean(charKey: CharacteristicKey, logTrue: string, logFalse: string): OnUpdateHandler {
-    return (async (valueOrObject: ValueOrObject<unknown>) => {
-      const value = this.getValue(valueOrObject);
+    return (async (value: PrimitiveTypes) => {
       if (typeof value !== 'number') {
-        this.log.error(strings.characteristic.badValue, this.name, charKey, `${JSON.stringify(valueOrObject)}`);
+        this.log.error(strings.characteristic.badValue, this.name, 'number', charKey, `${JSON.stringify(value)}`);
         return;
       }
       this.onUpdate(charKey, value, value === 1 ? logTrue : logFalse);
@@ -225,7 +226,7 @@ export abstract class BaseAccessory implements MQTTListener {
     }).bind(this);
   }
 
-  private onUpdate(key: CharacteristicKey, value: CharacteristicValue, logString: string | undefined = undefined): boolean {
+  protected onUpdate(key: CharacteristicKey, value: CharacteristicValue, logString: string | undefined = undefined): boolean {
 
     if (value === this.getProperty(key)) {
       return false;
@@ -259,7 +260,7 @@ export abstract class BaseAccessory implements MQTTListener {
   private onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, logTemplate: string, shouldDebounce: boolean) {
 
     if (typeof value !== 'number') {
-      this.log.error(strings.characteristic.badValue, this.name, charKey, `'${value}'`);
+      this.log.error(strings.characteristic.badValue, this.name, 'number', charKey, `'${value}'`);
       return;
     }
 
