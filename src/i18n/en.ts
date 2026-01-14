@@ -1,7 +1,9 @@
 const en = {
 
-  characteristic: {
+  accessory: {
+    alert: '%s has an alert', // device name
     badValue: '%s expected a %s for %s but received %s', // device name, value type, characteristic name, value
+    outOfRange: '%s is trying to set %s to %s which is out of the allowed range. Setting to %s.', // device name, characteristic name, number, number
   },
 
   config: {
@@ -73,6 +75,9 @@ const en = {
     enabled: '%s is enabled', // device name
     enabledSet: 'Setting %s to enabled…', // device name
     running: '%s is heating', // device name
+    temperatureCurrent: '%s temperature is %d°%s', // accessory name, number, units
+    temperatureTarget: '%s target temperature is %d°%s', // accessory name, number, units
+    temperatureTargetSet: '%s setting temperature to %d°%s…', // accessory name, number, units
   },
 
   startup: {

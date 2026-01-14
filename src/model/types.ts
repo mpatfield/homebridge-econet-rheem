@@ -78,6 +78,7 @@ export type EquipmentData = {
   serial_number: string,
   device_name: string,
   mac_address: string,
+  '@ALERTCOUNT'?: number,
   '@NAME'?: StringValue,
   '@SETPOINT'?: Setpoint,
   zoning_devices?: EquipmentData[],

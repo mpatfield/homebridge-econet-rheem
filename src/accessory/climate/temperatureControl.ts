@@ -1,13 +1,17 @@
-import { BaseAccessory } from '../abstract/base.js';
+import { PrimitiveTypes } from 'homebridge';
 
+import { BaseAccessory, OnUpdateHandler } from '../abstract/base.js';
+
+import { strings } from '../../i18n/i18n.js';
+
+import { HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
 import { AccessoryDependency, EquipmentData } from '../../model/types.js';
 
 import { TemperatureUnits } from '../../tools/temperature.js';
-import { HKCharacteristicKey } from '../../model/enums.js';
 
 export abstract class TemperatureControlAccessory extends BaseAccessory {
 
-  private readonly units: TemperatureUnits; 
+  protected readonly units: TemperatureUnits; 
 
   constructor(dependency: AccessoryDependency, data: EquipmentData) {
     super(dependency, data);
@@ -18,6 +22,36 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       dependency.Characteristic.TemperatureDisplayUnits.FAHRENHEIT : dependency.Characteristic.TemperatureDisplayUnits.CELSIUS;
     this.setCharacteristicValue(HKCharacteristicKey.TemperatureDisplayUnits, temperatureDisplayUnits);
 
-    
+    const hasAlert = typeof data['@ALERTCOUNT'] === 'number' && data['@ALERTCOUNT'] > 0;
+    const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
+    this.setup(HKCharacteristicKey.StatusFault, faultStatus, MQTTKeys(MQTTKey.ALERT_COUNT_D, MQTTKey.ALERT_COUNT_U),
+      this.bindOnAlertCountUpdate(),
+    );
+  }
+
+  private bindOnAlertCountUpdate(): OnUpdateHandler {
+    return (async (value: PrimitiveTypes) => {
+
+      let hasAlert: boolean = false;
+      if (this.isDeviceAuth) {
+        this.log.warning(`${this.bindOnAlertCountUpdate.name} is currently unsupported using DeviceAuth. Please create a ticket mentioning this warning.`);
+        return;
+      } else {
+
+        if (typeof value !== 'number') {
+          this.log.error(strings.accessory.badValue, this.name, 'string', HKCharacteristicKey.StatusFault, `${JSON.stringify(value)}`);
+          return;
+        }
+
+        hasAlert = value > 0;
+      }
+
+      const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
+
+      if (this.onUpdate(HKCharacteristicKey.StatusFault, faultStatus) && hasAlert) {
+        this.log.warning(strings.accessory.alert);
+      }
+
+    }).bind(this);
   }
 }

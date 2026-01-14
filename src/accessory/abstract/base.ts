@@ -13,9 +13,10 @@ import { CharacteristicType, AccessoryDependency, EquipmentData } from '../../mo
 import { debounce } from '../../tools/debounce.js';
 import { Log, LogType } from '../../tools/log.js';
 import { Properties } from '../../tools/properties.js';
+import { fromCelsius, TemperatureUnits, toCelsius } from '../../tools/temperature.js';
 import getVersion from '../../tools/version.js';
 
-type OnUpdateHandler = (value: PrimitiveTypes) => (Promise<void>);
+export type OnUpdateHandler = (value: PrimitiveTypes) => (Promise<void>);
 
 type ValueOrObject<T> = T | { value: T };
 
@@ -174,7 +175,7 @@ export abstract class BaseAccessory implements MQTTListener {
     onUpdateHandler: OnUpdateHandler,
   ): Characteristic {
 
-    if (isEveCharacteristic(characteristicKey)) {
+    if (this.isOptionalCharacteristic(characteristicKey)) {
       this.service.addOptionalCharacteristic(this.characteristicFromKey(characteristicKey));
     }
 
@@ -195,7 +196,7 @@ export abstract class BaseAccessory implements MQTTListener {
 
   private setupSet(characteristicKey: CharacteristicKey, onSetHandler: CharacteristicSetHandler) {
 
-    if (isEveCharacteristic(characteristicKey)) {
+    if (this.isOptionalCharacteristic(characteristicKey)) {
       this.service.addOptionalCharacteristic(this.characteristicFromKey(characteristicKey));
     }
 
@@ -206,23 +207,57 @@ export abstract class BaseAccessory implements MQTTListener {
   protected bindOnUpdateNumericBoolean(charKey: CharacteristicKey, logTrue: string, logFalse: string): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
       if (typeof value !== 'number') {
-        this.log.error(strings.characteristic.badValue, this.name, 'number', charKey, `${JSON.stringify(value)}`);
+        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `${value.toString()}`);
         return;
       }
       this.onUpdate(charKey, value, value === 1 ? logTrue : logFalse);
     }).bind(this);
   }
 
-  protected bindOnSetNumericBoolean(key: CharacteristicKey, mqttKeys: MQTTKeys, logTrue: string, logFalse: string, debounce: boolean = false) {
-    return (async (value: CharacteristicValue) => {
-      const logTemplate = value === 1 ? logTrue : logFalse;
-      this.onSetNumeric(key, mqttKeys, value, logTemplate, debounce);
+  protected bindOnUpdateTemperature(charKey: CharacteristicKey, units: TemperatureUnits, logTemplate: string): OnUpdateHandler {
+    return (async (value: PrimitiveTypes) => {
+
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
+        return;
+      }
+
+      const temperature = toCelsius(value, units);
+
+      const logString = logTemplate.replace('%d°%s', `${value}°${units}`);
+      this.onUpdate(charKey, temperature, logString);
+
     }).bind(this);
   }
 
-  protected bindOnSetNumeric(key: CharacteristicKey, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false) {
+  protected bindOnSetNumericBoolean(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTrue: string, logFalse: string, debounce: boolean = false):
+  CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
-      this.onSetNumeric(key, mqttKeys, value, logTemplate, debounce);
+      const logTemplate = value === 1 ? logTrue : logFalse;
+      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+    }).bind(this);
+  }
+
+  protected bindOnSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false): CharacteristicSetHandler {
+    return (async (value: CharacteristicValue) => {
+      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+    }).bind(this);
+  }
+
+  protected bindOnSetTemperature(charKey: CharacteristicKey, units: TemperatureUnits, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false):
+  CharacteristicSetHandler {
+    return (async (value: CharacteristicValue) => {
+
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
+        return;
+      }
+
+      logTemplate = logTemplate.replace('%d°%s', `%d°${units}`);
+      value = fromCelsius(value, units);
+
+      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+
     }).bind(this);
   }
 
@@ -260,7 +295,7 @@ export abstract class BaseAccessory implements MQTTListener {
   private onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, logTemplate: string, shouldDebounce: boolean) {
 
     if (typeof value !== 'number') {
-      this.log.error(strings.characteristic.badValue, this.name, 'number', charKey, `'${value}'`);
+      this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
       return;
     }
 
@@ -284,6 +319,10 @@ export abstract class BaseAccessory implements MQTTListener {
     }
 
     return this.Characteristic[key];
+  }
+
+  private isOptionalCharacteristic(key: CharacteristicKey): boolean {
+    return key === HKCharacteristicKey.StatusFault || isEveCharacteristic(key);
   }
 
   protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = false): boolean {
