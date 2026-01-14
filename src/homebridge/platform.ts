@@ -1,42 +1,37 @@
-import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig } from 'homebridge';
+import { API, DynamicPlatformPlugin, Logger, PlatformAccessory } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 
-import { ThermostatAccessory } from '../homebridge/thermostatAccessory.js';
-import { WaterHeaterAccessory } from '../homebridge/waterHeaterAccessory.js';
+import { initEveCharacteristics } from '../accessory/characteristic/eve.js';
+import { BaseAccessory } from '../accessory/abstract/base.js';
+import { createAccessory } from '../accessory/abstract/helper.js';
+
+import { DeviceAuth, UserAuth } from '../model/auth.js';
+import { EconetApi } from '../model/http.js';
+import { History } from '../model/history.js';
+import { AccessoryDependency, PlatformConfig } from '../model/types.js';
 
 import { setLanguage, strings } from '../i18n/i18n.js';
 
-import { EconetApi  } from '../model/api.js';
-import { EquipmentType } from '../model/constants.js';
-import { Equipment } from '../model/equipment.js';
-import { Thermostat } from '../model/thermostat.js';
-import { WaterHeater } from '../model/waterHeater.js';
-
 import { Log } from '../tools/log.js';
-import { Storage } from '../tools/storage.js';
+import { Properties } from '../tools/properties.js';
 import getVersion from '../tools/version.js';
 
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
-  public readonly Service;
-  public readonly Characteristic;
 
-  public readonly log: Log;
+  private readonly log: Log;
 
-  private readonly accessories: Map<string, PlatformAccessory> = new Map();
-  private econetApi: EconetApi | null = null;
+  private readonly platformAccessories: Map<string, PlatformAccessory> = new Map();
+  private readonly accessories: BaseAccessory[] = [];
 
   constructor(
     logger: Logger,
-    public readonly config: PlatformConfig,
-    public readonly api: API,
+    private readonly config: PlatformConfig,
+    private readonly api: API,
   ) {
 
     const userLang = Intl.DateTimeFormat().resolvedOptions().locale.split('-')[0];
     setLanguage(userLang);
-
-    this.Service = this.api.hap.Service;
-    this.Characteristic = this.api.hap.Characteristic;
 
     this.log = new Log(logger, config.verbose);
 
@@ -49,6 +44,8 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       api.hap.HAPLibraryVersion(),
     );
 
+    initEveCharacteristics(api);
+
     this.api.on('didFinishLaunching', () => {
       this.setup();
     });
@@ -60,19 +57,20 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
   configureAccessory(accessory: PlatformAccessory): void {
     this.log.always(strings.startup.restoringDevice, accessory.displayName);
-    this.accessories.set(accessory.context.serialNumber, accessory);
+    this.platformAccessories.set(accessory.context.identifier, accessory);
   }
 
   private teardown() {
-    this.econetApi?.teardown();
+    this.accessories.forEach( accessory => {
+      accessory.teardown();
+    });
   }
-
+  
   private async setup(): Promise<void> {
-    await Storage.init(this.api.user.persistPath());
+    await Properties.initStorage(this.api.user.persistPath());
 
     const email = this.config.email;
     const password = this.config.password;
-    const debugMQTT = this.config.mqtt_debug;
     const devices = this.config.devices || [];
 
     if (!email || !password) {
@@ -80,66 +78,95 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       return;
     }
 
-    try {
+    const equipmentsData = await EconetApi.connect(this.log, email, password, devices);
+    if (equipmentsData === undefined) {
+      return;
+    }
 
-      this.econetApi = await EconetApi.connect(this.log, email, password, devices, debugMQTT);
+    if (equipmentsData.length === 0) {
+      this.log.warning(strings.startup.noEquipment);
+      this.teardown();
+      return;
+    }
 
-      const equipments = Array.from(this.econetApi.equipments.values());
+    const Service = this.api.hap.Service;
+    const Characteristic = this.api.hap.Characteristic;
 
-      if (equipments.length === 0) {
-        this.log.warning(strings.startup.noEquipment);
-        this.teardown();
-        return;
+    const history = new History(this.api, this.log);
+
+    const keepSerials = new Set<string>();
+
+    const userAuth = UserAuth.load(email);
+    if (userAuth === undefined) {
+      this.log.error('User auth object is missing');
+      return;
+    }
+
+    for (const equipmentData of equipmentsData) {
+
+      let platformAccessory = this.platformAccessories.get(equipmentData.serial_number);
+      if (!platformAccessory) {
+
+        const name = equipmentData['@NAME']?.value ?? equipmentData.device_type;
+
+        const uuid = this.api.hap.uuid.generate(equipmentData.serial_number);
+
+        platformAccessory = new this.api.platformAccessory(name, uuid);
+        platformAccessory.context.identifier = equipmentData.serial_number;
+
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [platformAccessory]);
+
+        this.platformAccessories.set(equipmentData.serial_number, platformAccessory);
+
+        this.log.always(strings.startup.newEquipment, name);
       }
 
-      const keepSerials = new Set<string>();
+      let deviceAuth: DeviceAuth | undefined; 
 
-      equipments.forEach(equipment => {
-        keepSerials.add(equipment.serialNumber);
-        this.initializeAccessory(equipment);
-      });
+      const device = devices.find( (device) => device.serialNumber === equipmentData.serial_number);
+      if (device !== undefined) {
 
-      this.accessories.forEach( accessory => {
-        if (!keepSerials.has(accessory.context.serialNumber)) {
+        deviceAuth = DeviceAuth.load(equipmentData.serial_number, email);
+        if (deviceAuth === undefined) {
+          this.log.warning('Device auth object is missing');
+        }
+      }
+
+      const dependency: AccessoryDependency = {
+        Service,
+        Characteristic,
+        platformAccessory,
+        log: this.log,
+        history,
+        disableLogging: this.config.verbose !== true,
+        debugMQTT: this.config.mqtt_debug === true,
+        email: this.config.email,
+        auth: deviceAuth ?? userAuth,
+      };
+
+      const accessory = createAccessory(dependency, equipmentData);
+
+      if (accessory === undefined) {
+        continue;
+      }
+
+      keepSerials.add(equipmentData.serial_number);
+      this.accessories.push(accessory);
+
+      this.platformAccessories.forEach(accessory => {
+        if (!keepSerials.has(accessory.context.identifier)) {
           this.removeAccessory(accessory);
         }
       });
-
-    } catch (error) {
-      this.log.error(strings.startup.setupFailed, error instanceof Error ? error.message : String(error));
-    }
-  }
-
-  private initializeAccessory(equipment: Equipment) {
-
-    let accessory = this.accessories.get(equipment.serialNumber);
-    if (!accessory) {
-
-      const deviceName = equipment.deviceName;
-      this.log.always(strings.startup.newEquipment, deviceName);
-
-      const uuid = this.api.hap.uuid.generate(equipment.serialNumber);
-
-      accessory = new this.api.platformAccessory(deviceName, uuid);
-      accessory.context.serialNumber = equipment.serialNumber;
-
-      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-
-      this.accessories.set(equipment.serialNumber, accessory);
     }
 
-    switch(equipment.type) {
-    case EquipmentType.THERMOSTAT:
-      new ThermostatAccessory(this, accessory, equipment as Thermostat);
-      break;
-    case EquipmentType.WATER_HEATER:
-      new WaterHeaterAccessory(this, accessory, equipment as WaterHeater);
-    }
+    const randIndex = Math.floor(Math.random() * strings.startup.welcome.length);
+    this.log.always(`${strings.startup.complete}\n${strings.startup.welcome[randIndex]}`);
   }
 
   private removeAccessory(accessory: PlatformAccessory) {
     this.log.always(strings.startup.removeDevice, accessory.displayName);
     this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    this.accessories.delete(accessory.context.serialNumber);
+    this.platformAccessories.delete(accessory.context.identifier);
   }
 }

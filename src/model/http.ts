@@ -1,20 +1,16 @@
 import axios, { AxiosRequestConfig, AxiosResponse, isAxiosError } from 'axios';
 
 import { DeviceAuth, UserAuth } from './auth.js';
-import { EquipmentType } from './constants.js';
-import { Equipment } from './equipment.js';
-import { EconetMQTT } from './mqtt.js';
-import { DeviceDetails, DeviceTokenData, LocationsResponse, ThermostatData, UserTokenData, WaterHeaterData } from './types.js';
 
-import { Thermostat } from './thermostat.js';
-import { WaterHeater } from './waterHeater.js';
+import { EquipmentType } from './enums.js';
+import { DeviceDetails, DeviceTokenData, EquipmentData, LocationsResponse, UserTokenData } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
 import { CLEARBLADE_HOST, CLEARBLADE_KEY, CLEARBLADE_SECRET } from '../homebridge/settings.js';
 
-import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
 import { Log } from '../tools/log.js';
+import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
 
 const BASE_HEADERS = {
   'ClearBlade-SystemKey': CLEARBLADE_KEY,
@@ -45,21 +41,17 @@ export class EconetApi {
   private userAuth?: UserAuth;
   private retryIndex: number = 0;
 
-  readonly equipments: Map<string, Equipment> = new Map();
+  private static instance?: EconetApi;
 
-  private userClient?: EconetMQTT;
-  private deviceClients = new Map<string, EconetMQTT>();
-
-  constructor(
+  private constructor(
     public readonly log: Log,
     private readonly email: string,
     private readonly password: string,
-    private readonly devices: DeviceDetails[],
-    private readonly debugMQTT: boolean,
   ) {}
 
-  static async connect(log: Log, email: string, password: string, devices: DeviceDetails[], debugMQTT: boolean): Promise<EconetApi> {
-    const api = new EconetApi(log, email, password, devices, debugMQTT);
+  public static async connect(log: Log, email: string, password: string, devices: DeviceDetails[]): Promise<EquipmentData[] | undefined> {
+    const api = new EconetApi(log, email, password);
+    EconetApi.instance = api;
 
     api.userAuth = UserAuth.load(email);
 
@@ -68,51 +60,23 @@ export class EconetApi {
       shouldContinue = await api.authenticateUser();
     }
 
-    if (shouldContinue) {
-      await api.getLocations();
+    if (!shouldContinue) {
+      return;
+    }
 
-      for (const equipment of api.equipments.values()) {
-        const device = devices.find( (device) => device.serialNumber === equipment.serialNumber);
-        if (device !== undefined && DeviceAuth.load(device.serialNumber, email) === undefined) {
-          await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
-        }
+    const equipmentsData = await api.getLocations();
+    if (!equipmentsData) {
+      return;
+    }
+
+    for (const equipmentData of equipmentsData.values()) {
+      const device = devices.find( (device) => device.serialNumber === equipmentData.serial_number);
+      if (device !== undefined && DeviceAuth.load(device.serialNumber, email) === undefined) {
+        await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
       }
-
-      api.setupMQTTConnections();
     }
 
-    return api;
-  }
-
-  teardown(): void {
-    this.userClient?.teardown();
-    this.userClient = undefined;
-
-    this.deviceClients.forEach( (client) => {
-      client.teardown();
-    });
-    this.deviceClients.clear();
-  }
-
-  publish(serialNumber: string, userPayload: { [key: string]: number | string}, devicePayload: { [key: string]: number | string } | undefined): void {
-
-    const client = this.deviceClients.get(serialNumber);
-    if (client !== undefined && devicePayload !== undefined) {
-      client.publish(devicePayload);
-      return;
-    }
-
-    userPayload = {
-      serial_number: serialNumber,
-      ...userPayload,
-    };
-
-    if (!this.userClient) {
-      this.log.error(strings.mqtt.userNotConnected);
-      return;
-    }
-
-    this.userClient.publish(userPayload);
+    return equipmentsData;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -189,6 +153,10 @@ export class EconetApi {
     return await retry();
   }
 
+  public static async authenticateUser() {
+    await EconetApi.instance?.authenticateUser();
+  }
+
   private async authenticateUser(): Promise<boolean> {
 
     const data = { email: this.email, password: this.password };
@@ -225,7 +193,7 @@ export class EconetApi {
     return true;
   }
 
-  private async getLocations(): Promise<void> {
+  private async getLocations(): Promise<EquipmentData[] | undefined> {
       
     const data = { 'resource': 'friedrich' };
 
@@ -233,75 +201,49 @@ export class EconetApi {
     if (!locationsData) {
       return;
     }
+    
+    const equipmentsData: EquipmentData[] = [];
 
     for (const location of locationsData.results.locations) {
       for (const equipmentData of location.equiptments) {
 
-        let equipment: Equipment | null = null;
-        switch(equipmentData.device_type) {
-        case undefined:
-          break;
-        case EquipmentType.THERMOSTAT:
-          equipment = new Thermostat(this, equipmentData as unknown as ThermostatData);
-          break;
-        case EquipmentType.WATER_HEATER:
-          equipment = new WaterHeater(this, equipmentData as unknown as WaterHeaterData);
-          break;
-        default:
-          this.log.error(strings.equipment.unsupported, equipmentData.device_type);
+        if (equipmentData.device_type === undefined) {
+          continue;
         }
 
-        if (equipment) {
-          this.equipments.set(equipment.serialNumber, equipment);
+        if (!this.validateEquipmentData(equipmentData)) {
+          continue;
+        }
 
-          if (equipmentData.device_type === EquipmentType.THERMOSTAT && equipmentData.zoning_devices) {
-            equipmentData.zoning_devices.forEach(zoningEquipmentData => {
-              const zoningEquip = new Thermostat(this, zoningEquipmentData);
-              this.equipments.set(zoningEquip.serialNumber, zoningEquip);
-            });
+        equipmentsData.push(equipmentData);
+
+        if (equipmentData.device_type !== EquipmentType.THERMOSTAT || !Array.isArray(equipmentData.zoning_devices)) {
+          continue;
+        }
+
+        equipmentData.zoning_devices.forEach(zoningEquipmentData => {
+          if (this.validateEquipmentData(zoningEquipmentData)) {
+            equipmentsData.push(zoningEquipmentData);
           }
-        }
-      };
-    };
+        });
+      }
+    }
+
+    return equipmentsData;
   }
 
-  private setupMQTTConnections(): void {
-    
-    if (!this.equipments.size) {
-      return;
-    }
-  
-    if (!this.userAuth?.token) {
-      this.log.error(strings.mqtt.userAuthMissing);
-      return;
+  private validateEquipmentData(equipmentData: EquipmentData): boolean {
+
+    if (!Object.values(EquipmentType).includes(equipmentData.device_type)) {  
+      this.log.warning(strings.equipment.unsupported, equipmentData.device_type);
+      return false;
     }
 
-    for (const equipment of this.equipments.values()) {
-
-      const device = this.devices.find( (device) => device.serialNumber === equipment.serialNumber);
-      if (device === undefined) {
-        continue;
-      }
-
-      const auth = DeviceAuth.load(device.serialNumber, this.email);
-      if (auth === undefined) {
-        this.log.error(strings.mqtt.deviceAuthMissing);
-        continue;
-      }
-
-      const equipments: [string, Equipment][] = [[equipment.serialNumber, equipment]];
-      const deviceClient = EconetMQTT.connectDeviceClient(auth, new Map(equipments), this.log, this.debugMQTT, async () => {
-        await this.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
-      });
-      this.deviceClients.set(device.serialNumber, deviceClient);
+    if (equipmentData.serial_number === undefined) {
+      this.log.warning(strings.equipment.missingSerial, equipmentData.device_type);
+      return false;
     }
 
-    if (Array.from(this.equipments.keys()).sort().toString() === Array.from(this.deviceClients.keys()).sort().toString()) {
-      return;
-    }
-
-    this.userClient = EconetMQTT.connectUserClient(this.userAuth, this.email, this.equipments, this.log, this.debugMQTT, async () => {
-      await this.authenticateUser();
-    });
+    return true;
   }
 }

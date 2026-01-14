@@ -5,6 +5,7 @@ import storage from 'node-persist';
 import { PLATFORM_NAME } from '../homebridge/settings.js';
 
 const VERSION = 2;
+const STORAGE_KEY = `${PLATFORM_NAME}_V${VERSION}`;
 
 type Storable = PrimitiveTypes | PrimitiveTypes[] | { [key: string]: PrimitiveTypes };
 const PROPERTIES = new Map<string, Map<string, Storable>>();
@@ -14,7 +15,7 @@ export class Properties {
   public static async initStorage(persistPath: string) {
     await storage.init({ dir: persistPath, forgiveParseErrors: true });
 
-    const storageJson = await storage.get(`${PLATFORM_NAME}_V${VERSION}`);
+    const storageJson = await storage.get(STORAGE_KEY);
     if (storageJson === undefined) {
       Properties.save();
       return;
@@ -80,7 +81,7 @@ export class Properties {
     });
 
     const storageJson = JSON.stringify(storageArray);
-    await storage.set(PLATFORM_NAME, storageJson);
+    await storage.set(STORAGE_KEY, storageJson);
   }
 
   private static digest(encryptionKey: string): Buffer {

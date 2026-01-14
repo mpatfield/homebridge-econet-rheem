@@ -4,9 +4,19 @@ import { Properties } from '../tools/properties.js';
 
 const USER_AUTH_IDENTIFIER = 'e7764cce33fe4f9baa6fb6ffec909bca';
 
-export class UserAuth {
+export enum AuthType {
+  DEVICE,
+  USER,
+}
+
+abstract class Auth {
+  constructor(public readonly type: AuthType) {}
+}
+
+export class UserAuth extends Auth {
 
   constructor(private readonly data: UserTokenData) {
+    super(AuthType.USER);
   }
 
   get token(): string {
@@ -38,11 +48,12 @@ export class UserAuth {
   }
 }
 
-export class DeviceAuth {
+export class DeviceAuth extends Auth {
 
   static cache = new Map<string, DeviceAuth>();
 
   private constructor(private readonly data: DeviceTokenData) {
+    super(AuthType.DEVICE);
   }
 
   get name(): string {
