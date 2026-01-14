@@ -2,7 +2,10 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.6.2-beta.1 (2025-12-30)
+## 2.0.0-beta.0 (2025-01-14)
+
+### Changed
+- Complete rewrite of underlying architecture for easier updates/maintenance
 
 ### Fixed
 - Bad email/password can cause users to get stuck even after correcting login credentials ([#141](https://github.com/mpatfield/homebridge-econet-rheem/issues/141))

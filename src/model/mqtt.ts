@@ -9,7 +9,7 @@ import { EconetApi } from './http.js';
 
 import { strings } from '../i18n/i18n.js';
 
-import { CLEARBLADE_HOST, CLEARBLADE_KEY } from '../homebridge/settings.js';
+import { CLEARBLADE_HOST, CLEARBLADE_KEY, PLATFORM_NAME } from '../homebridge/settings.js';
 
 import { Log, LogType } from '../tools/log.js';
 import { MINUTE, SECOND } from '../tools/time.js';
@@ -35,7 +35,7 @@ interface MQTTError extends Error {
 
 export type MQTTDependency = {
   log: Log,
-  caller: string,
+  parentName: string,
   email: string,
   auth: DeviceAuth | UserAuth,
   serialNumber: string,
@@ -91,12 +91,12 @@ export class MQTT {
 
     let instance = MQTT.INSTANCES.get(id);
     if (instance !== undefined) {
-      dependency.log.ifVerbose(strings.mqtt.reuse, dependency.caller, shortId);
+      dependency.log.ifVerbose(strings.mqtt.reuse, dependency.parentName, shortId);
 
     } else {
-      dependency.log.ifVerbose(strings.mqtt.new, dependency.caller, shortId);
+      dependency.log.ifVerbose(strings.mqtt.new, dependency.parentName, shortId);
 
-      instance = new MQTT(dependency.log, dependency.caller, options, topic, debug);
+      instance = new MQTT(dependency.log, dependency.parentName, options, topic, debug);
       MQTT.INSTANCES.set(id, instance);
 
       instance.connect();
@@ -112,7 +112,7 @@ export class MQTT {
 
   private constructor(
     private readonly log: Log,
-    private readonly caller: string,
+    private readonly parentName: string,
     private readonly options: mqtt.IClientOptions,
     topicBase: string,
     private readonly debug: boolean,
@@ -128,19 +128,19 @@ export class MQTT {
     this.client = mqtt.connect(BROKER_URL, this.options);
 
     this.client.on('connect', () => {
-      this.log.ifVerbose(strings.mqtt.connected, this.caller);
+      this.log.ifVerbose(strings.mqtt.connected, this.parentName);
       this.client?.subscribe(this.topicReported); // TODO subscribe to desired also?
     });
 
     this.client.on('message', (topic, message) => this.messageReceived(topic, message.toString()));
 
     this.client.on('close', () => {
-      this.log.ifVerbose(strings.mqtt.disconnected, this.caller);
+      this.log.ifVerbose(strings.mqtt.disconnected, this.parentName);
       this.reconnect();
     });
 
     this.client.on('error', (error: MQTTError) => {
-      this.log.ifVerbose(LogType.WARNING, `${strings.mqtt.error}: ${error}`,  this.caller);
+      this.log.ifVerbose(LogType.WARNING, `${strings.mqtt.error}: ${error}`,  this.parentName);
     });
   }
 
@@ -152,7 +152,7 @@ export class MQTT {
 
   private messageReceived(topic: string, message: string) {
 
-    this.log.ifVerbose(`${this.caller} ${this.messageReceived.name}() - ${topic}\n${message}`);
+    this.log.ifVerbose(`${this.parentName} ${this.messageReceived.name}() - ${topic}\n${message}`);
 
     this.reconnectCount = 0;
     this.resetIdleTimer();
@@ -169,14 +169,14 @@ export class MQTT {
       }
 
     } catch (e) {
-      this.log.error(strings.mqtt.parseFailed, `- ${topic}\n${message}`);
+      this.log.error(strings.mqtt.parseFailed, this.parentName, `- ${topic}\n${message}`);
     }
   }
 
   public publish(payload: Record<string, PrimitiveTypes>): void {
 
     if (!this.client || !this.client.connected) {
-      this.log.error(strings.mqtt.notConnected, this.caller);
+      this.log.error(strings.mqtt.notConnected, this.parentName);
       return;
     }
 
@@ -191,7 +191,7 @@ export class MQTT {
     const message = JSON.stringify(data);
 
     this.client.publish(this.topicDesired, message);
-    this.log.ifVerbose( `${this.caller} ${this.publish.name}() — ${this.topicDesired} ${message}`);
+    this.log.ifVerbose( `${this.parentName} ${this.publish.name}() — ${this.topicDesired} ${message}`);
 
     return;
   }
@@ -212,18 +212,18 @@ export class MQTT {
     this.reconnectCount++;
     if (this.reconnectCount % DELAYS.length === 0) {
       try {
-        this.log.ifVerbose(LogType.WARNING, strings.mqtt.unstable);
+        this.log.ifVerbose(LogType.WARNING, strings.mqtt.unstable, this.parentName);
         await EconetApi.authenticateUser();
       } catch (error) {
-        this.log.ifVerbose(LogType.ERROR, strings.http.reauthFailed, JSON.stringify(error));
+        this.log.ifVerbose(LogType.ERROR, strings.http.reauthFailed, this.parentName, JSON.stringify(error));
       }
     }
 
     const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
     if (reconnectDelay < MINUTE) {
-      this.log.ifVerbose(strings.mqtt.reconnectSeconds, reconnectDelay / SECOND);
+      this.log.ifVerbose(strings.mqtt.reconnectSeconds, this.parentName, reconnectDelay / SECOND);
     } else {
-      this.log.ifVerbose(strings.mqtt.reconnectMinutes, reconnectDelay / MINUTE);
+      this.log.ifVerbose(strings.mqtt.reconnectMinutes, this.parentName, reconnectDelay / MINUTE);
     }
 
     setTimeout(() => {
@@ -237,7 +237,7 @@ export class MQTT {
     clearTimeout(this.idleTimer);
 
     this.idleTimer = setTimeout(()=>{
-      this.log.ifVerbose(LogType.WARNING, strings.mqtt.idleConnection);
+      this.log.ifVerbose(LogType.WARNING, strings.mqtt.idleConnection, this.parentName);
       this.reconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }
@@ -245,7 +245,7 @@ export class MQTT {
   private readonly KNOWN_KEYS = [...Object.keys(MQTTKey), 'transactionId'];
   private async saveData(data: Record<string, PrimitiveTypes | object>) {
   
-    const objectString = await storage.get('mqtt');
+    const objectString = await storage.get(`${PLATFORM_NAME}_MQTT`);
     const valuesObject = objectString ? JSON.parse(objectString) : {};
   
     let changed = false;
