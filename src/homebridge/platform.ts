@@ -57,7 +57,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
   configureAccessory(accessory: PlatformAccessory): void {
     this.log.always(strings.startup.restoringDevice, accessory.displayName);
-    this.platformAccessories.set(accessory.context.identifier, accessory);
+    this.platformAccessories.set(accessory.context.serialNumber, accessory);
   }
 
   private teardown() {
@@ -112,7 +112,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         const uuid = this.api.hap.uuid.generate(equipmentData.serial_number);
 
         platformAccessory = new this.api.platformAccessory(name, uuid);
-        platformAccessory.context.identifier = equipmentData.serial_number;
+        platformAccessory.context.serialNumber = equipmentData.serial_number;
 
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [platformAccessory]);
 
@@ -154,7 +154,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       this.accessories.push(accessory);
 
       this.platformAccessories.forEach(accessory => {
-        if (!keepSerials.has(accessory.context.identifier)) {
+        if (!keepSerials.has(accessory.context.serialNumber)) {
           this.removeAccessory(accessory);
         }
       });
@@ -167,6 +167,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   private removeAccessory(accessory: PlatformAccessory) {
     this.log.always(strings.startup.removeDevice, accessory.displayName);
     this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-    this.platformAccessories.delete(accessory.context.identifier);
+    this.platformAccessories.delete(accessory.context.serialNumber);
   }
 }
