@@ -47,11 +47,15 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
     const minTemp = data['@SETPOINT']?.constraints.lowerLimit ? toCelsius(data['@SETPOINT']?.constraints.lowerLimit, this.units) : DEFAULT_LOWER_LIMIT;
     const maxTemp = data['@SETPOINT']?.constraints.upperLimit ? toCelsius(data['@SETPOINT']?.constraints.upperLimit, this.units) : DEFAULT_UPPER_LIMIT;
-    const thresholdMQTTKeys = MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U);
-    this.setup(HKCharacteristicKey.HeatingThresholdTemperature, setPoint, thresholdMQTTKeys,
+    this.service.getCharacteristic(this.Characteristic.HeatingThresholdTemperature)
+      .setProps({ maxValue: maxTemp, minStep: 0.1 })
+      .setValue(setPoint)
+      .setProps({ minValue: minTemp });
+
+    const setpointMQTTKeys = MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U);
+    this.setup(HKCharacteristicKey.HeatingThresholdTemperature, setPoint, setpointMQTTKeys,
       this.bindOnUpdateThreshold(),
-      this.bindOnSetTemperature(HKCharacteristicKey.HeatingThresholdTemperature, this.units, thresholdMQTTKeys, strings.waterHeater.temperatureTargetSet, true))
-      ?.setProps({ minValue: minTemp, maxValue: maxTemp, minStep: 0.1 });
+      this.bindOnSetTemperature(HKCharacteristicKey.HeatingThresholdTemperature, this.units, setpointMQTTKeys, strings.waterHeater.temperatureTargetSet, true));
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {
