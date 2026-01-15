@@ -239,13 +239,13 @@ export abstract class BaseAccessory implements MQTTListener {
   CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
       const logTemplate = value === 1 ? logTrue : logFalse;
-      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+      this.onSetNumeric(charKey, mqttKeys, value, value as number, logTemplate, debounce);
     }).bind(this);
   }
 
   protected bindOnSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false): CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
-      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+      this.onSetNumeric(charKey, mqttKeys, value, value as number, logTemplate, debounce);
     }).bind(this);
   }
 
@@ -259,9 +259,9 @@ export abstract class BaseAccessory implements MQTTListener {
       }
 
       logTemplate = logTemplate.replace('%d°%s', `%d°${units}`);
-      value = fromCelsius(value, units);
+      const publish = fromCelsius(value, units);
 
-      this.onSetNumeric(charKey, mqttKeys, value, logTemplate, debounce);
+      this.onSetNumeric(charKey, mqttKeys, value, publish, logTemplate, debounce);
 
     }).bind(this);
   }
@@ -297,7 +297,7 @@ export abstract class BaseAccessory implements MQTTListener {
     this.publish(mqttKey, publish);
   }
 
-  private onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, logTemplate: string, shouldDebounce: boolean) {
+  private onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: number, logTemplate: string, doDebounce: boolean) {
 
     if (typeof value !== 'number') {
       this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
@@ -306,10 +306,10 @@ export abstract class BaseAccessory implements MQTTListener {
 
     const task = () => {
       const logString = logTemplate.replace('%d', value.toString());
-      this.onSet(charKey, mqttKeys, value, value, logString);
+      this.onSet(charKey, mqttKeys, value, publish, logString);
     };
 
-    if (shouldDebounce) {
+    if (doDebounce) {
       debounce(`${this.identifier}_${charKey}`, task);
     } else {
       task();
