@@ -46,7 +46,7 @@ export type DeviceTokenData = {
   deviceToken: string,
 }
 
-export type LocationData = {
+type LocationData = {
   equiptments: EquipmentData[],
 }
 
@@ -62,12 +62,12 @@ type StringValue = {
   value: string;
 }
 
-export type Setpoint = {
+type Setpoint = {
   constraints: SetpointConstraints;
   value: number;
 }
 
-export type SetpointConstraints = {
+type SetpointConstraints = {
   lowerLimit?: number;
   upperLimit?: number;
   units?: string;

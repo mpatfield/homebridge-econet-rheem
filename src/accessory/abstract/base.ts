@@ -27,7 +27,7 @@ export abstract class BaseAccessory implements MQTTListener {
 
   private readonly accessoryService: Service;
 
-  private readonly updateHandlers = new Map<string, OnUpdateHandler>();
+  private readonly updateHandlers = new Map<string, OnUpdateHandler[]>();
 
   constructor(
     private readonly dependency: AccessoryDependency,
@@ -91,10 +91,6 @@ export abstract class BaseAccessory implements MQTTListener {
 
   private getMQTTKey(mqttKeys: MQTTKeys): MQTTKey {
 
-    if (typeof mqttKeys === 'string') {
-      return mqttKeys;
-    }
-    
     if (this.isDeviceAuth) {
       return mqttKeys.device;
     }
@@ -104,14 +100,15 @@ export abstract class BaseAccessory implements MQTTListener {
 
   public mqttMessageReceived(message: Record<string, ValueOrObject<PrimitiveTypes>>): void {    
 
-    // TODO does this work for device messages also?
-    if (message.serial_number !== this.identifier) {
+    if (!this.isDeviceAuth && message.serial_number !== this.identifier) {
       return;
     }
 
     for (const key of Object.keys(message)) {
       const value = this.getValue(message[key]);
-      this.updateHandlers.get(key)?.(value);
+      this.updateHandlers.get(key)?.forEach(handler => {
+        handler(value);
+      });
     }
   }
 
@@ -188,7 +185,10 @@ export abstract class BaseAccessory implements MQTTListener {
     });
     
     const mqttKey = this.getMQTTKey(mqttKeys);
-    this.updateHandlers.set(mqttKey, onUpdateHandler);
+
+    const handlers = this.updateHandlers.get(mqttKey) ?? [];
+    handlers.push(onUpdateHandler);
+    this.updateHandlers.set(mqttKey, handlers);
 
     return characteristic;
   }
@@ -244,7 +244,7 @@ export abstract class BaseAccessory implements MQTTListener {
     return true;
   }
 
-  protected onSet(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: PrimitiveTypes, logString: string | undefined) {
+  private onSet(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: PrimitiveTypes, logString: string | undefined) {
 
     if (logString && value !== this.getProperty(charKey)) {
       this.logIfDesired(logString);

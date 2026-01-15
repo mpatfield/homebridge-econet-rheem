@@ -55,24 +55,19 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
     }).bind(this);
   }
 
-  protected onUpdateTemperature(charKey: CharacteristicKey, value: PrimitiveTypes, units: TemperatureUnits, logTemplate: string): number | undefined {
-  
-    if (typeof value !== 'number') {
-      this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
-      return;
-    }
-    
-    const temperature = toCelsius(value, units);
-    
-    const logString = logTemplate.replace('%d°%s', `${value}°${units}`);
-    this.onUpdate(charKey, temperature, logString);
-  
-    return temperature;
-  }
-  
   protected bindOnUpdateTemperature(charKey: CharacteristicKey, units: TemperatureUnits, logTemplate: string): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
-      this.onUpdateTemperature(charKey, value, units, logTemplate);
+
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
+        return;
+      }
+    
+      const temperature = toCelsius(value, units);
+    
+      const logString = logTemplate.replace('%d°%s', `${value}°${units}`);
+      this.onUpdate(charKey, temperature, logString);
+  
     }).bind(this);
   }
 

@@ -36,11 +36,9 @@ export enum MQTTKey {
   SETPOINT_U = '@SETPOINT',
 }
 
-type MQTTKeyGroup = { device: MQTTKey, user: MQTTKey}
+export type MQTTKeys = { device: MQTTKey, user: MQTTKey};
 
-export type MQTTKeys = MQTTKey | MQTTKeyGroup;
-
-export function MQTTKeys(device: MQTTKey, user: MQTTKey): MQTTKeyGroup {
+export function MQTTKeys(device: MQTTKey, user: MQTTKey): MQTTKeys {
   return { device, user };
 }
 

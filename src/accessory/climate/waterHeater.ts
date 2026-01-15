@@ -54,7 +54,7 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
     const setpointMQTTKeys = MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U);
     this.setup(HKCharacteristicKey.HeatingThresholdTemperature, setPoint, setpointMQTTKeys,
-      this.bindOnUpdateThreshold(),
+      this.bindOnUpdateTemperature(HKCharacteristicKey.HeatingThresholdTemperature, this.units, strings.waterHeater.temperatureTarget),
       this.bindOnSetTemperature(HKCharacteristicKey.HeatingThresholdTemperature, this.units, setpointMQTTKeys, strings.waterHeater.temperatureTargetSet, true));
   }
 
@@ -87,13 +87,4 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
     }).bind(this);
   }
-
-  private bindOnUpdateThreshold(): OnUpdateHandler {
-    return (async (value: PrimitiveTypes) => {
-      const temperature = this.onUpdateTemperature(HKCharacteristicKey.HeatingThresholdTemperature, value, this.units, strings.waterHeater.temperatureTarget);
-      if (!this.isDeviceAuth && temperature !== undefined) {
-        this.onUpdate(HKCharacteristicKey.CurrentTemperature, temperature);
-      }
-    }).bind(this);
-  }  
 }
