@@ -13,7 +13,6 @@ import { CharacteristicType, AccessoryDependency, EquipmentData } from '../../mo
 import { debounce } from '../../tools/debounce.js';
 import { Log, LogType } from '../../tools/log.js';
 import { Properties } from '../../tools/properties.js';
-import { fromCelsius, TemperatureUnits, toCelsius } from '../../tools/temperature.js';
 import getVersion from '../../tools/version.js';
 
 export type OnUpdateHandler = (value: PrimitiveTypes) => (Promise<void>);
@@ -214,27 +213,6 @@ export abstract class BaseAccessory implements MQTTListener {
     }).bind(this);
   }
 
-  protected onUpdateTemperature(charKey: CharacteristicKey, value: PrimitiveTypes, units: TemperatureUnits, logTemplate: string): number | undefined {
-
-    if (typeof value !== 'number') {
-      this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
-      return;
-    }
-  
-    const temperature = toCelsius(value, units);
-  
-    const logString = logTemplate.replace('%d°%s', `${value}°${units}`);
-    this.onUpdate(charKey, temperature, logString);
-
-    return temperature;
-  }
-
-  protected bindOnUpdateTemperature(charKey: CharacteristicKey, units: TemperatureUnits, logTemplate: string): OnUpdateHandler {
-    return (async (value: PrimitiveTypes) => {
-      this.onUpdateTemperature(charKey, value, units, logTemplate);
-    }).bind(this);
-  }
-
   protected bindOnSetNumericBoolean(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTrue: string, logFalse: string, debounce: boolean = false):
   CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
@@ -246,23 +224,6 @@ export abstract class BaseAccessory implements MQTTListener {
   protected bindOnSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false): CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
       this.onSetNumeric(charKey, mqttKeys, value, value as number, logTemplate, debounce);
-    }).bind(this);
-  }
-
-  protected bindOnSetTemperature(charKey: CharacteristicKey, units: TemperatureUnits, mqttKeys: MQTTKeys, logTemplate: string, debounce: boolean = false):
-  CharacteristicSetHandler {
-    return (async (value: CharacteristicValue) => {
-
-      if (typeof value !== 'number') {
-        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
-        return;
-      }
-
-      logTemplate = logTemplate.replace('%d°%s', `%d°${units}`);
-      const publish = fromCelsius(value, units);
-
-      this.onSetNumeric(charKey, mqttKeys, value, publish, logTemplate, debounce);
-
     }).bind(this);
   }
 
@@ -297,7 +258,8 @@ export abstract class BaseAccessory implements MQTTListener {
     this.publish(mqttKey, publish);
   }
 
-  private onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: number, logTemplate: string, doDebounce: boolean) {
+  protected onSetNumeric(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue,
+    publish: number, logTemplate: string, doDebounce: boolean) {
 
     if (typeof value !== 'number') {
       this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value}'`);
