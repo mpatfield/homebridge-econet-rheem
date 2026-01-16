@@ -129,7 +129,7 @@ export class MQTT {
 
     this.client.on('connect', () => {
       this.log.ifVerbose(strings.mqtt.connected, this.parentName);
-      this.client?.subscribe(this.topicReported); // TODO subscribe to desired also?
+      this.client?.subscribe(this.topicReported);
     });
 
     this.client.on('message', (topic, message) => this.messageReceived(topic, message.toString()));

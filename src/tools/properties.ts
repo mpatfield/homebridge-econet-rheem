@@ -63,18 +63,6 @@ export class Properties {
     Properties.save();
   }
 
-  public static asRecord<K extends string, V extends Storable>(identifier: string): Record<K, V> {
-    return new Proxy(new Properties(), {
-      get: (_target, key: K) => {
-        return Properties.get(identifier, key);
-      },
-      set: (_target, key: K, value: V) => {
-        Properties.set(identifier, key, value);
-        return true;
-      },
-    }) as Record<K, V>;
-  }
-
   private static async save() {
     const storageArray = Array.from(PROPERTIES.entries()).map(([key, value]) => {
       return [key, Array.from(value.entries())];
