@@ -267,7 +267,7 @@ export abstract class BaseAccessory implements MQTTListener {
     }
 
     const task = () => {
-      const logString = logTemplate.replace('%d', value.toString());
+      const logString = logTemplate.replace('%d', publish.toString());
       this.onSet(charKey, mqttKeys, value, publish, logString);
     };
 

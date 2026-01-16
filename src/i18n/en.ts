@@ -77,7 +77,7 @@ const en = {
     running: '%s is heating', // device name
     temperatureCurrent: '%s temperature is %d°%s', // accessory name, number, units
     temperatureTarget: '%s target temperature is %d°%s', // accessory name, number, units
-    temperatureTargetSet: '%s setting temperature to %d°%s…', // accessory name, number, units
+    temperatureTargetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
   },
 
   startup: {
