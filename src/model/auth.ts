@@ -1,10 +1,22 @@
 import { DeviceTokenData, UserTokenData } from './types.js';
 
-import { Storage, STORAGE_KEY_USER_AUTH } from '../tools/storage.js';
+import { Properties } from '../tools/properties.js';
 
-export class UserAuth {
+const USER_AUTH_IDENTIFIER = 'e7764cce33fe4f9baa6fb6ffec909bca';
+
+export enum AuthType {
+  DEVICE,
+  USER,
+}
+
+abstract class Auth {
+  constructor(public readonly type: AuthType) {}
+}
+
+export class UserAuth extends Auth {
 
   constructor(private readonly data: UserTokenData) {
+    super(AuthType.USER);
   }
 
   get token(): string {
@@ -21,13 +33,13 @@ export class UserAuth {
 
   save(encryptionKey: string) {
     const serialized = JSON.stringify({ data: this.data });
-    Storage.set(STORAGE_KEY_USER_AUTH, serialized, encryptionKey);
+    Properties.set(USER_AUTH_IDENTIFIER, UserAuth.name, serialized, encryptionKey);
   }
 
   static load(encryptionKey: string): UserAuth | undefined {
 
-    const decrypted = Storage.get(STORAGE_KEY_USER_AUTH, encryptionKey);
-    if (decrypted === undefined) {
+    const decrypted = Properties.get(USER_AUTH_IDENTIFIER, UserAuth.name, encryptionKey);
+    if (decrypted === undefined || typeof decrypted !== 'string') {
       return;
     }
 
@@ -36,11 +48,12 @@ export class UserAuth {
   }
 }
 
-export class DeviceAuth {
+export class DeviceAuth extends Auth {
 
   static cache = new Map<string, DeviceAuth>();
 
   private constructor(private readonly data: DeviceTokenData) {
+    super(AuthType.DEVICE);
   }
 
   get name(): string {
@@ -53,7 +66,7 @@ export class DeviceAuth {
 
   static save(serialNumber: string, data: DeviceTokenData, encryptionKey: string) {
     const serialized = JSON.stringify({ data });
-    Storage.set(serialNumber, serialized, encryptionKey);
+    Properties.set(serialNumber, DeviceAuth.name, serialized, encryptionKey);
 
     DeviceAuth.cache.set(serialNumber, new DeviceAuth(data));
   }
@@ -62,8 +75,8 @@ export class DeviceAuth {
 
     if (!this.cache.has(serialNumber)) {
       
-      const decrypted = Storage.get(serialNumber, encryptionKey);
-      if (decrypted === undefined) {
+      const decrypted = Properties.get(serialNumber, DeviceAuth.name, encryptionKey);
+      if (decrypted === undefined || typeof decrypted !== 'string') {
         return;
       }
 

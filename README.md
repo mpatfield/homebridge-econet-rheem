@@ -9,7 +9,7 @@
 Homebridge plugin for HomeKit control of Rheem water heaters and thermostats
 
 [![verified-by-homebridge](https://img.shields.io/badge/homebridge-verified-blueviolet?color=%23491F59&style=flat)](https://github.com/homebridge/homebridge/wiki/Verified-Plugins)
-[![Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/QNErYXzS)\
+[![Discord](https://img.shields.io/discord/432663330281226270?color=728ED5&logo=discord&label=discord)](https://discord.gg/DmwrnkgvpC)\
 [![npm](https://img.shields.io/npm/dw/homebridge-econet-rheem)](https://www.npmjs.com/package/homebridge-econet-rheem)
 [![npm](https://img.shields.io/npm/dt/homebridge-econet-rheem)](https://www.npmjs.com/package/homebridge-econet-rheem)  
 
@@ -110,6 +110,8 @@ Enter the `serialNumber`, `deviceName`, and `activeKey` you collected from above
 [@w1ll1am23](https://github.com/sponsors/w1ll1am23) for earlier work done in [pyeconet](https://github.com/w1ll1am23/pyeconet), a Python 3 interface to the EcoNet API
 
 [@klinquist](https://github.com/sponsors/klinquist) for his comment [here](https://community.hubitat.com/t/rheem-econet-integration-maintained-by-kris-linquist/116913/72) which inspired [better realtime updates](#device-details)
+
+[fakegato-history](https://github.com/simont77/fakegato-history) by [@simont77](https://github.com/sponsors/simont77) *Copyright © 2017*
 
 [@r3tr3ad](https://github.com/r3tr3ad) for helping debug the thermostat implementation.
 

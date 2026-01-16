@@ -1,7 +1,14 @@
 const en = {
 
+  accessory: {
+    alert: '%s has an alert', // device name
+    badValue: '%s expected a %s for %s but received %s', // device name, value type, characteristic name, value
+    outOfRange: '%s is trying to set %s to %s which is out of the allowed range. Setting to %s.', // device name, characteristic name, number, number
+  },
+
   config: {
-    continue: 'Continue %s',
+
+    continue: 'Continue %s', // arrow icon
 
     description: {
       account: 'Dedicated account recommended. See documentation.',
@@ -10,7 +17,7 @@ const en = {
     },
 
     needed: 'You will need your Rheem username and password',
-    support: 'For documentation and support please visit %s',
+    support: 'For documentation and support please visit %s', // url
     thankYou: 'Thank you for installing Homebridge Econet Rheem',
 
     title: {
@@ -23,86 +30,87 @@ const en = {
       serialNumber: 'Serial Number',
       verbose: 'Verbose',
     },
-  },
 
-  debug: {
-    alertCount: '%s alert count = %s',
-    availabilityState: '%s availability = %s',
-    clientOffline: 'Client offline',
-    coolSetpoint: '%s cool setpoint = %s',
-    currentTempState: '%s current temp = %s',
-    enabledState: '%s enabled = %s',
-    heatSetpoint: '%s heat setpoint = %s',
-    humidityState: '%s humidity = %s',
-    modeState: '%s mode = %s',
-    runningState: '%s running = %s',
-    setpointState: '%s setpoint = %s',
   },
 
   equipment: {
-    outOfRangeCool: 'Cool setpoint out of range, lower: %s, upper: %s, setpoint: %s',
-    outOfRangeHeat: 'Heat setpoint out of range, lower: %s, upper: %s, setpoint: %s',
-    setpointUnknown: 'Cannot determine desired setpoint when mode is %s',
-    thermostat: 'Thermostat',
-    unknownMode: 'Unknown thermostat mode:',
-    unsupported: 'Unsupported equipment type: %s',
-    unsupportedState: 'Unsupported state:',
-    waterHeater: 'Water Heater',
+    missingSerial: 'Equipment has missing serial number',
+    unsupported: 'Unsupported equipment type: %s', // device name
   },
 
   general: {
     brand: 'EcoNet',
-    redacted: '****redacted****',
-    undefined: 'undefined',
+  },
+
+  history: {
+    entry: '%s logging history entry:', // device name
   },
 
   http: {
     authSuccess: 'Successfully authenticated',
     noDataReceived: 'No data received from EcoNet',
-    reauthenticate: 'Attempting to re-authenticate',
-    reauthFailed: 'Re-authentication failed:',
-    retryInMinutes: 'Request failed. Retrying in %s minutes…',
-    retryInSeconds: 'Request failed. Retrying in %s seconds…',
+    reauthFailed: '%s failed to reauthenticate', // device name
+    retryInMinutes: 'Request failed. Retrying in %d minutes…', // number
+    retryInSeconds: 'Request failed. Retrying in %d seconds…', // number
   },
 
   mqtt: {
-    deviceAuthMissing: 'MQTT is missing device auth',
-    deviceClientError: 'Device client error:',
-    deviceConnected: 'Device client connected and listening for updates…',
-    deviceConnectionClosed: 'Device client connection closed',
-    deviceConnectionError: 'Device client cannot connect',
-    deviceIdleConnection: 'Idle device client connection',
-    deviceNotConnected: 'Device client not connected',
-    deviceParseFailed: 'Failed to parse device client message:',
-    deviceReconnectInMinutes: 'Will attempt to device client reconnect in %s minutes…',
-    deviceReconnectInSeconds: 'Will attempt to device client reconnect in %s seconds…',
-    userAuthMissing: 'MQTT is missing user auth',
-    userClientError: 'User client error:',
-    userConnected: 'User client connected and listening for updates…',
-    userConnectionClosed: 'User client connection closed',
-    userConnectionError: 'User client cannot connect',
-    userIdleConnection: 'Idle user client connection',
-    userNotConnected: 'User client not connected',
-    userParseFailed: 'Failed to parse user client message:',
-    userReconnectInMinutes: 'Will attempt to user client reconnect in %s minutes…',
-    userReconnectInSeconds: 'Will attempt to user client reconnect in %s seconds…',
-    unstableConnection: 'MQTT trouble staying connected',
+    connected: '%s connected and listening for updates', // device name
+    disconnected: '%s disconnected', // device name
+    error: '%s client error', // device name
+    idleConnection: '%s connection is idle. Attempting to reconnect…', // device name
+    new: '%s creating a new client with id %s', // device name, uuid
+    notConnected: '%s not connected', // device name
+    parseFailed: '%s failed to parse message', // device name
+    reconnectMinutes: '%s will attempt to reconnect in %d minutes…', // device name, number
+    reconnectSeconds: '%s will attempt to reconnect in %d seconds…', // device name, number
+    reuse: '%s reusing existing client with id %s', // device name, uuid
+    unstable: '%s connection is unstable. Attempting to reauthenticate…', // device name
+  },
+
+  waterHeater: {
+    disabled: '%s is disabled', // device name
+    disabledSet: 'Setting %s to disabled…', // device name
+    idle: '%s is idle', // device name
+    enabled: '%s is enabled', // device name
+    enabledSet: 'Setting %s to enabled…', // device name
+    running: '%s is heating', // device name
+  },
+
+  temperatureControl: {
+    current: '%s temperature is %d°%s', // accessory name, number, units
+    target: '%s target temperature is %d°%s', // accessory name, number, units
+    targetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
   },
 
   startup: {
     badConfig: 'One or more required variables are missing from the config. Please check the documentation.',
+    complete: '✓ Setup complete.',
     newEquipment: 'Adding new device:',
     noEquipment: 'No equipment found',
     removeDevice: 'Removing device:',
     restoringDevice: 'Restoring device:',
-    setupComplete: '✓ Setup complete.',
-    setupFailed: 'Setup failed:',
     welcome: [
       'Please ★ this plugin on GitHub if you\'re finding it useful! https://github.com/mpatfield/homebridge-econet-rheem',
       'Would you like to sponsor this plugin? https://github.com/sponsors/mpatfield',
       'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
       'Want to see this plugin in your own language? Please visit https://github.com/mpatfield/homebridge-econet-rheem/issues/35',
     ],
+  },
+
+  thermostat: {
+    humidity: '%s humidity is %d%', // device name
+    stateAutoFuture: 'Settings %s to Auto…', // device name
+    stateCool: '%s set to Cool', // device name
+    stateCoolFuture: 'Settings %s to Cool…', // device name
+    stateHeat: '%s set to Heat', // device name
+    stateHeatFuture: 'Settings %s to Heat…', // device name
+    stateOff: '%s set to Off', // device name
+    stateOffFuture: 'Settings %s to Off…', // device name
+    targetSetFailed: '%s unabled to set target with value %s', // device name, value
+    unexpectedMode: '%s received unexpected mode %s for %s', // device name, value, value type
+    unknownMode: '%s has unknown mode %s', // device name, value
+    unknownTargetTemp: '%s is unable to determine the target temperature', // device name
   },
 };
 

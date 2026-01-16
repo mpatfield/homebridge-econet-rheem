@@ -70,6 +70,9 @@
         "title": "${config.title.verbose}",
         "type": "boolean",
         "description": "${config.description.verbose}"
+      },
+      "mqtt_debug": {
+        "type": "boolean"
       }
     },
     "allOf": [

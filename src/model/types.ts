@@ -1,100 +1,20 @@
-import { ThermostatOperationMode } from './constants.js';
+import { PlatformAccessory, PlatformConfig as HBPlatformConfig } from 'homebridge';
 
-export type ValueOrObject<T> = T | { value: T };
+export type ServiceType = typeof import('homebridge').Service;
+export type CharacteristicType = typeof import('homebridge').Characteristic;
 
-export function getValue<T>(input: ValueOrObject<T>): T {
-  return typeof input === 'object' && input !== null && 'value' in input
-    ? input.value
-    : (input as T);
-}
+import { EquipmentType, ThermostatMode } from './enums.js';
 
-export type UserTokenData = {
-  user_id: string;
-  user_token: string;
-  options: { account_id: string, message: string, success: boolean };
-};
+import { History } from './history.js';
+import { Log } from '../tools/log.js';
+import { DeviceAuth, UserAuth } from './auth.js';
 
-export type DeviceTokenData = {
-  deviceName: string;
-  deviceToken: string;
-}
-
-export type StringValue = {
-  value: string;
-}
-
-export type NumberValue = {
-  value: number;
-}
-
-export type Setpoint = {
-  constraints: SetpointConstraints;
-  value: number;
-}
-
-export type SetpointConstraints = {
-  lowerLimit?: number;
-  upperLimit?: number;
-  units?: string;
-}
-
-export type ModeConstraints = {
-  enumText?: string[];
-}
-
-export type Mode = {
-  constraints?: ModeConstraints;
-  value?: ThermostatOperationMode;
-}
-
-export type EquipmentData = {
-  device_type?: string;
-  device_name?: string;
-  serial_number?: string;
-  mac_address?: string,
-  '@NAME'?: StringValue;
-  '@ALERTCOUNT'?: number;
-  '@SETPOINT'?: Setpoint;
-  zoning_devices?: EquipmentData[];
-}
-
-export type LocationData = {
-  equiptments: EquipmentData[];
-}
-
-export type LocationsResponse = {
-  results: {locations: LocationData[]};
-}
-
-export type ThermostatData = {
-  '@HUMIDITY'?: NumberValue;
-  '@SETPOINT'?: NumberValue;
-  '@COOLSETPOINT'?: Setpoint;
-  '@HEATSETPOINT'?: Setpoint;
-  '@DEADBAND'?: NumberValue;
-  '@MODE'?: Mode;
-  '@RUNNINGSTATUS'?: string;
-}
-
-export type WaterHeaterData = {
-  '@RUNNING'?: string;
-  '@ENABLED'?: NumberValue;
-  '@SETPOINT'?: Setpoint;
-  '@HOTWATER'?: string;
-}
-
-export type UserMQTTData = {
-  serial_number?: string;
-  '@ALERTCOUNT'?: number;
-  '@ENABLED'?: ValueOrObject<number>;
-  '@SETPOINT'?: number;
-  '@HOTWATER'?: string;
-  '@RUNNING'?: string;
-  '@RUNNINGSTATUS'?: string;
-  '@HUMIDITY'?: number;
-  '@COOLSETPOINT'?: number;
-  '@HEATSETPOINT'?: number;
-  '@MODE'?: NumberValue;
+export type PlatformConfig = HBPlatformConfig & {
+  email: string,
+  password: string,
+  devices?: DeviceDetails[]
+  verbose: boolean,
+  mqtt_debug: boolean,
 }
 
 export type DeviceDetails = {
@@ -103,13 +23,85 @@ export type DeviceDetails = {
   activeKey: string
 }
 
-export type DeviceMQTTData = {
-  COMP_RLY?: number; // compressor running
-  UPHTRTMP?: number; // current temperature
-  WHTRENAB?: number; // enabled
-  WHTRSETP?: number; // setpoint
+export type AccessoryDependency = {
+  Service: ServiceType,
+  Characteristic: CharacteristicType,
+  platformAccessory: PlatformAccessory,
+  log: Log,
+  history: History,
+  disableLogging: boolean,
+  debugMQTT: boolean,
+  email: string,
+  auth: DeviceAuth | UserAuth
 }
 
-export interface MQTTError extends Error {
-  code?: string | number;
+export type UserTokenData = {
+  user_id: string,
+  user_token: string,
+  options: { account_id: string, message: string, success: boolean },
+}
+
+export type DeviceTokenData = {
+  deviceName: string,
+  deviceToken: string,
+}
+
+type LocationData = {
+  equiptments: EquipmentData[],
+}
+
+export type LocationsResponse = {
+  results: {locations: LocationData[]},
+}
+
+type NumberValue = {
+  value: number,
+}
+
+type StringValue = {
+  value: string;
+}
+
+export type Setpoint = {
+  constraints: SetpointConstraints;
+  value: number;
+}
+
+type SetpointConstraints = {
+  lowerLimit?: number;
+  upperLimit?: number;
+  units?: string;
+}
+
+export type EquipmentData = {
+  device_type: EquipmentType,
+  serial_number: string,
+  device_name: string,
+  mac_address: string,
+  '@ALERTCOUNT'?: number,
+  '@NAME'?: StringValue,
+  '@SETPOINT'?: Setpoint,
+  zoning_devices?: EquipmentData[],
+}
+
+type ModeConstraints = {
+  enumText?: string[];
+}
+
+type Mode = {
+  constraints?: ModeConstraints;
+  value?: ThermostatMode;
+}
+
+export type ThermostatData = EquipmentData & {
+  '@MODE'?: Mode,
+  '@HUMIDITY'?: NumberValue,
+  '@COOLSETPOINT'?: Setpoint,
+  '@HEATSETPOINT'?: Setpoint,
+  '@DEADBAND'?: NumberValue,
+}
+
+export type WaterHeaterData = EquipmentData & {
+  '@RUNNING'?: string,
+  '@ENABLED'?: NumberValue,
 }
