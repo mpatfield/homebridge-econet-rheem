@@ -117,6 +117,11 @@ export abstract class BaseAccessory implements MQTTListener {
     const payload: Record<string, PrimitiveTypes> = {};
     payload[mqttKey] = value;
 
+    this.publishPayload(payload);
+  }
+
+  protected publishPayload(payload: Record<string, PrimitiveTypes>) {
+
     if (!this.isDeviceAuth) {
       payload.serial_number = this.data.serial_number;
       payload.device_name = this.data.device_name;
@@ -213,6 +218,31 @@ export abstract class BaseAccessory implements MQTTListener {
     }).bind(this);
   }
 
+  protected bindOnUpdateNumeric(charKey: CharacteristicKey, logTemplate: string): OnUpdateHandler {
+    return (async (value: PrimitiveTypes) => {
+
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `'${value.toString()}'`);
+        return;
+      }
+
+      const characteristic = this.service.getCharacteristic(this.characteristicFromKey(charKey));
+      const minValue = characteristic.props.minValue;
+      const maxValue = characteristic.props.maxValue;
+      if (minValue !== undefined && value < minValue) {
+        this.logIfDesired(LogType.WARNING, strings.accessory.outOfRange, charKey, `'${value.toString()}'`, `'${minValue.toString()}'`);
+        value = minValue;
+      } else if (maxValue !== undefined && value > maxValue) {
+        this.logIfDesired(LogType.WARNING, strings.accessory.outOfRange, charKey, `'${value.toString()}'`, `'${maxValue.toString()}'`);
+        value = maxValue;
+      }
+
+      const logString = logTemplate.replace('%d', value.toString());
+      this.onUpdate(charKey, value, logString);
+
+    }).bind(this);
+  }
+
   protected bindOnSetNumericBoolean(charKey: CharacteristicKey, mqttKeys: MQTTKeys, logTrue: string, logFalse: string, debounce: boolean = false):
   CharacteristicSetHandler {
     return (async (value: CharacteristicValue) => {
@@ -244,7 +274,7 @@ export abstract class BaseAccessory implements MQTTListener {
     return true;
   }
 
-  private onSet(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: PrimitiveTypes, logString: string | undefined) {
+  protected onSet(charKey: CharacteristicKey, mqttKeys: MQTTKeys, value: CharacteristicValue, publish: PrimitiveTypes, logString: string | undefined) {
 
     if (logString && value !== this.getProperty(charKey)) {
       this.logIfDesired(logString);
@@ -279,7 +309,7 @@ export abstract class BaseAccessory implements MQTTListener {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private characteristicFromKey(key: CharacteristicKey): any {
+  protected characteristicFromKey(key: CharacteristicKey): any {
 
     if (isEveCharacteristic(key)) {
       return EveCharacteristic(key);

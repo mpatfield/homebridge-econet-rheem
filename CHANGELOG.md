@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-alpha.2 (2025-01-15)
+## 2.0.0-alpha.3 (2025-01-16)
 
 ### Changed
 - Complete rewrite of underlying architecture for easier updates/maintenance

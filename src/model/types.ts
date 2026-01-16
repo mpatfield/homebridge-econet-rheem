@@ -3,7 +3,7 @@ import { PlatformAccessory, PlatformConfig as HBPlatformConfig } from 'homebridg
 export type ServiceType = typeof import('homebridge').Service;
 export type CharacteristicType = typeof import('homebridge').Characteristic;
 
-import { EquipmentType } from './enums.js';
+import { EquipmentType, ThermostatMode } from './enums.js';
 
 import { History } from './history.js';
 import { Log } from '../tools/log.js';
@@ -62,7 +62,7 @@ type StringValue = {
   value: string;
 }
 
-type Setpoint = {
+export type Setpoint = {
   constraints: SetpointConstraints;
   value: number;
 }
@@ -84,7 +84,21 @@ export type EquipmentData = {
   zoning_devices?: EquipmentData[],
 }
 
+type ModeConstraints = {
+  enumText?: string[];
+}
+
+type Mode = {
+  constraints?: ModeConstraints;
+  value?: ThermostatMode;
+}
+
 export type ThermostatData = EquipmentData & {
+  '@MODE'?: Mode,
+  '@HUMIDITY'?: NumberValue,
+  '@COOLSETPOINT'?: Setpoint,
+  '@HEATSETPOINT'?: Setpoint,
+  '@DEADBAND'?: NumberValue,
 }
 
 export type WaterHeaterData = EquipmentData & {

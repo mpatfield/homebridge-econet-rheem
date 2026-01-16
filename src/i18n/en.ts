@@ -75,9 +75,12 @@ const en = {
     enabled: '%s is enabled', // device name
     enabledSet: 'Setting %s to enabled…', // device name
     running: '%s is heating', // device name
-    temperatureCurrent: '%s temperature is %d°%s', // accessory name, number, units
-    temperatureTarget: '%s target temperature is %d°%s', // accessory name, number, units
-    temperatureTargetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
+  },
+
+  temperatureControl: {
+    current: '%s temperature is %d°%s', // accessory name, number, units
+    target: '%s target temperature is %d°%s', // accessory name, number, units
+    targetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
   },
 
   startup: {
@@ -93,6 +96,21 @@ const en = {
       'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
       'Want to see this plugin in your own language? Please visit https://github.com/mpatfield/homebridge-econet-rheem/issues/35',
     ],
+  },
+
+  thermostat: {
+    humidity: '%s humidity is %d%', // device name
+    stateAutoFuture: 'Settings %s to Auto…', // device name
+    stateCool: '%s set to Cool', // device name
+    stateCoolFuture: 'Settings %s to Cool…', // device name
+    stateHeat: '%s set to Heat', // device name
+    stateHeatFuture: 'Settings %s to Heat…', // device name
+    stateOff: '%s set to Off', // device name
+    stateOffFuture: 'Settings %s to Off…', // device name
+    targetSetFailed: '%s unabled to set target with value %s', // device name, value
+    unexpectedMode: '%s received unexpected mode %s for %s', // device name, value, value type
+    unknownMode: '%s has unknown mode %s', // device name, value
+    unknownTargetTemp: '%s is unable to determine the target temperature', // device name
   },
 };
 

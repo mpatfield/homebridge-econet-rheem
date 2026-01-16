@@ -5,15 +5,23 @@ import { BaseAccessory, OnUpdateHandler } from '../abstract/base.js';
 import { strings } from '../../i18n/i18n.js';
 
 import { CharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
-import { AccessoryDependency, EquipmentData } from '../../model/types.js';
+import { AccessoryDependency, EquipmentData, Setpoint } from '../../model/types.js';
 
 import { fromCelsius, TemperatureUnits, toCelsius } from '../../tools/temperature.js';
+
+type TemperatureDefaults = { setPoint: number, lowerLimit: number, upperLimit: number }
+
+export function TemperatureDefaults(setPoint: number, lowerLimit: number, upperLimit: number) {
+  return { setPoint, lowerLimit, upperLimit };
+}
+
+export type Thresholds = { minimum: number, maximum: number }
 
 export abstract class TemperatureControlAccessory extends BaseAccessory {
 
   protected readonly units: TemperatureUnits; 
 
-  constructor(dependency: AccessoryDependency, data: EquipmentData) {
+  constructor(dependency: AccessoryDependency, data: EquipmentData, private readonly defaults: TemperatureDefaults) {
     super(dependency, data);
 
     this.units = data['@SETPOINT']?.constraints?.units?.includes('F') ? TemperatureUnits.FAHRENHEIT : TemperatureUnits.CELSIUS;
@@ -22,11 +30,34 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       dependency.Characteristic.TemperatureDisplayUnits.FAHRENHEIT : dependency.Characteristic.TemperatureDisplayUnits.CELSIUS;
     this.setCharacteristicValue(HKCharacteristicKey.TemperatureDisplayUnits, temperatureDisplayUnits);
 
+    const setPoint = data['@SETPOINT']?.value ? toCelsius(data['@SETPOINT']?.value, this.units) : defaults.setPoint;
+    this.setup(HKCharacteristicKey.CurrentTemperature, setPoint, MQTTKeys(MQTTKey.CURRENT_TEMP, MQTTKey.SETPOINT_U),
+      this.bindOnUpdateTemperature(HKCharacteristicKey.CurrentTemperature, this.units, strings.temperatureControl.current),
+    );
+
     const hasAlert = typeof data['@ALERTCOUNT'] === 'number' && data['@ALERTCOUNT'] > 0;
     const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
     this.setup(HKCharacteristicKey.StatusFault, faultStatus, MQTTKeys(MQTTKey.ALERT_COUNT_D, MQTTKey.ALERT_COUNT_U),
       this.bindOnAlertCountUpdate(),
     );
+  }
+
+  protected setupThreshold(charKey: HKCharacteristicKey, setPoint: Setpoint | undefined, mqttKeys: MQTTKeys): Thresholds {
+
+    const setpointValue = setPoint?.value ? toCelsius(setPoint?.value, this.units) : this.defaults.setPoint;
+
+    const minimum = setPoint?.constraints?.lowerLimit ? toCelsius(setPoint?.constraints.lowerLimit, this.units) : this.defaults.lowerLimit;
+    const maximum = setPoint?.constraints?.upperLimit ? toCelsius(setPoint?.constraints.upperLimit, this.units) : this.defaults.upperLimit;
+    this.service.getCharacteristic(this.characteristicFromKey(charKey))
+      .setProps({ maxValue: maximum, minStep: 0.1 })
+      .setValue(setpointValue)
+      .setProps({ minValue: minimum });
+
+    this.setup(charKey, setpointValue, mqttKeys,
+      this.bindOnUpdateTemperature(charKey, this.units, strings.temperatureControl.target),
+      this.bindOnSetTemperature(charKey, this.units, mqttKeys, strings.temperatureControl.targetSet, true));
+
+    return { minimum, maximum };
   }
 
   private bindOnAlertCountUpdate(): OnUpdateHandler {
