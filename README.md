@@ -69,7 +69,7 @@ Using the Homebridge Config UI is the easiest way to set up this plugin. However
 
 ⚠️ This has only been confirmed with a 2024 Heat Pump Water Heater (XE65T10HM00U0). It will not work with water heaters using the Home Comfort WiFi Module. You are welcome to try other equipment, but you may run into issues. If you do, please [open a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) and we can work together to try and support your equipment.
 
-While optional, providing additional details about your device gives more accurate real-time info, such as true current water temperature for water heaters. However, it does require collecting additional info about your device: `serialNumber`, `deviceName`, and `activeKey`.
+While optional, providing additional details about your device gives more accurate real-time info, such as true current water temperature for water heaters. To use this feature, you will need to collect additional info about your device: `serialNumber`, `deviceName`, and `activeKey`.
 
 The easiest way to get the `serialNumber` is by visiting [this site](https://mpatfield.github.io/homebridge-econet-rheem/serials.html). Enter your Econet username and password and it'll give you a list of serial numbers.
 
