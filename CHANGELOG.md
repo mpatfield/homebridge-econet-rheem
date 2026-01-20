@@ -7,6 +7,9 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ### Changed
 - Complete rewrite of underlying architecture for easier updates/maintenance
 
+### Fixed
+- Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))
+
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
