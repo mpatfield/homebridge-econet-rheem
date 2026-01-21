@@ -66,24 +66,16 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
   private bindOnAlertCountUpdate(): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
 
-      let hasAlert: boolean = false;
-      if (this.isDeviceAuth) {
-        this.log.warning(`${this.bindOnAlertCountUpdate.name} is currently unsupported using DeviceAuth. Please create a ticket mentioning this warning.`);
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'string', HKCharacteristicKey.StatusFault, `${JSON.stringify(value)}`);
         return;
-      } else {
-
-        if (typeof value !== 'number') {
-          this.log.error(strings.accessory.badValue, this.name, 'string', HKCharacteristicKey.StatusFault, `${JSON.stringify(value)}`);
-          return;
-        }
-
-        hasAlert = value > 0;
       }
 
+      const hasAlert =  value > 0;
       const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
 
       if (this.onUpdate(HKCharacteristicKey.StatusFault, faultStatus) && hasAlert) {
-        this.logIfDesired(LogType.WARNING, strings.accessory.alert);
+        this.log.warning(strings.accessory.alert);
       }
 
     }).bind(this);
