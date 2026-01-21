@@ -2,13 +2,15 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-beta.2 (2025-01-20)
+## 2.0.0-beta.3 (2025-01-21)
 
 ### Changed
-- Complete rewrite of Econet real-time communication model (MQTT) for easier updates/maintenance
+- Complete rewrite of Econet real-time communication model (MQTT) for easier updates and maintenance
+    - ⚠️ I am unable to test Thermostat so please [create a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) if you notice issues
+- More granular logging control — use "Disable Logging" option to turn off logging
 
 ### Added
-- Eve History (running, temperature, humidity) and Consumption (current, total) for Water Heaters
+- [Eve App Support](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) for temperature/humidity history and current/total consumption
 
 ### Fixed
 - Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))
