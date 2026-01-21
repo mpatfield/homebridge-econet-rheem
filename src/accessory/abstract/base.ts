@@ -328,7 +328,7 @@ export abstract class BaseAccessory implements MQTTListener {
     return key === HKCharacteristicKey.StatusFault || isEveCharacteristic(key);
   }
 
-  protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = false): boolean {
+  protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = true): boolean {
     return this.dependency.history.record(this, type, entry, updateLastActivation);
   }
 
