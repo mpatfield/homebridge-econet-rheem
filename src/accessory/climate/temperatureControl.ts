@@ -1,10 +1,11 @@
 import { CharacteristicSetHandler, CharacteristicValue, PrimitiveTypes } from 'homebridge';
 
-import { BaseAccessory, OnUpdateHandler } from '../abstract/base.js';
+import { BaseAccessory, NumberCallback, OnUpdateHandler } from '../abstract/base.js';
 
 import { strings } from '../../i18n/i18n.js';
 
 import { CharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
+import { HistoryType } from '../../model/history.js';
 import { AccessoryDependency, EquipmentData, Setpoint } from '../../model/types.js';
 
 import { fromCelsius, TemperatureUnits, toCelsius } from '../../tools/temperature.js';
@@ -32,7 +33,9 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
 
     const setPoint = data['@SETPOINT']?.value ? toCelsius(data['@SETPOINT']?.value, this.units) : defaults.setPoint;
     this.setup(HKCharacteristicKey.CurrentTemperature, setPoint, MQTTKeys(MQTTKey.CURRENT_TEMP, MQTTKey.SETPOINT_U),
-      this.bindOnUpdateTemperature(HKCharacteristicKey.CurrentTemperature, this.units, strings.temperatureControl.current),
+      this.bindOnUpdateTemperature(HKCharacteristicKey.CurrentTemperature, this.units, strings.temperatureControl.current, (value) => {
+        this.recordHistory(HistoryType.WEATHER, { temp: value } );
+      }),
     );
 
     const hasAlert = typeof data['@ALERTCOUNT'] === 'number' && data['@ALERTCOUNT'] > 0;
@@ -86,7 +89,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
     }).bind(this);
   }
 
-  protected bindOnUpdateTemperature(charKey: CharacteristicKey, units: TemperatureUnits, logTemplate: string): OnUpdateHandler {
+  protected bindOnUpdateTemperature(charKey: CharacteristicKey, units: TemperatureUnits, logTemplate: string, callback?: NumberCallback): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
 
       if (typeof value !== 'number') {
@@ -99,6 +102,8 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       const logString = logTemplate.replace('%d°%s', `${value}°${units}`);
       this.onUpdate(charKey, temperature, logString);
   
+      callback?.(temperature);
+
     }).bind(this);
   }
 

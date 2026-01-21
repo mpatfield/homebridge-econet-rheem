@@ -6,7 +6,8 @@ import { OnUpdateHandler } from '../abstract/base.js';
 
 import { strings } from '../../i18n/i18n.js';
 
-import { AccessoryType, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
+import { AccessoryType, EveCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
+import { HistoryType } from '../../model/history.js';
 import { AccessoryDependency, WaterHeaterData } from '../../model/types.js';
 
 const DEFAULT_SETPOINT = 50;
@@ -39,6 +40,14 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     )?.setProps({ validValues: [dependency.Characteristic.CurrentHeaterCoolerState.IDLE, dependency.Characteristic.CurrentHeaterCoolerState.HEATING] });
 
     this.setupThreshold(HKCharacteristicKey.HeatingThresholdTemperature, data['@SETPOINT'], MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U));
+
+    this.setup(EveCharacteristicKey.CurrentConsumption, 0, MQTTKeys(MQTTKey.CURRENT_CONSUMPTION_D, MQTTKey.UNDEFINED),
+      this.bindOnUpdateNumeric(EveCharacteristicKey.CurrentConsumption, strings.waterHeater.currentConsumption, (value) => {
+        this.recordHistory(HistoryType.CUSTOM, { power: value });
+      }));
+
+    this.setup(EveCharacteristicKey.TotalConsumption, 0, MQTTKeys(MQTTKey.TOTAL_CONSUMPTION_D, MQTTKey.UNDEFINED),
+      this.bindOnUpdateNumeric(EveCharacteristicKey.TotalConsumption, strings.waterHeater.totalConsumption));
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {
@@ -67,6 +76,8 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
       const logString = running ? strings.waterHeater.running : strings.waterHeater.idle;
 
       this.onUpdate(HKCharacteristicKey.CurrentHeaterCoolerState, state, logString);
+
+      this.recordHistory(HistoryType.CUSTOM, { status: running ? 1 : 0 }, true);
 
     }).bind(this);
   }

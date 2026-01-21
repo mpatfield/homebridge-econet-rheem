@@ -26,27 +26,29 @@ export enum HKCharacteristicKey {
 }
 
 export enum EveCharacteristicKey {
+  CurrentConsumption = 'CurrentConsumption',
   LastActivation = 'LastActivation',
+  TotalConsumption = 'TotalConsumption',
 }
 
 export enum MQTTKey {
-  ALERT_COUNT_D = 'ALERT_COUNT_D_UNKNOWN',
+  ALERT_COUNT_D = 'ALRMALRT',
   ALERT_COUNT_U = '@ALERTCOUNT',
-  COOL_SETPOINT_D = 'COOL_SETPOINT_D_UNKNOWN',
   COOL_SETPOINT_U = '@COOLSETPOINT',
   CURRENT_TEMP = 'UPHTRTMP',
+  CURRENT_CONSUMPTION_D = 'POWRWATT',
   ENABLED_D = 'WHTRENAB',
   ENABLED_U = '@ENABLED',
-  HEAT_SETPOINT_D = 'HEAT_SETPOINT_D_UNKNOWN',
   HEAT_SETPOINT_U = '@HEATSETPOINT',
-  HUMIDITY_D = 'HUMIDITY_D_UNKNOWN',
   HUMIDITY_U = '@HUMIDITY',
-  MODE_D = 'MODE_D_UNKNOWN',
   MODE_U = '@MODE',
   RUNNING_D = 'COMP_RLY',
   RUNNING_U = '@RUNNING',
   SETPOINT_D = 'WHTRSETP',
   SETPOINT_U = '@SETPOINT',
+  TOTAL_CONSUMPTION_D = 'TOTALKWH',
+  UNDEFINED = 'MQTT_KEY_UNDEFINED',
+  UNKNOWN = 'MQTT_KEY_UNKNOWN'
 }
 
 export type MQTTKeys = { device: MQTTKey, user: MQTTKey};

@@ -19,6 +19,8 @@ export type OnUpdateHandler = (value: PrimitiveTypes) => (Promise<void>);
 
 type ValueOrObject<T> = T | { value: T };
 
+export type NumberCallback = (value: number) => void;
+
 export abstract class BaseAccessory implements MQTTListener {
 
   public readonly name: string;
@@ -218,7 +220,7 @@ export abstract class BaseAccessory implements MQTTListener {
     }).bind(this);
   }
 
-  protected bindOnUpdateNumeric(charKey: CharacteristicKey, logTemplate: string): OnUpdateHandler {
+  protected bindOnUpdateNumeric(charKey: CharacteristicKey, logTemplate: string, callback?: NumberCallback): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
 
       if (typeof value !== 'number') {
@@ -239,6 +241,8 @@ export abstract class BaseAccessory implements MQTTListener {
 
       const logString = logTemplate.replace('%d', value.toString());
       this.onUpdate(charKey, value, logString);
+
+      callback?.(value);
 
     }).bind(this);
   }

@@ -69,12 +69,14 @@ const en = {
   },
 
   waterHeater: {
+    currentConsumption: '%s consumption is %dW', // accessory name, value
     disabled: '%s is disabled', // device name
     disabledSet: 'Setting %s to disabled…', // device name
     idle: '%s is idle', // device name
     enabled: '%s is enabled', // device name
     enabledSet: 'Setting %s to enabled…', // device name
     running: '%s is heating', // device name
+    totalConsumption: '%s consumption is %dkWh', // accessory name, value
   },
 
   temperatureControl: {

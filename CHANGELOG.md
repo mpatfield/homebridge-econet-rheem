@@ -2,10 +2,13 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-beta.1 (2025-01-19)
+## 2.0.0-beta.2 (2025-01-20)
 
 ### Changed
-- Complete rewrite of underlying architecture for easier updates/maintenance
+- Complete rewrite of Econet real-time communication model (MQTT) for easier updates/maintenance
+
+### Added
+- Eve History (running, temperature, humidity) and Consumption (current, total) for Water Heaters
 
 ### Fixed
 - Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))

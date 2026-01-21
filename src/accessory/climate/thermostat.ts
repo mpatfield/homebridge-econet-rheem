@@ -7,7 +7,9 @@ import { OnUpdateHandler } from '../abstract/base.js';
 import { strings } from '../../i18n/i18n.js';
 
 import { AccessoryType, HKCharacteristicKey, MQTTKey, MQTTKeys, ThermostatMode } from '../../model/enums.js';
+import { HistoryType } from '../../model/history.js';
 import { AccessoryDependency, ThermostatData } from '../../model/types.js';
+
 import { fromCelsius } from '../../tools/temperature.js';
 
 const DEFAULT_SETPOINT = 20;
@@ -77,7 +79,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
     const currentMode = this.modes.get(data['@MODE']?.value ?? -1);
     const currentState = currentStateMap.get(currentMode) ?? dependency.Characteristic.CurrentHeatingCoolingState.OFF;
 
-    this.setup(HKCharacteristicKey.CurrentHeatingCoolingState, currentState, MQTTKeys(MQTTKey.MODE_D, MQTTKey.MODE_U),
+    this.setup(HKCharacteristicKey.CurrentHeatingCoolingState, currentState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U),
       this.bindOnUpdateMode(HKCharacteristicKey.CurrentHeatingCoolingState, currentStateMap, false));
 
     const targetStateMap = new Map<ThermostatMode | undefined, CharacteristicValue>([
@@ -89,24 +91,26 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       [ThermostatMode.AUTO, dependency.Characteristic.TargetHeatingCoolingState.AUTO],
     ]);
 
-    this.setup(HKCharacteristicKey.TargetHeatingCoolingState, currentState, MQTTKeys(MQTTKey.MODE_D, MQTTKey.MODE_U),
+    this.setup(HKCharacteristicKey.TargetHeatingCoolingState, currentState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U),
       this.bindOnUpdateMode(HKCharacteristicKey.TargetHeatingCoolingState, targetStateMap, true),
       this.bindOnSetTargetMode(targetStateMap),
     );
 
     this.heatThresholds = this.setupThreshold(HKCharacteristicKey.HeatingThresholdTemperature, data['@HEATSETPOINT'],
-      MQTTKeys(MQTTKey.HEAT_SETPOINT_D, MQTTKey.HEAT_SETPOINT_U));
+      MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.HEAT_SETPOINT_U));
 
     this.coolThresholds = this.setupThreshold(HKCharacteristicKey.CoolingThresholdTemperature, data['@COOLSETPOINT'],
-      MQTTKeys(MQTTKey.COOL_SETPOINT_D, MQTTKey.COOL_SETPOINT_U));
+      MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.COOL_SETPOINT_U));
 
     this.service.getCharacteristic(this.characteristicFromKey(HKCharacteristicKey.TargetTemperature))
       .onGet(this.getTargetTemperature.bind(this))
       .onSet(this.setTargetTemperature.bind(this));
 
     const currentHumidity = data['@HUMIDITY']?.value ?? DEFAULT_HUMIDITY;
-    this.setup(HKCharacteristicKey.CurrentRelativeHumidity, currentHumidity, MQTTKeys(MQTTKey.HUMIDITY_D, MQTTKey.HUMIDITY_U),
-      this.bindOnUpdateNumeric(HKCharacteristicKey.CurrentRelativeHumidity, strings.thermostat.humidity));
+    this.setup(HKCharacteristicKey.CurrentRelativeHumidity, currentHumidity, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.HUMIDITY_U),
+      this.bindOnUpdateNumeric(HKCharacteristicKey.CurrentRelativeHumidity, strings.thermostat.humidity, (value) => {
+        this.recordHistory(HistoryType.WEATHER, { humidity: value } );        
+      }));
   }
 
   private bindOnUpdateMode(charKey: HKCharacteristicKey, stateMap: Map<ThermostatMode | undefined, CharacteristicValue>, future: boolean): OnUpdateHandler {
@@ -140,7 +144,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
 
             if (compare === mode) {
               const logString = this.logStringForState(value);
-              this.onSet(HKCharacteristicKey.TargetHeatingCoolingState, MQTTKeys(MQTTKey.MODE_D, MQTTKey.MODE_U), value, publish, logString);
+              this.onSet(HKCharacteristicKey.TargetHeatingCoolingState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U), value, publish, logString);
               return;
             }
           }
@@ -210,10 +214,10 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
     case this.Characteristic.TargetHeatingCoolingState.OFF:
       break;
     case this.Characteristic.TargetHeatingCoolingState.HEAT:
-      payload[this.isDeviceAuth ? MQTTKey.HEAT_SETPOINT_D : MQTTKey.HEAT_SETPOINT_U] = temperature;
+      payload[this.isDeviceAuth ? MQTTKey.UNKNOWN : MQTTKey.HEAT_SETPOINT_U] = temperature;
       break;
     case this.Characteristic.TargetHeatingCoolingState.COOL:
-      payload[this.isDeviceAuth ? MQTTKey.COOL_SETPOINT_D : MQTTKey.COOL_SETPOINT_U] = temperature;
+      payload[this.isDeviceAuth ? MQTTKey.UNKNOWN : MQTTKey.COOL_SETPOINT_U] = temperature;
       break;
     case this.Characteristic.TargetHeatingCoolingState.AUTO: {
 
@@ -233,8 +237,8 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
         }
       }
         
-      payload[this.isDeviceAuth ? MQTTKey.HEAT_SETPOINT_D : MQTTKey.HEAT_SETPOINT_U] = heatSetPoint;
-      payload[this.isDeviceAuth ? MQTTKey.COOL_SETPOINT_D : MQTTKey.COOL_SETPOINT_U] = coolSetPoint;
+      payload[this.isDeviceAuth ? MQTTKey.UNKNOWN : MQTTKey.HEAT_SETPOINT_U] = heatSetPoint;
+      payload[this.isDeviceAuth ? MQTTKey.UNKNOWN : MQTTKey.COOL_SETPOINT_U] = coolSetPoint;
 
       break;
     }
