@@ -52,9 +52,10 @@ export abstract class BaseAccessory implements MQTTListener {
       auth: dependency.auth,
       serialNumber: data.serial_number,
       macAddress: data.mac_address,
+      debug: dependency.debug,
     };
 
-    this.mqttClient = MQTT.connect(mqttDependency, this, dependency.debugMQTT);
+    this.mqttClient = MQTT.connect(mqttDependency, this);
 
     const serviceInstance = dependency.Service[this.getAccessoryType()];
 
@@ -336,7 +337,7 @@ export abstract class BaseAccessory implements MQTTListener {
   protected logIfDesired(level: LogType, message: string, ...parameters: string[]): void;
   protected logIfDesired(levelOrMessage: LogType | string, ...rest: string[]) {
 
-    if (this.disableLogging) {
+    if (this.disableLogging && !this.dependency.debug) {
       return;
     }
 

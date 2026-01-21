@@ -12,7 +12,7 @@ export class Log {
 
   constructor(
     private readonly logger: Logger,
-    private readonly verbose: boolean,
+    private readonly debug: boolean,
   ) {}
 
   public always(message: string, ...parameters: Param[]) {
@@ -27,10 +27,11 @@ export class Log {
     this.logger.error(message, ...parameters);
   }
 
-  public ifVerbose(message: string, ...parameters: Param[]): void;
-  public ifVerbose(level: LogType, message: string, ...parameters: Param[]): void;
-  public ifVerbose(levelOrMessage: LogType | string, ...rest: Param[]) {
-    if (!this.verbose) {
+  public ifDebug(message: string, ...parameters: Param[]): void;
+  public ifDebug(level: LogType, message: string, ...parameters: Param[]): void;
+  public ifDebug(levelOrMessage: LogType | string, ...rest: Param[]) {
+
+    if (!this.debug) {
       return;
     }
 

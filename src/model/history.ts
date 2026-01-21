@@ -79,7 +79,7 @@ export class History {
       ...entry,
     };
 
-    this.log.ifVerbose(strings.history.entry, accessory.name, JSON.stringify(entry));
+    this.log.ifDebug(strings.history.entry, accessory.name, JSON.stringify(entry));
 
     historyService.addEntry(entry);
 

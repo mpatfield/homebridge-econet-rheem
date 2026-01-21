@@ -13,8 +13,8 @@ export type PlatformConfig = HBPlatformConfig & {
   email: string,
   password: string,
   devices?: DeviceDetails[]
-  verbose: boolean,
-  mqtt_debug: boolean,
+  disableLogging?: boolean,
+  debug?: boolean,
 }
 
 export type DeviceDetails = {
@@ -30,7 +30,7 @@ export type AccessoryDependency = {
   log: Log,
   history: History,
   disableLogging: boolean,
-  debugMQTT: boolean,
+  debug: boolean,
   email: string,
   auth: DeviceAuth | UserAuth
 }

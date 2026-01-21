@@ -83,7 +83,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
 
       if (this.onUpdate(HKCharacteristicKey.StatusFault, faultStatus) && hasAlert) {
-        this.log.warning(strings.accessory.alert);
+        this.logIfDesired(LogType.WARNING, strings.accessory.alert);
       }
 
     }).bind(this);

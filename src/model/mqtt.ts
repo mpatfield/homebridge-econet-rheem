@@ -40,23 +40,14 @@ export type MQTTDependency = {
   auth: DeviceAuth | UserAuth,
   serialNumber: string,
   macAddress: string,
+  debug: boolean,
 }
 
 export class MQTT {
 
   private static readonly INSTANCES = new Map<string, MQTT>();
 
-  private client: mqtt.MqttClient | undefined = undefined;
-
-  private idleTimer?: NodeJS.Timeout;
-
-  private shouldReconnect = false;
-  private isReconnecting = false;
-  private reconnectCount = 0;
-
-  private readonly listeners: MQTTListener[] = [];
-
-  static connect(dependency: MQTTDependency, listener: MQTTListener, debug: boolean): MQTT | undefined {
+  static connect(dependency: MQTTDependency, listener: MQTTListener): MQTT | undefined {
 
     let username: string;
     let clientId: string | undefined;
@@ -91,12 +82,12 @@ export class MQTT {
 
     let instance = MQTT.INSTANCES.get(id);
     if (instance !== undefined) {
-      dependency.log.ifVerbose(strings.mqtt.reuse, dependency.parentName, shortId);
+      dependency.log.ifDebug(strings.mqtt.reuse, dependency.parentName, shortId);
 
     } else {
-      dependency.log.ifVerbose(strings.mqtt.new, dependency.parentName, shortId);
+      dependency.log.ifDebug(strings.mqtt.new, dependency.parentName, shortId);
 
-      instance = new MQTT(dependency.log, dependency.parentName, options, topic, debug);
+      instance = new MQTT(dependency, options, topic);
       MQTT.INSTANCES.set(id, instance);
 
       instance.connect();
@@ -107,16 +98,27 @@ export class MQTT {
     return instance;
   }
 
+  private readonly log: Log;
+
+  private client: mqtt.MqttClient | undefined = undefined;
+
+  private idleTimer?: NodeJS.Timeout;
+
+  private shouldReconnect = false;
+  private isReconnecting = false;
+  private reconnectCount = 0;
+
+  private readonly listeners: MQTTListener[] = [];
+
   private readonly topicDesired: string;
   private readonly topicReported: string;
 
   private constructor(
-    private readonly log: Log,
-    private readonly parentName: string,
+    private readonly dependency: MQTTDependency,
     private readonly options: mqtt.IClientOptions,
     topicBase: string,
-    private readonly debug: boolean,
   ) {
+    this.log = dependency.log;
     this.topicDesired = topicBase + 'desired';
     this.topicReported = topicBase + 'reported';
   }
@@ -128,19 +130,19 @@ export class MQTT {
     this.client = mqtt.connect(BROKER_URL, this.options);
 
     this.client.on('connect', () => {
-      this.log.ifVerbose(strings.mqtt.connected, this.parentName);
+      this.log.ifDebug(strings.mqtt.connected, this.dependency.parentName);
       this.client?.subscribe(this.topicReported);
     });
 
     this.client.on('message', (topic, message) => this.messageReceived(topic, message.toString()));
 
     this.client.on('close', () => {
-      this.log.ifVerbose(strings.mqtt.disconnected, this.parentName);
+      this.log.ifDebug(strings.mqtt.disconnected, this.dependency.parentName);
       this.reconnect();
     });
 
     this.client.on('error', (error: MQTTError) => {
-      this.log.ifVerbose(LogType.WARNING, `${strings.mqtt.error}: ${error}`,  this.parentName);
+      this.log.warning(`${strings.mqtt.error}: ${error}`,  this.dependency.parentName);
     });
   }
 
@@ -152,7 +154,7 @@ export class MQTT {
 
   private messageReceived(topic: string, message: string) {
 
-    this.log.ifVerbose(`${this.parentName} ${this.messageReceived.name}() - ${topic}\n${message}`);
+    this.log.ifDebug(`${this.dependency.parentName} ${this.messageReceived.name}() - ${topic}\n${message}`);
 
     this.reconnectCount = 0;
     this.resetIdleTimer();
@@ -164,19 +166,19 @@ export class MQTT {
         listener.mqttMessageReceived(parsed);
       }
 
-      if (this.debug) {
+      if (this.dependency.debug) {
         this.saveData(parsed);
       }
 
     } catch (e) {
-      this.log.error(strings.mqtt.parseFailed, this.parentName, `- ${topic}\n${message}`);
+      this.log.error(strings.mqtt.parseFailed, this.dependency.parentName, `- ${topic}\n${message}`);
     }
   }
 
   public publish(payload: Record<string, PrimitiveTypes>): void {
 
     if (!this.client || !this.client.connected) {
-      this.log.error(strings.mqtt.notConnected, this.parentName);
+      this.log.error(strings.mqtt.notConnected, this.dependency.parentName);
       return;
     }
 
@@ -191,7 +193,7 @@ export class MQTT {
     const message = JSON.stringify(data);
 
     this.client.publish(this.topicDesired, message);
-    this.log.ifVerbose( `${this.parentName} ${this.publish.name}() — ${this.topicDesired} ${message}`);
+    this.log.ifDebug( `${this.dependency.parentName} ${this.publish.name}() — ${this.topicDesired} ${message}`);
 
     return;
   }
@@ -212,18 +214,18 @@ export class MQTT {
     this.reconnectCount++;
     if (this.reconnectCount % DELAYS.length === 0) {
       try {
-        this.log.ifVerbose(LogType.WARNING, strings.mqtt.unstable, this.parentName);
+        this.log.ifDebug(LogType.WARNING, strings.mqtt.unstable, this.dependency.parentName);
         await EconetApi.authenticateUser();
       } catch (error) {
-        this.log.ifVerbose(LogType.ERROR, strings.http.reauthFailed, this.parentName, JSON.stringify(error));
+        this.log.ifDebug(LogType.ERROR, strings.http.reauthFailed, this.dependency.parentName, JSON.stringify(error));
       }
     }
 
     const reconnectDelay = DELAYS[Math.min(this.reconnectCount, DELAYS.length - 1)];
     if (reconnectDelay < MINUTE) {
-      this.log.ifVerbose(strings.mqtt.reconnectSeconds, this.parentName, reconnectDelay / SECOND);
+      this.log.ifDebug(strings.mqtt.reconnectSeconds, this.dependency.parentName, reconnectDelay / SECOND);
     } else {
-      this.log.ifVerbose(strings.mqtt.reconnectMinutes, this.parentName, reconnectDelay / MINUTE);
+      this.log.ifDebug(strings.mqtt.reconnectMinutes, this.dependency.parentName, reconnectDelay / MINUTE);
     }
 
     setTimeout(() => {
@@ -237,7 +239,7 @@ export class MQTT {
     clearTimeout(this.idleTimer);
 
     this.idleTimer = setTimeout(()=>{
-      this.log.ifVerbose(LogType.WARNING, strings.mqtt.idleConnection, this.parentName);
+      this.log.ifDebug(LogType.WARNING, strings.mqtt.idleConnection, this.dependency.parentName);
       this.reconnect();
     }, IDLE_CONNECTION_TIMER_INTERVAL); 
   }

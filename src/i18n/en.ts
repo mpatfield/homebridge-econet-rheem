@@ -13,7 +13,6 @@ const en = {
     description: {
       account: 'Dedicated account recommended. See documentation.',
       devices: 'Providing additional device details gives a better experience. See documentation for details.',
-      verbose: 'Enable additional debug logging',
     },
 
     needed: 'You will need your Rheem username and password',
@@ -25,12 +24,11 @@ const en = {
       device: 'Device',
       devices: 'Devices',
       deviceName: 'Device Name',
+      disableLogging: 'Disable Logging',
       email: 'Email',
       password: 'Password',
       serialNumber: 'Serial Number',
-      verbose: 'Verbose',
     },
-
   },
 
   equipment: {
@@ -95,7 +93,6 @@ const en = {
     welcome: [
       'Please ★ this plugin on GitHub if you\'re finding it useful! https://github.com/mpatfield/homebridge-econet-rheem',
       'Would you like to sponsor this plugin? https://github.com/sponsors/mpatfield',
-      'Please rate us on HOOBS! https://plugins.hoobs.org/plugin/homebridge-econet-rheem',
       'Want to see this plugin in your own language? Please visit https://github.com/mpatfield/homebridge-econet-rheem/issues/35',
     ],
   },

@@ -7,7 +7,7 @@ import { BaseAccessory } from '../accessory/abstract/base.js';
 import { createAccessory } from '../accessory/abstract/helper.js';
 
 import { DeviceAuth, UserAuth } from '../model/auth.js';
-import { EconetApi } from '../model/http.js';
+import { EconetApi, EconetApiDependency } from '../model/http.js';
 import { History } from '../model/history.js';
 import { AccessoryDependency, PlatformConfig } from '../model/types.js';
 
@@ -33,7 +33,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const userLang = Intl.DateTimeFormat().resolvedOptions().locale.split('-')[0];
     setLanguage(userLang);
 
-    this.log = new Log(logger, config.verbose);
+    this.log = new Log(logger, config.debug === true);
 
     this.log.always(
       'v%s | System %s | Node %s | HB v%s | HAPNodeJS v%s',
@@ -73,12 +73,21 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const password = this.config.password;
     const devices = this.config.devices || [];
 
-    if (!email || !password) {
+    if (!email || email.length === 0 || !password || password.length === 0) {
       this.log.error(strings.startup.badConfig);
       return;
     }
 
-    const equipmentsData = await EconetApi.connect(this.log, email, password, devices);
+    const dependency: EconetApiDependency = {
+      log: this.log,
+      email,
+      password,
+      devices,
+      disableLogging: this.config.disableLogging === true,
+      debug: this.config.debug === true,
+    };
+
+    const equipmentsData = await EconetApi.connect(dependency);
     if (equipmentsData === undefined) {
       return;
     }
@@ -138,8 +147,8 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         platformAccessory,
         log: this.log,
         history,
-        disableLogging: this.config.verbose !== true,
-        debugMQTT: this.config.mqtt_debug === true,
+        disableLogging: this.config.disableLogging === true,
+        debug: this.config.debug === true,
         email: this.config.email,
         auth: deviceAuth ?? userAuth,
       };

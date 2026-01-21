@@ -37,23 +37,33 @@ const HTTP_RETRY_CODES = [
   '504',          // Gateway Timeout
 ];
 
+export type EconetApiDependency = {
+  log: Log,
+  email: string,
+  password: string,
+  devices: DeviceDetails[],
+  disableLogging: boolean,
+  debug: boolean,
+}
+
 export class EconetApi {
+
+  private readonly log: Log;
+
   private userAuth?: UserAuth;
   private retryIndex: number = 0;
 
   private static instance?: EconetApi;
 
-  private constructor(
-    public readonly log: Log,
-    private readonly email: string,
-    private readonly password: string,
-  ) {}
+  private constructor(private readonly dependency: EconetApiDependency) {
+    this.log = dependency.log;
+  }
 
-  public static async connect(log: Log, email: string, password: string, devices: DeviceDetails[]): Promise<EquipmentData[] | undefined> {
-    const api = new EconetApi(log, email, password);
+  public static async connect(dependency: EconetApiDependency): Promise<EquipmentData[] | undefined> {
+    const api = new EconetApi(dependency);
     EconetApi.instance = api;
 
-    api.userAuth = UserAuth.load(email);
+    api.userAuth = UserAuth.load(dependency.email);
 
     let shouldContinue = true;
     if (!api.userAuth) {
@@ -70,8 +80,8 @@ export class EconetApi {
     }
 
     for (const equipmentData of equipmentsData.values()) {
-      const device = devices.find( (device) => device.serialNumber === equipmentData.serial_number);
-      if (device !== undefined && DeviceAuth.load(device.serialNumber, email) === undefined) {
+      const device = dependency.devices.find( (device) => device.serialNumber === equipmentData.serial_number);
+      if (device !== undefined && DeviceAuth.load(device.serialNumber, dependency.email) === undefined) {
         await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
       }
     }
@@ -114,7 +124,7 @@ export class EconetApi {
         throw new Error(strings.http.noDataReceived);
       }
 
-      this.log.ifVerbose(`${caller}() —`, `${url.substring(BASE_URL_V1.length + 1)}${data ? ` ${JSON.stringify(data)}` : ''}`, `\n${JSON.stringify(res.data)}`);
+      this.log.ifDebug(`${caller}() —`, `${url.substring(BASE_URL_V1.length + 1)}${data ? ` ${JSON.stringify(data)}` : ''}`, `\n${JSON.stringify(res.data)}`);
       this.retryIndex = 0;
 
       return res.data;
@@ -141,9 +151,9 @@ export class EconetApi {
     
     const retryDelay = DELAYS[Math.min(this.retryIndex, DELAYS.length - 1)];
     if (retryDelay <= MINUTE) {
-      this.log.ifVerbose(strings.http.retryInSeconds, retryDelay / SECOND);
+      this.log.ifDebug(strings.http.retryInSeconds, retryDelay / SECOND);
     } else {
-      this.log.ifVerbose(strings.http.retryInMinutes, retryDelay / MINUTE);
+      this.log.ifDebug(strings.http.retryInMinutes, retryDelay / MINUTE);
     }
 
     await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -159,7 +169,7 @@ export class EconetApi {
 
   private async authenticateUser(): Promise<boolean> {
 
-    const data = { email: this.email, password: this.password };
+    const data = { email: this.dependency.email, password: this.dependency.password };
     const tokenData = await this.httpRequest<UserTokenData>(this.authenticateUser.name, data, AUTH_USER_URL);
 
     if (!tokenData) {
@@ -172,9 +182,11 @@ export class EconetApi {
     }
   
     this.userAuth = new UserAuth(tokenData);
-    this.userAuth.save(this.email);
+    this.userAuth.save(this.dependency.email);
 
-    this.log.always(strings.http.authSuccess);
+    if (!this.dependency.disableLogging) {
+      this.log.always(strings.http.authSuccess);
+    }
 
     return true;
   }
@@ -188,7 +200,7 @@ export class EconetApi {
       return false;
     }
     
-    DeviceAuth.save(serialNumber, tokenData, this.email);
+    DeviceAuth.save(serialNumber, tokenData, this.dependency.email);
 
     return true;
   }

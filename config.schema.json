@@ -66,12 +66,11 @@
           ]
         }
       },
-      "verbose": {
-        "title": "${config.title.verbose}",
-        "type": "boolean",
-        "description": "${config.description.verbose}"
+      "disableLogging": {
+        "title": "${config.title.disableLogging}",
+        "type": "boolean"
       },
-      "mqtt_debug": {
+      "debug": {
         "type": "boolean"
       }
     },
@@ -108,7 +107,7 @@
       "flex-direction": "row",
       "items": [
         {
-          "key": "verbose",
+          "key": "disableLogging",
           "flex": "0 1 auto"
         }
       ]
