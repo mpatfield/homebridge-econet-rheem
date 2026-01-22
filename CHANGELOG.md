@@ -10,8 +10,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 - More granular logging control — use "Disable Logging" option to turn off logging
 
 ### Added
-- [Eve App Support](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) for temperature/humidity history and current/total consumption
-    - To use this feature, choose "Enable History" in the config UI.
+- [Eve App Support](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) for temperature/humidity history and current/total consumption characteristics — choose "Enable History" in the config UI
 
 ### Fixed
 - Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))
