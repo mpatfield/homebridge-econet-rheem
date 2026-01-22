@@ -74,7 +74,7 @@ export class History {
     }
 
     const historyService = this.historyServices.get(accessory.identifier)
-      ?? this.createHistoryService(accessory, type, updateLastActivation);
+      ?? this.createHistoryService(accessory, type);
 
     const time = Math.floor(Date.now() / 1000);
     entry = {
@@ -95,7 +95,7 @@ export class History {
     return;
   }
 
-  private createHistoryService(accessory: Accessory, type: HistoryType, addLastActivation: boolean): HistoryService {
+  private createHistoryService(accessory: Accessory, type: HistoryType): HistoryService {
 
     const options: HistoryOptions = {
       size: 4032,
@@ -106,10 +106,6 @@ export class History {
 
     const historyService = HistoryService(type, accessory.platformAccessory, options);
     this.historyServices.set(accessory.identifier, historyService);
-
-    if (!addLastActivation) {
-      return historyService;
-    }
 
     setTimeout( () => {
 
