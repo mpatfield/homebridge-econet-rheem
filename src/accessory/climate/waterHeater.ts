@@ -77,7 +77,7 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
       this.onUpdate(HKCharacteristicKey.CurrentHeaterCoolerState, state, logString);
 
-      this.recordHistory(HistoryType.CUSTOM, { status: running ? 1 : 0 } );
+      this.recordHistory(HistoryType.CUSTOM, { status: running ? 1 : 0 }, true);
 
     }).bind(this);
   }

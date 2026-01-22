@@ -1,5 +1,8 @@
+import { F_OK } from 'constants';
 import fakegato, { HistoryServiceProvider, HistoryService } from 'fakegato-history';
+import { access, unlink } from 'fs/promises';
 import { API, CharacteristicValue, Nullable, PlatformAccessory } from 'homebridge';
+import path from 'path';
 
 import { EveCharacteristicKey } from './enums.js';
 
@@ -14,8 +17,6 @@ import { SECOND } from '../tools/time.js';
 export enum HistoryType {
   CUSTOM = 'custom',
   WEATHER = 'weather',
-  DOOR = 'door',
-  MOTION = 'motion',
 }
 
 export type HistoryEntry = {
@@ -27,8 +28,6 @@ export type HistoryEntry = {
 }
 
 type HistoryOptions = {
-  disableRepeatLastData?: boolean,
-  disableTimer?: boolean,
   filename?: string,
   path?: string,
   size?: number,
@@ -57,7 +56,7 @@ export class History {
 
   private readonly cleanedUp = new Set<string>();
 
-  constructor(private readonly api: API, private readonly log: Log) {
+  constructor(private readonly api: API, private readonly log: Log, private readonly enabled: boolean) {
 
     if (ServiceProvider) {
       throw new Error('HistoryServiceProvider already initialized');
@@ -67,8 +66,12 @@ export class History {
     this.persistPath = api.user.persistPath();
   }
 
-  public record(accessory: Accessory, type: HistoryType, entry: HistoryEntry,
-    updateLastActivation: boolean = false): boolean {
+  public record(accessory: Accessory, type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = false) {
+
+    if (!this.enabled) {
+      this.cleanup(accessory);
+      return;
+    }
 
     const historyService = this.historyServices.get(accessory.identifier)
       ?? this.createHistoryService(accessory, type, updateLastActivation);
@@ -89,14 +92,12 @@ export class History {
       accessory.service.updateCharacteristic(EveCharacteristic(EveCharacteristicKey.LastActivation), lastActivation);
     }
 
-    return true;
+    return;
   }
 
   private createHistoryService(accessory: Accessory, type: HistoryType, addLastActivation: boolean): HistoryService {
 
     const options: HistoryOptions = {
-      disableRepeatLastData: false,
-      disableTimer: false,
       size: 4032,
       storage: 'fs',
       path: this.persistPath,
@@ -140,5 +141,44 @@ export class History {
 
   private getFilename(accessory: Accessory): string {
     return this.api.hap.uuid.generate(accessory.identifier + HISTORY_UUID);
+  }
+
+  private async cleanup(accessory: Accessory) {
+
+    if (this.cleanedUp.has(accessory.identifier)) {
+      return;
+    }
+
+    this.cleanedUp.add(accessory.identifier);
+
+    const filename = this.getFilename(accessory);
+    const filePath = path.join(this.persistPath, filename);
+
+    const fileExists = await this.fileExists(filePath);
+    if (!fileExists) {
+      return;
+    }
+
+    this.log.ifDebug(strings.history.cleanup, accessory.name);
+
+    try {
+      await unlink(filePath);
+    } catch (error) {
+
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        return;
+      }
+
+      this.log.error(strings.history.cleanupFailed, accessory.name, filename);
+    }
+  }
+
+  private async fileExists(filePath: string): Promise<boolean> {
+    try {
+      await access(filePath, F_OK);
+      return true;
+    } catch {
+      return false;
+    }
   }
 }

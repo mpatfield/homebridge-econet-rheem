@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-beta.3 (2025-01-21)
+## 2.0.0-beta.4 (2025-01-22)
 
 ### Changed
 - Complete rewrite of Econet real-time communication model (MQTT) for easier updates and maintenance
@@ -11,6 +11,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Added
 - [Eve App Support](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) for temperature/humidity history and current/total consumption
+    - To use this feature, choose "Enable History" in the config UI.
 
 ### Fixed
 - Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))

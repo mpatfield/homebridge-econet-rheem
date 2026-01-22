@@ -26,6 +26,7 @@ const en = {
       deviceName: 'Device Name',
       disableLogging: 'Disable Logging',
       email: 'Email',
+      enableHistory: 'Enable History',
       password: 'Password',
       serialNumber: 'Serial Number',
     },
@@ -41,6 +42,8 @@ const en = {
   },
 
   history: {
+    cleanup: 'Removing history for %s', // device name
+    cleanupFailed: 'Unable to remove history for %s. Try manually removing the file %s from your Homebridge \'persist\' directory.', // device name, filename
     entry: '%s logging history entry:', // device name
   },
 

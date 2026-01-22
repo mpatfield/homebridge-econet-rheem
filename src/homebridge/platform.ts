@@ -101,7 +101,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
     const Service = this.api.hap.Service;
     const Characteristic = this.api.hap.Characteristic;
 
-    const history = new History(this.api, this.log);
+    const history = new History(this.api, this.log, this.config.enableHistory === true);
 
     const keepSerials = new Set<string>();
 

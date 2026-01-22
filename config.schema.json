@@ -66,6 +66,10 @@
           ]
         }
       },
+      "enableHistory": {
+        "title": "${config.title.enableHistory}",
+        "type": "boolean"
+      },
       "disableLogging": {
         "title": "${config.title.disableLogging}",
         "type": "boolean"
@@ -107,8 +111,12 @@
       "flex-direction": "row",
       "items": [
         {
+          "key": "enableHistory",
+          "flex": "0 1 25%"
+        },
+        {
           "key": "disableLogging",
-          "flex": "0 1 auto"
+          "flex": "0 1 25%"
         }
       ]
     },

@@ -13,6 +13,7 @@ export type PlatformConfig = HBPlatformConfig & {
   email: string,
   password: string,
   devices?: DeviceDetails[]
+  enableHistory?: boolean,
   disableLogging?: boolean,
   debug?: boolean,
 }

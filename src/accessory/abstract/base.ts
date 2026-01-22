@@ -84,10 +84,6 @@ export abstract class BaseAccessory implements MQTTListener {
     return this.data.serial_number;
   }
 
-  private get disableLogging(): boolean {
-    return this.dependency.disableLogging;
-  }
-
   protected get isDeviceAuth(): boolean {
     return this.dependency.auth.type === AuthType.DEVICE;
   }
@@ -329,15 +325,15 @@ export abstract class BaseAccessory implements MQTTListener {
     return key === HKCharacteristicKey.StatusFault || isEveCharacteristic(key);
   }
 
-  protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = true): boolean {
-    return this.dependency.history.record(this, type, entry, updateLastActivation);
+  protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = false) {
+    this.dependency.history.record(this, type, entry, updateLastActivation);
   }
 
   protected logIfDesired(message: string, ...parameters: string[]): void;
   protected logIfDesired(level: LogType, message: string, ...parameters: string[]): void;
   protected logIfDesired(levelOrMessage: LogType | string, ...rest: string[]) {
 
-    if (this.disableLogging && !this.dependency.debug) {
+    if (this.dependency.disableLogging && !this.dependency.debug) {
       return;
     }
 
