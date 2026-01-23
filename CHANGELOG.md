@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-beta.4 (2025-01-22)
+## 2.0.0-beta.5 (2025-01-22)
 
 ### Changed
 - Complete rewrite of Econet real-time communication model (MQTT) for easier updates and maintenance
