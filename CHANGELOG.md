@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 2.0.0-beta.5 (2025-01-22)
+## 1.7.0 (2026-01-25)
 
 ### Changed
 - Complete rewrite of Econet real-time communication model (MQTT) for easier updates and maintenance
@@ -21,7 +21,7 @@ Would you like to see Homebridge Econet Rheem in your language? Please consider 
 ## 1.6.2 (2026-01-16)
 
 ### ⚠️ Help Needed ⚠️
-Please help test Homebridge Econet Rheem v2.0.0-beta! While there are no new features (yet), it is a complete rewrite of the underlying code, which will be easier to expand and maintain. In particular, I have no ability to test `Thermostats` so please give it a try and let me know if you see issues by [creating a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose). You can always downgrade to v1.6 if it isn't working for you.
+Please help test Homebridge Econet Rheem beta! While there are no new features (yet), it is a complete rewrite of the underlying code, which will be easier to expand and maintain. In particular, I have no ability to test `Thermostats` so please give it a try and let me know if you see issues by [creating a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose). You can always downgrade to v1.6.2 if it isn't working for you.
 
 ### Fixed
 - Bad email/password can cause users to get stuck even after correcting login credentials ([#141](https://github.com/mpatfield/homebridge-econet-rheem/issues/141))
