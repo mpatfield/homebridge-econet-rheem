@@ -113,10 +113,10 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     for (const equipmentData of equipmentsData) {
 
+      const name = equipmentData['@NAME']?.value ?? equipmentData.device_type;
+
       let platformAccessory = this.platformAccessories.get(equipmentData.serial_number);
       if (!platformAccessory) {
-
-        const name = equipmentData['@NAME']?.value ?? equipmentData.device_type;
 
         const uuid = this.api.hap.uuid.generate(equipmentData.serial_number);
 
@@ -128,6 +128,10 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         this.platformAccessories.set(equipmentData.serial_number, platformAccessory);
 
         this.log.always(strings.startup.newEquipment, name);
+      }
+
+      if (name !== platformAccessory.displayName) {
+        platformAccessory.updateDisplayName(name);
       }
 
       let deviceAuth: DeviceAuth | undefined; 
