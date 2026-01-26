@@ -3,7 +3,7 @@ import { PlatformAccessory, PlatformConfig as HBPlatformConfig } from 'homebridg
 export type ServiceType = typeof import('homebridge').Service;
 export type CharacteristicType = typeof import('homebridge').Characteristic;
 
-import { EquipmentType, ThermostatMode } from './enums.js';
+import { EquipmentType } from './enums.js';
 
 import { History } from './history.js';
 import { Log } from '../tools/log.js';
@@ -81,6 +81,7 @@ export type EquipmentData = {
   mac_address: string,
   '@ALERTCOUNT'?: number,
   '@NAME'?: StringValue,
+  '@RUNNINGSTATUS'?: StringValue,
   '@SETPOINT'?: Setpoint,
   zoning_devices?: EquipmentData[],
 }
@@ -91,7 +92,7 @@ type ModeConstraints = {
 
 type Mode = {
   constraints?: ModeConstraints;
-  value?: ThermostatMode;
+  value?: number;
 }
 
 export type ThermostatData = EquipmentData & {

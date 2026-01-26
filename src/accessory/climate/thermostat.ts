@@ -24,8 +24,14 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
     return AccessoryType.Thermostat;
   }
 
+  private readonly currentStateMap: Map<ThermostatMode, CharacteristicValue>;
+  private readonly targetStateMap: Map<ThermostatMode, CharacteristicValue>;
+
   private deadband: number;
   private modes = new Map<number, ThermostatMode>();
+
+  private mode: ThermostatMode;
+  private running: boolean;
 
   private heatThresholds: Thresholds;
   private coolThresholds: Thresholds;
@@ -40,7 +46,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
 
       let mode: ThermostatMode;
 
-      const cleanedString = textMode.trim().replace(' ', '').toUpperCase();
+      const cleanedString = textMode.trim().replace(' ', '_').toUpperCase();
       switch (cleanedString) {
       case 'OFF':
         mode = ThermostatMode.OFF;
@@ -54,21 +60,21 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       case 'AUTO':
         mode = ThermostatMode.AUTO;
         break;
-      case 'FANONLY':
+      case 'FAN_ONLY':
         mode = ThermostatMode.FAN_ONLY;
         break;
-      case 'EMERGENCYHEAT':
+      case 'EMERGENCY_HEAT':
         mode = ThermostatMode.EMERGENCY_HEAT;
         break;
       default:
-        this.log.warning(strings.thermostat.unknownMode, this.name, textMode);
+        this.log.warning(`${this.name} has unknown mode '${textMode}'`);
         return;
       }
 
       this.modes.set(index, mode);
     });
 
-    const currentStateMap = new Map<ThermostatMode | undefined, CharacteristicValue>([
+    this.currentStateMap = new Map<ThermostatMode, CharacteristicValue>([
       [ThermostatMode.OFF, dependency.Characteristic.CurrentHeatingCoolingState.OFF],
       [ThermostatMode.HEATING, dependency.Characteristic.CurrentHeatingCoolingState.HEAT],
       [ThermostatMode.EMERGENCY_HEAT, dependency.Characteristic.CurrentHeatingCoolingState.HEAT],
@@ -76,13 +82,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       [ThermostatMode.FAN_ONLY, dependency.Characteristic.CurrentHeatingCoolingState.COOL],
     ]);
 
-    const currentMode = this.modes.get(data['@MODE']?.value ?? -1);
-    const currentState = currentStateMap.get(currentMode) ?? dependency.Characteristic.CurrentHeatingCoolingState.OFF;
-
-    this.setup(HKCharacteristicKey.CurrentHeatingCoolingState, currentState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U),
-      this.bindOnUpdateMode(HKCharacteristicKey.CurrentHeatingCoolingState, currentStateMap, false));
-
-    const targetStateMap = new Map<ThermostatMode | undefined, CharacteristicValue>([
+    this.targetStateMap = new Map<ThermostatMode, CharacteristicValue>([
       [ThermostatMode.OFF, dependency.Characteristic.TargetHeatingCoolingState.OFF],
       [ThermostatMode.HEATING, dependency.Characteristic.TargetHeatingCoolingState.HEAT],
       [ThermostatMode.EMERGENCY_HEAT, dependency.Characteristic.TargetHeatingCoolingState.HEAT],
@@ -90,11 +90,6 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       [ThermostatMode.FAN_ONLY, dependency.Characteristic.TargetHeatingCoolingState.COOL],
       [ThermostatMode.AUTO, dependency.Characteristic.TargetHeatingCoolingState.AUTO],
     ]);
-
-    this.setup(HKCharacteristicKey.TargetHeatingCoolingState, currentState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U),
-      this.bindOnUpdateMode(HKCharacteristicKey.TargetHeatingCoolingState, targetStateMap, true),
-      this.bindOnSetTargetMode(targetStateMap),
-    );
 
     this.heatThresholds = this.setupThreshold(HKCharacteristicKey.HeatingThresholdTemperature, data['@HEATSETPOINT'],
       MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.HEAT_SETPOINT_U));
@@ -106,6 +101,15 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       .onGet(this.getTargetTemperature.bind(this))
       .onSet(this.setTargetTemperature.bind(this));
 
+    this.mode = this.modes.get(data['@MODE']?.value ?? -1) ?? ThermostatMode.OFF;
+    this.running = (this.getValue(data['@RUNNINGSTATUS'])?.replace(/\s/g, '') ?? '').length > 0;
+
+    this.setup(HKCharacteristicKey.CurrentHeatingCoolingState, this.currentState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.RUNNINGSTATUS_U),
+      this.bindOnUpdateCurrentMode());
+
+    this.setup(HKCharacteristicKey.TargetHeatingCoolingState, this.targetState, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.MODE_U),
+      this.bindOnUpdateTargetMode(), this.bindOnSetTargetMode());
+
     const currentHumidity = data['@HUMIDITY']?.value ?? DEFAULT_HUMIDITY;
     this.setup(HKCharacteristicKey.CurrentRelativeHumidity, currentHumidity, MQTTKeys(MQTTKey.UNKNOWN, MQTTKey.HUMIDITY_U),
       this.bindOnUpdateNumeric(HKCharacteristicKey.CurrentRelativeHumidity, strings.thermostat.humidity, (value) => {
@@ -113,31 +117,78 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       }));
   }
 
-  private bindOnUpdateMode(charKey: HKCharacteristicKey, stateMap: Map<ThermostatMode | undefined, CharacteristicValue>, future: boolean): OnUpdateHandler {
+  private get currentState(): CharacteristicValue {
+
+    if (!this.running) {
+      return this.Characteristic.CurrentHeatingCoolingState.OFF;
+    }
+    
+    const currentState = this.currentStateMap.get(this.mode);
+    if (currentState !== undefined) {
+      return currentState;
+    }
+
+    const currentTemp = this.getProperty(HKCharacteristicKey.CurrentTemperature) as number;
+    if (this.mode === ThermostatMode.AUTO && currentTemp !== undefined) {
+      const targetTemp = this.getTargetTemperature();
+      return currentTemp < targetTemp ? this.Characteristic.CurrentHeatingCoolingState.HEAT : this.Characteristic.CurrentHeatingCoolingState.COOL;
+    }
+
+    this.log.warning(`${this.name} unabled to get current state for mode '${this.mode}'`);
+    return this.Characteristic.CurrentHeatingCoolingState.OFF;
+  }
+
+  private get targetState(): CharacteristicValue {
+
+    const targetState = this.targetStateMap.get(this.mode);
+    if (targetState !== undefined) {
+      return targetState;
+    }
+
+    this.log.warning(`${this.name} unabled to get target state for mode '${this.mode}'`);
+    return this.Characteristic.TargetHeatingCoolingState.OFF;
+  }
+
+  private bindOnUpdateCurrentMode(): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
 
       if (typeof value !== 'number') {
-        this.log.error(strings.accessory.badValue, this.name, 'number', charKey, `${value.toString()}`);
+        this.log.error(strings.accessory.badValue, this.name, 'number', HKCharacteristicKey.CurrentHeatingCoolingState, `${value.toString()}`);
         return;
       }
 
-      const mode = this.modes.get(value);
-
-      const state = stateMap.get(mode);
-      if (state === undefined) {
-        this.log.warning(strings.thermostat.unexpectedMode, this.name, `'${mode}`, charKey);
-        return;
-      }
-
-      this.onUpdate(charKey, state, this.logStringForState(state, future));
+      const currentState = this.currentState;
+      this.onUpdate(HKCharacteristicKey.CurrentHeatingCoolingState, currentState, this.logStringForState(currentState));
 
     }).bind(this);
   }
 
-  private bindOnSetTargetMode(stateMap: Map<ThermostatMode | undefined, CharacteristicValue>) {
+  private bindOnUpdateTargetMode(): OnUpdateHandler {
+    return (async (value: PrimitiveTypes) => {
+
+      if (typeof value !== 'number') {
+        this.log.error(strings.accessory.badValue, this.name, 'number', HKCharacteristicKey.TargetHeatingCoolingState, `${value.toString()}`);
+        return;
+      }
+
+      const mode = this.modes.get(value);
+      if (mode === undefined) {
+        this.log.warning(`${this.name} unabled to get target mode for value '${value}'`);
+        return;
+      }
+
+      this.mode = mode;
+
+      const targetState = this.targetState;
+      this.onUpdate(HKCharacteristicKey.TargetHeatingCoolingState, targetState, this.logStringForState(targetState, true));
+
+    }).bind(this);
+  }
+
+  private bindOnSetTargetMode() {
     return (async (value: CharacteristicValue) => {
 
-      for (const [mode, state] of stateMap.entries()) {
+      for (const [mode, state] of this.targetStateMap.entries()) {
 
         if (state === value) {
           for (const [publish, compare] of this.modes.entries()) {
@@ -196,7 +247,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
     }
 
     if (targetTemp === undefined) {
-      this.log.warning(strings.thermostat.unknownTargetTemp, this.name);
+      this.log.warning(`${this.name} is unable to determine the target temperature`);
     }
 
     return targetTemp ?? DEFAULT_SETPOINT;

@@ -44,6 +44,7 @@ export enum MQTTKey {
   MODE_U = '@MODE',
   RUNNING_D = 'COMP_RLY',
   RUNNING_U = '@RUNNING',
+  RUNNINGSTATUS_U = '@RUNNING_STATUS',
   SETPOINT_D = 'WHTRSETP',
   SETPOINT_U = '@SETPOINT',
   TOTAL_CONSUMPTION_D = 'TOTALKWH',
@@ -58,12 +59,12 @@ export function MQTTKeys(device: MQTTKey, user: MQTTKey): MQTTKeys {
 }
 
 export enum ThermostatMode {
-  OFF = 1,
-  HEATING = 2,
-  COOLING = 3,
-  AUTO = 4,
-  FAN_ONLY = 5,
-  EMERGENCY_HEAT = 6,
+  OFF = 'OFF',
+  HEATING = 'HEATING',
+  COOLING = 'COOLING',
+  AUTO = 'AUTO',
+  FAN_ONLY = 'FAN_ONLY',
+  EMERGENCY_HEAT = 'EMERGENCY_HEAT',
 }
 
 export enum TimeUnits {

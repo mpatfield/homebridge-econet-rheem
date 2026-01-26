@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.1 (2026-01-26)
+
+### Fixed
+- Several issues with Thermostat have been addressed
+
+### Notes
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
+
 ## 1.7.0 (2026-01-25)
 
 ### Changed
@@ -14,9 +22,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Fixed
 - Checkboxes in config UI not reflecting correct state in ([#150](https://github.com/mpatfield/homebridge-econet-rheem/issues/150))
-
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.6.2 (2026-01-16)
 

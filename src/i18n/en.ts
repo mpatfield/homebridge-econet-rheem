@@ -110,9 +110,6 @@ const en = {
     stateOff: '%s set to Off', // device name
     stateOffFuture: 'Settings %s to Off…', // device name
     targetSetFailed: '%s unabled to set target with value %s', // device name, value
-    unexpectedMode: '%s received unexpected mode %s for %s', // device name, value, value type
-    unknownMode: '%s has unknown mode %s', // device name, value
-    unknownTargetTemp: '%s is unable to determine the target temperature', // device name
   },
 };
 

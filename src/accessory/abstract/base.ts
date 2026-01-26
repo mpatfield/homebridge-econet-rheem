@@ -153,13 +153,13 @@ export abstract class BaseAccessory implements MQTTListener {
 
   protected setup(
     characteristicKey: CharacteristicKey,
-    initialValue: CharacteristicValue,
+    startingValue: CharacteristicValue,
     mqttKeys: MQTTKeys,
     onUpdateHandler: OnUpdateHandler,
     onSetHandler?: CharacteristicSetHandler,
   ): Characteristic {
 
-    const characteristic = this.setupGet(characteristicKey, initialValue, mqttKeys, onUpdateHandler);
+    const characteristic = this.setupGet(characteristicKey, startingValue, mqttKeys, onUpdateHandler);
 
     if (onSetHandler !== undefined) {
       this.setupSet(characteristicKey, onSetHandler);
@@ -170,12 +170,10 @@ export abstract class BaseAccessory implements MQTTListener {
 
   private setupGet(
     characteristicKey: CharacteristicKey,
-    defaultValue: CharacteristicValue,
+    startingValue: CharacteristicValue,
     mqttKeys: MQTTKeys,
     onUpdateHandler: OnUpdateHandler,
   ): Characteristic {
-
-    const startingValue = this.getProperty(characteristicKey) ?? defaultValue;
 
     if (this.isOptionalCharacteristic(characteristicKey)) {
       this.service.addOptionalCharacteristic(this.characteristicFromKey(characteristicKey));
