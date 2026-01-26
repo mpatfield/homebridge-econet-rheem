@@ -60,7 +60,11 @@ document.getElementById('loginForm').onsubmit = async (e) => {
     const devices = [];
     for (const location of data.results.locations) {
       for (const equipmentData of location.equiptments) {
-        devices.push( { name: equipmentData['@NAME'].value, serial_number: equipmentData.serial_number } )
+        const name = equipmentData['@NAME']?.value;
+        const serial_number = equipmentData.serial_number;
+        if (name && serial_number) {
+          devices.push( { name, serial_number } )
+        }
       }
     };
 
