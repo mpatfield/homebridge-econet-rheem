@@ -32,7 +32,8 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
     this.setCharacteristicValue(HKCharacteristicKey.TemperatureDisplayUnits, temperatureDisplayUnits);
 
     const setPoint = data['@SETPOINT']?.value ? toCelsius(data['@SETPOINT']?.value, this.units) : defaults.setPoint;
-    this.setup(HKCharacteristicKey.CurrentTemperature, setPoint, MQTTKeys(MQTTKey.CURRENT_TEMP, MQTTKey.SETPOINT_U),
+    const startingTemperature = (this.isDeviceAuth ? this.getProperty(HKCharacteristicKey.CurrentTemperature) : setPoint) ?? setPoint;
+    this.setup(HKCharacteristicKey.CurrentTemperature, startingTemperature, MQTTKeys(MQTTKey.CURRENT_TEMP_D, MQTTKey.SETPOINT_U),
       this.bindOnUpdateTemperature(HKCharacteristicKey.CurrentTemperature, this.units, strings.temperatureControl.current, (value) => {
         this.recordHistory(HistoryType.WEATHER, { temp: value } );
       }),
