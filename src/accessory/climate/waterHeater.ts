@@ -41,12 +41,14 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
     this.setupThreshold(HKCharacteristicKey.HeatingThresholdTemperature, data['@SETPOINT'], MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U));
 
-    this.setup(EveCharacteristicKey.CurrentConsumption, 0, MQTTKeys(MQTTKey.CURRENT_CONSUMPTION_D, MQTTKey.UNDEFINED),
+    const startingCurrentConsumption = this.getProperty(EveCharacteristicKey.CurrentConsumption) ?? 0;
+    this.setup(EveCharacteristicKey.CurrentConsumption, startingCurrentConsumption, MQTTKeys(MQTTKey.CURRENT_CONSUMPTION_D, MQTTKey.UNDEFINED),
       this.bindOnUpdateNumeric(EveCharacteristicKey.CurrentConsumption, strings.waterHeater.currentConsumption, (value) => {
         this.recordHistory(HistoryType.CUSTOM, { power: value });
       }));
 
-    this.setup(EveCharacteristicKey.TotalConsumption, 0, MQTTKeys(MQTTKey.TOTAL_CONSUMPTION_D, MQTTKey.UNDEFINED),
+    const startingTotalConsumption = this.getProperty(EveCharacteristicKey.TotalConsumption) ?? 0;
+    this.setup(EveCharacteristicKey.TotalConsumption, startingTotalConsumption, MQTTKeys(MQTTKey.TOTAL_CONSUMPTION_D, MQTTKey.UNDEFINED),
       this.bindOnUpdateNumeric(EveCharacteristicKey.TotalConsumption, strings.waterHeater.totalConsumption));
   }
 

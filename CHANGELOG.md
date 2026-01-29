@@ -2,10 +2,13 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.1-beta.1 (2026-01-26)
+## 1.7.1-beta.2 (2026-01-29)
 
 ### Fixed
-- Several issues with Thermostat have been addressed
+- Several issues with Thermostats have been addressed
+
+### Changed
+- Updated dependencies
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
