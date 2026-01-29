@@ -115,6 +115,7 @@ export class ThermostatAccessory extends TemperatureControlAccessory {
       this.bindOnUpdateNumeric(HKCharacteristicKey.CurrentRelativeHumidity, strings.thermostat.humidity, (value) => {
         this.recordHistory(HistoryType.WEATHER, { humidity: value } );        
       }));
+    this.recordHistory(HistoryType.WEATHER, { humidity: currentHumidity } );        
   }
 
   private get currentState(): CharacteristicValue {

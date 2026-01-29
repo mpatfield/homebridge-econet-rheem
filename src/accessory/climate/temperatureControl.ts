@@ -38,6 +38,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
         this.recordHistory(HistoryType.WEATHER, { temp: value } );
       }),
     );
+    this.recordHistory(HistoryType.WEATHER, { temp: startingTemperature as number } );
 
     const hasAlert = typeof data['@ALERTCOUNT'] === 'number' && data['@ALERTCOUNT'] > 0;
     const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;

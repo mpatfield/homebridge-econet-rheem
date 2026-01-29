@@ -38,6 +38,7 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     this.setup(HKCharacteristicKey.CurrentHeaterCoolerState, initialState, runningMQTTKeys,
       this.bindOnCurrentStateUpdate(),
     )?.setProps({ validValues: [dependency.Characteristic.CurrentHeaterCoolerState.IDLE, dependency.Characteristic.CurrentHeaterCoolerState.HEATING] });
+    this.recordHistory(HistoryType.CUSTOM, { status: running ? 1 : 0 }, true);
 
     this.setupThreshold(HKCharacteristicKey.HeatingThresholdTemperature, data['@SETPOINT'], MQTTKeys(MQTTKey.SETPOINT_D, MQTTKey.SETPOINT_U));
 
