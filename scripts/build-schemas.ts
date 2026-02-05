@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-import { getTranslations, Language } from '../src/i18n/i18n.js';
+import { getStrings, Language } from '../src/i18n/i18n.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,11 +22,12 @@ const regex = /\$\{config\.(title|description|enumNames)\.([^}]+)\}/g;
 
 for (const language of Object.values(Language)) {
 
-  const strings = getTranslations(language);
+  const strings = getStrings(language);
 
   const translated = template.replace(regex, (match, type: keyof typeof strings.config, key) => {
     if (strings.config[type] && typeof strings.config[type] === 'object' && key in (strings.config[type] as Record<string, string>)) {
-      return (strings.config[type] as Record<string, string>)[key];
+      const replacement = (strings.config[type] as Record<string, string>)[key];
+      return replacement.replaceAll('"','\\"');
     }
     return match;
   });

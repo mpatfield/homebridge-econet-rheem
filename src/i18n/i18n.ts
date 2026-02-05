@@ -28,12 +28,8 @@ export function setLanguage(i18nLang: string) {
   currentLanguage = Translations[language] ? language : Language.EN;
 }
 
-export function getTranslations(language: Language) {
-  return Translations[language];
-}
-
-export function getCurrentTranslations(): Translation {
-  return getTranslations(currentLanguage);
+export function getStrings(language: Language): Translation {
+  return Translations[language] ?? Translations[Language.EN];
 }
 
 const translations = new Proxy({} as Translation, {
