@@ -1,6 +1,6 @@
 import { HomebridgePluginUiServer } from '@homebridge/plugin-ui-utils';
 
-import { getAllTranslations, setLanguage, Translation } from '../i18n/i18n.js';
+import { getCurrentTranslations, setLanguage, Translation } from '../i18n/i18n.js';
 
 class EconetRheemConfigUiServer extends HomebridgePluginUiServer {
   constructor() {
@@ -12,7 +12,7 @@ class EconetRheemConfigUiServer extends HomebridgePluginUiServer {
    
   async i18n(language: string): Promise<Translation> {
     setLanguage(language);
-    return getAllTranslations();
+    return getCurrentTranslations();
   }
 }
 

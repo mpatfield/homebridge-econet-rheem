@@ -4,7 +4,7 @@
   "displayName": "Homebridge Econet Rheem",
   "description": "Homebridge plugin for control of Rheem and Ruud thermostats and water heaters",
   "type": "module",
-  "version": "1.7.1-beta.3",
+  "version": "1.7.1-beta.4",
   "homepage": "https://github.com/mpatfield/homebridge-econet-rheem#readme",
   "repository": {
     "type": "git",
@@ -19,8 +19,9 @@
   },
   "main": "dist/homebridge/index.js",
   "scripts": {
-    "build": "rimraf ./dist && tsc && npm run build:html && npm run build:ui",
+    "build": "rimraf ./dist && tsc && npm run build:html && npm run build:schemas && npm run build:ui",
     "build:html": "node --import tsx ./scripts/build-html.ts",
+    "build:schemas": "node --import tsx ./scripts/build-schemas.ts",
     "build:ui": "esbuild src/homebridge-ui/ui.ts --bundle --outfile=dist/homebridge-ui/public/ui.js --minify",
     "lint": "eslint . --max-warnings=0",
     "prepublishOnly": "npm run lint && npm run build"
@@ -66,6 +67,9 @@
   "homebridge": {
     "platform": "HomebridgeEconetRheem",
     "name": "homebridge-econet-rheem"
+  },
+  "directories": {
+    "schemas": "schemas/"
   },
   "author": {
     "name": "mpatfield"

@@ -2,13 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.1-beta.3 (2026-02-04)
+## 1.7.1-beta.4 (2026-02-05)
 
 ### Fixed
 - Several issues with Thermostats have been addressed
 
 ### Changed
 - Updated mqtt and axios dependencies
+- Config UI schemas are generated at build-time rather than translated at run-time ([open a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) if you have issues)
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
