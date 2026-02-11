@@ -142,7 +142,9 @@ export class MQTT {
     });
 
     this.client.on('error', (error: MQTTError) => {
-      this.log.warning(`${strings.mqtt.error}: ${error}`,  this.dependency.parentName);
+      if (error.code !== 'ENOTFOUND') {
+        this.log.warning(`${strings.mqtt.error}: ${error}`,  this.dependency.parentName);
+      }
     });
   }
 
