@@ -50,6 +50,8 @@ class Custom {
       return strings.characteristic.ambientTemperature;
     case CustomCharacteristicKey.HotWaterAvailable:
       return strings.characteristic.hotWaterAvailable;
+    case CustomCharacteristicKey.RecoveryRate:
+      return strings.characteristic.recoveryRate;
     }
   }
 
@@ -59,6 +61,8 @@ class Custom {
       return 'e9638ce8-19ad-468f-a4e8-a65042137a5f';
     case CustomCharacteristicKey.HotWaterAvailable:
       return 'f127b4a0-6d4b-48fd-8533-f5f4001152f2';
+    case CustomCharacteristicKey.RecoveryRate:
+      return '794fae1a-8f69-4c50-8b40-b135216f79dd';
     }
   }
 
@@ -68,6 +72,8 @@ class Custom {
       return Units.CELSIUS;
     case CustomCharacteristicKey.HotWaterAvailable:
       return '%';
+    case CustomCharacteristicKey.RecoveryRate:
+      return strings.characteristic.recoveryRateUnits;
     }
   }
 }

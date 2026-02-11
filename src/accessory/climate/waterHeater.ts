@@ -8,6 +8,7 @@ import { strings } from '../../i18n/i18n.js';
 
 import { AccessoryType, CustomCharacteristicKey, EveCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
 import { HistoryType } from '../../model/history.js';
+import { RecoveryRates } from '../../model/recovery.js';
 import { AccessoryDependency, WaterHeaterData } from '../../model/types.js';
 
 const DEFAULT_SETPOINT = 50;
@@ -20,8 +21,12 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     return AccessoryType.HeaterCooler;
   }
 
+  private readonly recoveryRates: RecoveryRates;
+
   constructor(dependency: AccessoryDependency, data: WaterHeaterData) {
     super(dependency, data, TemperatureDefaults(DEFAULT_SETPOINT, DEFAULT_LOWER_LIMIT, DEFAULT_UPPER_LIMIT));
+
+    this.recoveryRates = new RecoveryRates(this.identifier);
 
     const active = this.getValue(data['@ENABLED']) === 1 ? dependency.Characteristic.Active.ACTIVE : dependency.Characteristic.Active.INACTIVE;
     const enabledMQTTKeys = MQTTKeys(MQTTKey.ENABLED_D, MQTTKey.ENABLED_U);
@@ -52,11 +57,6 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     this.setup(EveCharacteristicKey.TotalConsumption, startingTotalConsumption, MQTTKeys(MQTTKey.TOTAL_CONSUMPTION_D, MQTTKey.UNDEFINED),
       this.bindOnUpdateNumeric(EveCharacteristicKey.TotalConsumption, strings.waterHeater.totalConsumption));
 
-    const startingAmbientTemperature = this.getProperty(CustomCharacteristicKey.AmbientTemperature) ?? 0;
-    this.setup(CustomCharacteristicKey.AmbientTemperature, startingAmbientTemperature, MQTTKeys(MQTTKey.AMBIENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
-      this.onUpdate(CustomCharacteristicKey.AmbientTemperature, value);
-    });
-
     const hotWaterAvailable = this.getHotWaterAvailable(data['@HOTWATER']);
     this.setup(CustomCharacteristicKey.HotWaterAvailable, hotWaterAvailable, MQTTKeys(MQTTKey.HOT_WATER_AVAILABLE_D, MQTTKey.HOT_WATER_AVAILABLE_U),
       async (value) => {
@@ -64,6 +64,17 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
         this.onUpdate(CustomCharacteristicKey.AmbientTemperature, hotWaterAvailable);
       },
     );
+
+    const recoveryRate = this.recoveryRates.getAverage();
+    this.setup(CustomCharacteristicKey.RecoveryRate, recoveryRate, MQTTKeys(MQTTKey.CURRENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
+      this.recoveryRates.recordTemperature(value as number);
+      this.onUpdate(CustomCharacteristicKey.RecoveryRate, this.recoveryRates.getAverage());
+    });
+
+    const startingAmbientTemperature = this.getProperty(CustomCharacteristicKey.AmbientTemperature) ?? 0;
+    this.setup(CustomCharacteristicKey.AmbientTemperature, startingAmbientTemperature, MQTTKeys(MQTTKey.AMBIENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
+      this.onUpdate(CustomCharacteristicKey.AmbientTemperature, value);
+    });
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {

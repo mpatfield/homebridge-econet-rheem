@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.2-beta.0 (2026-02-11)
+
+## Added
+- Additional [Eve App](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) Characteristic — Ambient Temperature, Hot Water Available, Recovery Rate
+
+### Notes
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
+
 ## 1.7.1 (2026-02-10)
 
 ### Fixed
@@ -10,9 +18,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ### Changed
 - Config UI schemas are generated at build-time rather than translated at run-time ([open a ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/new/choose) if you have issues)
 - Updated mqtt and axios dependencies
-
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.7.0 (2026-01-25)
 

@@ -9,6 +9,8 @@ const en = {
   characteristic: {
     ambientTemperature: 'Ambient Temperature',
     hotWaterAvailable: 'Hot Water',
+    recoveryRate: 'Recovery Rate',
+    recoveryRateUnits: '° per hour',
   },
 
   config: {

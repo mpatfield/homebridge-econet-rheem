@@ -13,6 +13,7 @@ export type CharacteristicKey = CustomCharacteristicKey | HKCharacteristicKey | 
 export enum CustomCharacteristicKey {
   AmbientTemperature = 'AmbientTemperature',
   HotWaterAvailable = 'HotWaterAvailable',
+  RecoveryRate = 'RecoveryRate',
 }
 
 export enum HKCharacteristicKey {
