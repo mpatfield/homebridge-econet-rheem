@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.1-beta.4 (2026-02-05)
+## 1.7.1 (2026-02-10)
 
 ### Fixed
 - Several issues with Thermostats have been addressed
