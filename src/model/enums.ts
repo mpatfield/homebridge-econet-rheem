@@ -12,6 +12,7 @@ export type CharacteristicKey = CustomCharacteristicKey | HKCharacteristicKey | 
 
 export enum CustomCharacteristicKey {
   AmbientTemperature = 'AmbientTemperature',
+  HotWaterAvailable = 'HotWaterAvailable',
 }
 
 export enum HKCharacteristicKey {
@@ -46,6 +47,8 @@ export enum MQTTKey {
   ENABLED_U = '@ENABLED',
   HEAT_SETPOINT_U = '@HEATSETPOINT',
   HUMIDITY_U = '@HUMIDITY',
+  HOT_WATER_AVAILABLE_D = 'HOTWATER',
+  HOT_WATER_AVAILABLE_U = '@HOTWATER',
   MODE_U = '@MODE',
   RUNNING_D = 'COMP_RLY',
   RUNNING_U = '@RUNNING',

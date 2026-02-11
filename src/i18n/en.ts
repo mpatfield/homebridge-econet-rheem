@@ -8,6 +8,7 @@ const en = {
 
   characteristic: {
     ambientTemperature: 'Ambient Temperature',
+    hotWaterAvailable: 'Hot Water',
   },
 
   config: {

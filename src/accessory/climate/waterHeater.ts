@@ -56,6 +56,14 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     this.setup(CustomCharacteristicKey.AmbientTemperature, startingAmbientTemperature, MQTTKeys(MQTTKey.AMBIENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
       this.onUpdate(CustomCharacteristicKey.AmbientTemperature, value);
     });
+
+    const hotWaterAvailable = this.getHotWaterAvailable(data['@HOTWATER']);
+    this.setup(CustomCharacteristicKey.HotWaterAvailable, hotWaterAvailable, MQTTKeys(MQTTKey.HOT_WATER_AVAILABLE_D, MQTTKey.HOT_WATER_AVAILABLE_U),
+      async (value) => {
+        const hotWaterAvailable = this.getHotWaterAvailable(value);
+        this.onUpdate(CustomCharacteristicKey.AmbientTemperature, hotWaterAvailable);
+      },
+    );
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {
@@ -88,5 +96,34 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
       this.recordHistory(HistoryType.CUSTOM, { status: running ? 1 : 0 }, true);
 
     }).bind(this);
+  }
+
+  private getHotWaterAvailable(value: unknown): number {
+
+    if (typeof value === 'number') {
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      return 100;
+    }
+
+    if (value.includes('empty') || value.includes('zero')) {
+      return 0;
+    }
+    
+    if (value.includes('ten')) {
+      return 10;
+    }
+    
+    if (value.includes('fourty')) {
+      return 40;
+    }
+    
+    if (value.includes('hundred') || value.includes('hundread')) {
+      return 100;
+    }
+
+    return 100;
   }
 }

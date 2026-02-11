@@ -106,4 +106,5 @@ export type ThermostatData = EquipmentData & {
 export type WaterHeaterData = EquipmentData & {
   '@RUNNING'?: string,
   '@ENABLED'?: NumberValue,
+  '@HOTWATER'?: string;
 }
