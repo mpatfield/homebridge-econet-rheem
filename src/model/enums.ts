@@ -8,7 +8,11 @@ export enum EquipmentType {
   WATER_HEATER = 'WH'
 }
 
-export type CharacteristicKey = HKCharacteristicKey | EveCharacteristicKey;
+export type CharacteristicKey = CustomCharacteristicKey | HKCharacteristicKey | EveCharacteristicKey;
+
+export enum CustomCharacteristicKey {
+  AmbientTemperature = 'AmbientTemperature',
+}
 
 export enum HKCharacteristicKey {
   Active = 'Active',
@@ -34,6 +38,7 @@ export enum EveCharacteristicKey {
 export enum MQTTKey {
   ALERT_COUNT_D = 'ALRMALRT',
   ALERT_COUNT_U = '@ALERTCOUNT',
+  AMBIENT_TEMP_D = 'AMBIENTT',
   COOL_SETPOINT_U = '@COOLSETPOINT',
   CURRENT_TEMP_D = 'UPHTRTMP',
   CURRENT_CONSUMPTION_D = 'POWRWATT',

@@ -6,7 +6,7 @@ import { OnUpdateHandler } from '../abstract/base.js';
 
 import { strings } from '../../i18n/i18n.js';
 
-import { AccessoryType, EveCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
+import { AccessoryType, CustomCharacteristicKey, EveCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
 import { HistoryType } from '../../model/history.js';
 import { AccessoryDependency, WaterHeaterData } from '../../model/types.js';
 
@@ -51,6 +51,11 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     const startingTotalConsumption = this.getProperty(EveCharacteristicKey.TotalConsumption) ?? 0;
     this.setup(EveCharacteristicKey.TotalConsumption, startingTotalConsumption, MQTTKeys(MQTTKey.TOTAL_CONSUMPTION_D, MQTTKey.UNDEFINED),
       this.bindOnUpdateNumeric(EveCharacteristicKey.TotalConsumption, strings.waterHeater.totalConsumption));
+
+    const startingAmbientTemperature = this.getProperty(CustomCharacteristicKey.AmbientTemperature) ?? 0;
+    this.setup(CustomCharacteristicKey.AmbientTemperature, startingAmbientTemperature, MQTTKeys(MQTTKey.AMBIENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
+      this.onUpdate(CustomCharacteristicKey.AmbientTemperature, value);
+    });
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {

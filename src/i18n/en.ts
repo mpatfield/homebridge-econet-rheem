@@ -6,6 +6,10 @@ const en = {
     outOfRange: '%s is trying to set %s to %s which is out of the allowed range. Setting to %s.', // device name, characteristic name, number, number
   },
 
+  characteristic: {
+    ambientTemperature: 'Ambient Temperature',
+  },
+
   config: {
 
     continue: 'Continue %s', // arrow icon

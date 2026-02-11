@@ -1,5 +1,6 @@
 import { Characteristic, CharacteristicSetHandler, CharacteristicValue, Nullable, PlatformAccessory, PrimitiveTypes, Service } from 'homebridge';
 
+import { CustomCharacteristic, isCustomCharacteristic } from '../characteristic/custom.js';
 import { EveCharacteristic, isEveCharacteristic } from '../characteristic/eve.js';
 
 import { strings } from '../../i18n/i18n.js';
@@ -157,9 +158,18 @@ export abstract class BaseAccessory implements MQTTListener {
     mqttKeys: MQTTKeys,
     onUpdateHandler: OnUpdateHandler,
     onSetHandler?: CharacteristicSetHandler,
-  ): Characteristic {
+  ): Characteristic | undefined {
 
-    const characteristic = this.setupGet(characteristicKey, startingValue, mqttKeys, onUpdateHandler);
+    const mqttKey = this.getMQTTKey(mqttKeys);
+    if (mqttKey === MQTTKey.UNDEFINED || mqttKey === MQTTKey.UNKNOWN) {
+      if (this.service.testCharacteristic(this.characteristicFromKey(characteristicKey))) {
+        const characteristic = this.service.getCharacteristic(this.characteristicFromKey(characteristicKey));
+        this.service.removeCharacteristic(characteristic);
+      }
+      return;
+    }
+
+    const characteristic = this.setupGet(characteristicKey, startingValue, mqttKey, onUpdateHandler);
 
     if (onSetHandler !== undefined) {
       this.setupSet(characteristicKey, onSetHandler);
@@ -171,11 +181,11 @@ export abstract class BaseAccessory implements MQTTListener {
   private setupGet(
     characteristicKey: CharacteristicKey,
     startingValue: CharacteristicValue,
-    mqttKeys: MQTTKeys,
+    mqttKey: MQTTKey,
     onUpdateHandler: OnUpdateHandler,
   ): Characteristic {
 
-    if (this.isOptionalCharacteristic(characteristicKey)) {
+    if (this.isOptionalCharacteristic(characteristicKey) && !this.service.testCharacteristic(this.characteristicFromKey(characteristicKey))) {
       this.service.addOptionalCharacteristic(this.characteristicFromKey(characteristicKey));
     }
 
@@ -188,8 +198,6 @@ export abstract class BaseAccessory implements MQTTListener {
       return this.getProperty(characteristicKey) ?? null;
     });
     
-    const mqttKey = this.getMQTTKey(mqttKeys);
-
     const handlers = this.updateHandlers.get(mqttKey) ?? [];
     handlers.push(onUpdateHandler);
     this.updateHandlers.set(mqttKey, handlers);
@@ -312,6 +320,10 @@ export abstract class BaseAccessory implements MQTTListener {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   protected characteristicFromKey(key: CharacteristicKey): any {
 
+    if (isCustomCharacteristic(key)) {
+      return CustomCharacteristic(key, this.Characteristic);
+    }
+
     if (isEveCharacteristic(key)) {
       return EveCharacteristic(key);
     }
@@ -320,7 +332,7 @@ export abstract class BaseAccessory implements MQTTListener {
   }
 
   private isOptionalCharacteristic(key: CharacteristicKey): boolean {
-    return key === HKCharacteristicKey.StatusFault || isEveCharacteristic(key);
+    return key === HKCharacteristicKey.StatusFault || isCustomCharacteristic(key) || isEveCharacteristic(key);
   }
 
   protected recordHistory(type: HistoryType, entry: HistoryEntry, updateLastActivation: boolean = false) {
