@@ -8,12 +8,15 @@ import { strings } from '../../i18n/i18n.js';
 
 import { AccessoryType, CustomCharacteristicKey, EveCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
 import { HistoryType } from '../../model/history.js';
-import { RecoveryRates } from '../../model/recovery.js';
 import { AccessoryDependency, WaterHeaterData } from '../../model/types.js';
+
+import { HOUR } from '../../tools/time.js';
 
 const DEFAULT_SETPOINT = 50;
 const DEFAULT_LOWER_LIMIT = 35;
 const DEFAULT_UPPER_LIMIT = 65;
+
+type TemperatureEntry = { temperature: number, timestamp: number }
 
 export class WaterHeaterAccessory extends TemperatureControlAccessory {
 
@@ -21,12 +24,10 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     return AccessoryType.HeaterCooler;
   }
 
-  private readonly recoveryRates: RecoveryRates;
+  private lastTemperatureEntry?: TemperatureEntry;
 
   constructor(dependency: AccessoryDependency, data: WaterHeaterData) {
     super(dependency, data, TemperatureDefaults(DEFAULT_SETPOINT, DEFAULT_LOWER_LIMIT, DEFAULT_UPPER_LIMIT));
-
-    this.recoveryRates = new RecoveryRates(this.identifier);
 
     const active = this.getValue(data['@ENABLED']) === 1 ? dependency.Characteristic.Active.ACTIVE : dependency.Characteristic.Active.INACTIVE;
     const enabledMQTTKeys = MQTTKeys(MQTTKey.ENABLED_D, MQTTKey.ENABLED_U);
@@ -65,16 +66,32 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
       },
     );
 
-    const recoveryRate = this.recoveryRates.getAverage();
-    this.setup(CustomCharacteristicKey.RecoveryRate, recoveryRate, MQTTKeys(MQTTKey.CURRENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
-      this.recoveryRates.recordTemperature(value as number);
-      this.onUpdate(CustomCharacteristicKey.RecoveryRate, this.recoveryRates.getAverage());
+    this.setup(CustomCharacteristicKey.RecoveryRate, 0, MQTTKeys(MQTTKey.CURRENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
+      this.onUpdate(CustomCharacteristicKey.RecoveryRate, this.getRecoveryRate(value as number));
     });
 
     const startingAmbientTemperature = this.getProperty(CustomCharacteristicKey.AmbientTemperature) ?? 0;
     this.setup(CustomCharacteristicKey.AmbientTemperature, startingAmbientTemperature, MQTTKeys(MQTTKey.AMBIENT_TEMP_D, MQTTKey.UNDEFINED), async (value) => {
       this.onUpdate(CustomCharacteristicKey.AmbientTemperature, value);
     });
+  }
+
+  private getRecoveryRate(temperature: number): number {
+
+    let recoveryRate = 0;
+
+    const currentEntry: TemperatureEntry = { temperature: temperature, timestamp: Date.now() };
+    if (this.lastTemperatureEntry !== undefined && currentEntry.temperature > this.lastTemperatureEntry.temperature) {
+
+      const deltaTemp = currentEntry.temperature - this.lastTemperatureEntry.temperature;
+      const deltaTime = currentEntry.timestamp - this.lastTemperatureEntry.timestamp;
+
+      recoveryRate = (deltaTemp / deltaTime) * HOUR;
+    }
+
+    this.lastTemperatureEntry = currentEntry;
+
+    return recoveryRate;
   }
 
   private bindOnCurrentStateUpdate(): OnUpdateHandler {
