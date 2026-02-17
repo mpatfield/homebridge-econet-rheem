@@ -1,4 +1,4 @@
-import { CharacteristicSetHandler, CharacteristicValue, PrimitiveTypes } from 'homebridge';
+import { CharacteristicSetHandler, CharacteristicValue, LogLevel, PrimitiveTypes } from 'homebridge';
 
 import { BaseAccessory, NumberCallback, OnUpdateHandler } from '../abstract/base.js';
 
@@ -77,7 +77,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
 
       if (this.onUpdate(HKCharacteristicKey.StatusFault, faultStatus) && hasAlert) {
-        this.log.warning(strings.accessory.alert);
+        this.logIfDesired(LogLevel.WARN, strings.accessory.alert);
       }
 
     }).bind(this);
