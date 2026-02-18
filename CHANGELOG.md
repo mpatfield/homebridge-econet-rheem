@@ -2,10 +2,10 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.2-beta.1 (2026-02-17)
+## 1.7.2 (2026-02-18)
 
 ## Added
-- Additional [Eve App](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) Characteristic — Ambient Temperature, Hot Water Available, Recovery Rate
+- Additional [Eve App](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support) Characteristics — Ambient Temperature, Hot Water Availability, Recovery Rate
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
