@@ -62,7 +62,7 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
     this.setup(CustomCharacteristicKey.HotWaterAvailable, hotWaterAvailable, MQTTKeys(MQTTKey.HOT_WATER_AVAILABLE_D, MQTTKey.HOT_WATER_AVAILABLE_U),
       async (value) => {
         const hotWaterAvailable = this.getHotWaterAvailable(value);
-        this.onUpdate(CustomCharacteristicKey.AmbientTemperature, hotWaterAvailable);
+        this.onUpdate(CustomCharacteristicKey.HotWaterAvailable, hotWaterAvailable);
       },
     );
 
