@@ -97,7 +97,7 @@ export class WaterHeaterAccessory extends TemperatureControlAccessory {
   private bindOnCurrentStateUpdate(): OnUpdateHandler {
     return (async (value: PrimitiveTypes) => {
 
-      let running: boolean = false;
+      let running: boolean;
       if (this.isDeviceAuth) {
 
         if (typeof value !== 'number') {
