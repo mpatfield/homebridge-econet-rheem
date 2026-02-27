@@ -29,8 +29,8 @@ const en = {
     title: {
       activeKey: 'Active Key',
       device: 'Device',
-      devices: 'Devices',
       deviceName: 'Device Name',
+      devices: 'Devices',
       disableLogging: 'Disable Logging',
       email: 'Email',
       enableHistory: 'Enable History',
@@ -76,23 +76,6 @@ const en = {
     unstable: '%s connection is unstable. Attempting to reauthenticate…', // device name
   },
 
-  waterHeater: {
-    currentConsumption: '%s consumption is %dW', // accessory name, value
-    disabled: '%s is disabled', // device name
-    disabledSet: 'Setting %s to disabled…', // device name
-    idle: '%s is idle', // device name
-    enabled: '%s is enabled', // device name
-    enabledSet: 'Setting %s to enabled…', // device name
-    running: '%s is heating', // device name
-    totalConsumption: '%s consumption is %dkWh', // accessory name, value
-  },
-
-  temperatureControl: {
-    current: '%s temperature is %d°%s', // accessory name, number, units
-    target: '%s target temperature is %d°%s', // accessory name, number, units
-    targetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
-  },
-
   startup: {
     badConfig: 'One or more required variables are missing from the config. Please check the documentation.',
     complete: '✓ Setup complete.',
@@ -107,6 +90,12 @@ const en = {
     ],
   },
 
+  temperatureControl: {
+    current: '%s temperature is %d°%s', // accessory name, number, units
+    target: '%s target temperature is %d°%s', // accessory name, number, units
+    targetSet: 'Setting %s temperature to %d°%s…', // accessory name, number, units
+  },
+
   thermostat: {
     humidity: '%s humidity is %d%', // device name
     stateAutoFuture: 'Settings %s to Auto…', // device name
@@ -117,6 +106,17 @@ const en = {
     stateOff: '%s set to Off', // device name
     stateOffFuture: 'Settings %s to Off…', // device name
     targetSetFailed: '%s unabled to set target with value %s', // device name, value
+  },
+
+  waterHeater: {
+    currentConsumption: '%s consumption is %dW', // accessory name, value
+    disabled: '%s is disabled', // device name
+    disabledSet: 'Setting %s to disabled…', // device name
+    idle: '%s is idle', // device name
+    enabled: '%s is enabled', // device name
+    enabledSet: 'Setting %s to enabled…', // device name
+    running: '%s is heating', // device name
+    totalConsumption: '%s consumption is %dkWh', // accessory name, value
   },
 };
 
