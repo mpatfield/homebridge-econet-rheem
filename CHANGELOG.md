@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.3-beta.2 (2026-02-27)
+## 1.7.3-beta.3 (2026-02-27)
 
 ### Fixed
 - Incorrect hot water characteristic ([Eve App](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Eve-App-Support))
