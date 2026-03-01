@@ -44,7 +44,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
     const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
     this.setup(HKCharacteristicKey.StatusFault, faultStatus, MQTTKeys(MQTTKey.ALERT_COUNT_D, MQTTKey.ALERT_COUNT_U), this.bindOnAlertCountUpdate());
 
-    this.setup(CustomCharacteristicKey.AlarmDescription, '', MQTTKeys(MQTTKey.ALARM_D, MQTTKey.UNDEFINED), this.bindOnAlarmUpdate());
+    this.setUpdateHandler(MQTTKeys(MQTTKey.ALARM_D, MQTTKey.UNDEFINED), this.bindOnAlarmUpdate());
   }
 
   protected setupThreshold(charKey: HKCharacteristicKey, setPoint: Setpoint | undefined, mqttKeys: MQTTKeys): Thresholds {
@@ -93,7 +93,13 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
 
       const alarmDescription = value.trim();
 
-      if (this.onUpdate(CustomCharacteristicKey.AlarmDescription, alarmDescription) && alarmDescription.length > 0) {
+      if (value === this.getProperty(CustomCharacteristicKey.AlarmDescription)) {
+        return;
+      }
+
+      this.setProperty(CustomCharacteristicKey.AlarmDescription, value);
+
+      if (alarmDescription.length > 0) {
         this.log.warning(`${this.name} - ${alarmDescription}`);
       }
 

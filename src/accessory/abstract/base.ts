@@ -152,6 +152,15 @@ export abstract class BaseAccessory implements MQTTListener {
     return typeof input === 'object' && input !== null && 'value' in input ? input.value : (input as T);
   }
 
+  protected setUpdateHandler(mqttKeys: MQTTKeys, onUpdateHandler: OnUpdateHandler) {
+
+    const mqttKey = this.getMQTTKey(mqttKeys);
+
+    const handlers = this.updateHandlers.get(mqttKey) ?? [];
+    handlers.push(onUpdateHandler);
+    this.updateHandlers.set(mqttKey, handlers);
+  }
+
   protected setup(
     characteristicKey: CharacteristicKey,
     startingValue: CharacteristicValue,
