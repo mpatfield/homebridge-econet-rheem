@@ -1,10 +1,10 @@
-import { CharacteristicSetHandler, CharacteristicValue, LogLevel, PrimitiveTypes } from 'homebridge';
+import { CharacteristicSetHandler, CharacteristicValue, PrimitiveTypes } from 'homebridge';
 
 import { BaseAccessory, NumberCallback, OnUpdateHandler } from '../abstract/base.js';
 
 import { strings } from '../../i18n/i18n.js';
 
-import { CharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
+import { CharacteristicKey, CustomCharacteristicKey, HKCharacteristicKey, MQTTKey, MQTTKeys } from '../../model/enums.js';
 import { HistoryType } from '../../model/history.js';
 import { AccessoryDependency, EquipmentData, Setpoint } from '../../model/types.js';
 
@@ -42,9 +42,9 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
 
     const hasAlert = typeof data['@ALERTCOUNT'] === 'number' && data['@ALERTCOUNT'] > 0;
     const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
-    this.setup(HKCharacteristicKey.StatusFault, faultStatus, MQTTKeys(MQTTKey.ALERT_COUNT_D, MQTTKey.ALERT_COUNT_U),
-      this.bindOnAlertCountUpdate(),
-    );
+    this.setup(HKCharacteristicKey.StatusFault, faultStatus, MQTTKeys(MQTTKey.ALERT_COUNT_D, MQTTKey.ALERT_COUNT_U), this.bindOnAlertCountUpdate());
+
+    this.setup(CustomCharacteristicKey.AlarmDescription, '', MQTTKeys(MQTTKey.ALARM_D, MQTTKey.UNDEFINED), this.bindOnAlarmUpdate());
   }
 
   protected setupThreshold(charKey: HKCharacteristicKey, setPoint: Setpoint | undefined, mqttKeys: MQTTKeys): Thresholds {
@@ -69,7 +69,7 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
     return (async (value: PrimitiveTypes) => {
 
       if (typeof value !== 'number') {
-        this.log.error(strings.accessory.badValue, this.name, 'string', HKCharacteristicKey.StatusFault, `${JSON.stringify(value)}`);
+        this.log.error(strings.accessory.badValue, this.name, 'number', HKCharacteristicKey.StatusFault, `${JSON.stringify(value)}`);
         return;
       }
 
@@ -77,7 +77,24 @@ export abstract class TemperatureControlAccessory extends BaseAccessory {
       const faultStatus = hasAlert ? this.Characteristic.StatusFault.GENERAL_FAULT : this.Characteristic.StatusFault.NO_FAULT;
 
       if (this.onUpdate(HKCharacteristicKey.StatusFault, faultStatus) && hasAlert) {
-        this.logIfDesired(LogLevel.WARN, strings.accessory.alert);
+        this.log.warning(strings.accessory.alert, this.name);
+      }
+
+    }).bind(this);
+  }
+
+  private bindOnAlarmUpdate(): OnUpdateHandler {
+    return (async (value: PrimitiveTypes) => {
+
+      if (typeof value !== 'string') {
+        this.log.error(strings.accessory.badValue, this.name, 'string', CustomCharacteristicKey.AlarmDescription, `${JSON.stringify(value)}`);
+        return;
+      }
+
+      const alarmDescription = value.trim();
+
+      if (this.onUpdate(CustomCharacteristicKey.AlarmDescription, alarmDescription) && alarmDescription.length > 0) {
+        this.log.warning(`${this.name} - ${alarmDescription}`);
       }
 
     }).bind(this);

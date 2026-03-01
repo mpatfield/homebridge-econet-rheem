@@ -11,6 +11,7 @@ export enum EquipmentType {
 export type CharacteristicKey = CustomCharacteristicKey | HKCharacteristicKey | EveCharacteristicKey;
 
 export enum CustomCharacteristicKey {
+  AlarmDescription = 'AlarmDescription',
   AmbientTemperature = 'AmbientTemperature',
   HotWaterAvailable = 'HotWaterAvailable',
   RecoveryRate = 'RecoveryRate',
@@ -38,6 +39,7 @@ export enum EveCharacteristicKey {
 }
 
 export enum MQTTKey {
+  ALARM_D = 'ALARM_01',
   ALERT_COUNT_D = 'ALRMALRT',
   ALERT_COUNT_U = '@ALERTCOUNT',
   AMBIENT_TEMP_D = 'AMBIENTT',
