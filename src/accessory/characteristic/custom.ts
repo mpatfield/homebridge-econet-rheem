@@ -46,6 +46,8 @@ class Custom {
 
   get name(): string {
     switch (this.key) {
+    case CustomCharacteristicKey.AlarmDescription:
+      return '';
     case CustomCharacteristicKey.AmbientTemperature:
       return strings.characteristic.ambientTemperature;
     case CustomCharacteristicKey.HotWaterAvailable:
@@ -57,6 +59,8 @@ class Custom {
 
   get uuid(): string {
     switch (this.key) {
+    case CustomCharacteristicKey.AlarmDescription:
+      return '';
     case CustomCharacteristicKey.AmbientTemperature:
       return 'e9638ce8-19ad-468f-a4e8-a65042137a5f';
     case CustomCharacteristicKey.HotWaterAvailable:
@@ -68,6 +72,8 @@ class Custom {
 
   get units(): string {
     switch (this.key) {
+    case CustomCharacteristicKey.AlarmDescription:
+      return '';
     case CustomCharacteristicKey.AmbientTemperature:
       return Units.CELSIUS;
     case CustomCharacteristicKey.HotWaterAvailable:
