@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.4 (2026-03-24)
+
+### Changed
+- Updated dependencies and fixed npm audit vulnerabilities
+
+### Notes
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
+
 ## 1.7.3 (2026-03-04)
 
 ### Fixed
@@ -9,9 +17,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Changed
 - Updated dependencies
-
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.7.2 (2026-02-18)
 
