@@ -2,10 +2,11 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.5-beta.0 (2026-03-25)
+## 1.7.5 (2026-03-30)
 
 ### Changed
 - Cleanup unnecessary dependencies
+- npm audit fix
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
