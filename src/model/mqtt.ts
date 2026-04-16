@@ -19,7 +19,7 @@ const BROKER_URL = `mqtts://${CLEARBLADE_HOST}:1884`;
 const TOPIC_BASE_USER = 'user/%s/device/';
 const TOPIC_BASE_DEVICE = 'device/%s/%s/4736/';
 
-const KEEPALIVE = 90;
+const KEEPALIVE = 30;
 
 const DELAYS = [5 * SECOND, 10 * SECOND, 30 * SECOND, 2 * MINUTE, 5 * MINUTE];
 

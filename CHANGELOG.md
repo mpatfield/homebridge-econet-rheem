@@ -2,14 +2,20 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.6-beta.0 ()
+
+### Changed
+- Updated dependencies
+- Reduced MQTT `keepalive` to fix ECONNRESET errors caused by CGNAT
+
+### Notes
+Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
+
 ## 1.7.5 (2026-03-30)
 
 ### Changed
 - Cleanup unnecessary dependencies
 - npm audit fix
-
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.7.4 (2026-03-24)
 
