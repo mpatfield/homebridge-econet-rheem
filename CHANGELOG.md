@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.6-beta.0 ()
+## 1.7.6-beta.1 ()
 
 ### Changed
 - Updated dependencies
