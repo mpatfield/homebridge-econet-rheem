@@ -34,7 +34,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     this.log = new Log(logger, config.debug === true);
 
-    this.log.always(
+    this.log.ifDebug(
       'v%s | System %s | Node %s | HB v%s | HAPNodeJS v%s',
       getVersion(),
       process.platform,
@@ -55,7 +55,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   configureAccessory(accessory: PlatformAccessory): void {
-    this.log.always(strings.startup.restoringDevice, accessory.displayName);
+    this.log.ifDebug(strings.startup.restoringDevice, accessory.displayName);
     this.platformAccessories.set(accessory.context.serialNumber, accessory);
   }
 
