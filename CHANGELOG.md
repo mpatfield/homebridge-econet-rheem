@@ -7,6 +7,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ### Changed
 - Removed `beta` tag from `homebridge` dependency
 - Reduce noisy startup logging
+- Updated dependencies
 
 ### Notes
 Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
