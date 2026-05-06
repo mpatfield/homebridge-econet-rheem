@@ -2,11 +2,11 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.7-beta.1 ()
+## 1.7.7-beta.2 ()
 
 ### Changed
 - Removed `beta` tag from `homebridge` dependency
-- Reduce noisy startup logging
+- Reduced noisy startup logging
 - Updated dependencies
 
 ### Notes
