@@ -2,7 +2,10 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.7-beta.2 ()
+## 1.7.7-beta.3 ()
+
+### Fixed
+- Potential crash in translation system
 
 ### Changed
 - Removed `beta` tag from `homebridge` dependency
