@@ -2,10 +2,11 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.8-beta.0 ()
+## 1.7.8-beta.1 ()
 
 ### Fixed
 - Potential race condition in persistent storage
+- Possible crash on load
 
 ### Changed
 - Updated dependencies
