@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.8-beta.0 ()
+
+### Fixed
+- Potential race condition in persistent storage
+
+### Changed
+- Updated dependencies
+
 ## 1.7.7 (2026-05-12)
 
 ### Fixed
@@ -32,8 +40,6 @@ Would you like to see Homebridge Econet Rheem in your language? Please consider 
 ### Changed
 - Updated dependencies and fixed npm audit vulnerabilities
 
-### Notes
-Would you like to see Homebridge Econet Rheem in your language? Please consider [getting involved](https://github.com/mpatfield/homebridge-econet-rheem/issues/35). No coding experience required!
 
 ## 1.7.3 (2026-03-04)
 

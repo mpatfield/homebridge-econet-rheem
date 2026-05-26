@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import { PrimitiveTypes } from 'homebridge';
 import storage from 'node-persist';
 
+import { Mutex } from './mutex.js';
+
 import { PLATFORM_NAME } from '../homebridge/settings.js';
 
 const VERSION = 2;
@@ -9,6 +11,8 @@ const STORAGE_KEY = `${PLATFORM_NAME}_V${VERSION}`;
 
 type Storable = PrimitiveTypes | PrimitiveTypes[] | { [key: string]: PrimitiveTypes };
 const PROPERTIES = new Map<string, Map<string, Storable>>();
+
+const MUTEX = new Mutex();
 
 export class Properties {
 
@@ -64,6 +68,12 @@ export class Properties {
   }
 
   private static async save() {
+    await MUTEX.lock(async () => {
+      await Properties._save();
+    });
+  }
+
+  private static async _save() {
     const storageArray = Array.from(PROPERTIES.entries()).map(([key, value]) => {
       return [key, Array.from(value.entries())];
     });
