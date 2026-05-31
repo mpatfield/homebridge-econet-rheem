@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.8-beta.1 ()
+## 1.7.8 (2026-05-30)
 
 ### Fixed
 - Potential race condition in persistent storage
@@ -10,6 +10,9 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Changed
 - Updated dependencies
+
+### Notes
+Please consider giving this plugin a ★ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
 
 ## 1.7.7 (2026-05-12)
 
