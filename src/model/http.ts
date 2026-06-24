@@ -1,4 +1,6 @@
 import axios, { AxiosRequestConfig, AxiosResponse, isAxiosError } from 'axios';
+import https from 'https';
+import tls from 'tls';
 
 import { DeviceAuth, UserAuth } from './auth.js';
 
@@ -7,7 +9,7 @@ import { DeviceDetails, DeviceTokenData, EquipmentData, LocationsResponse, UserT
 
 import { strings } from '../i18n/i18n.js';
 
-import { CLEARBLADE_HOST, CLEARBLADE_KEY, CLEARBLADE_SECRET } from '../homebridge/settings.js';
+import { CLEARBLADE_CERT_INTERMEDIATE, CLEARBLADE_CERT_ROOT, CLEARBLADE_HOST, CLEARBLADE_KEY, CLEARBLADE_SECRET } from '../homebridge/settings.js';
 
 import { Log } from '../tools/log.js';
 import { DELAYS, MINUTE, SECOND } from '../tools/time.js';
@@ -52,6 +54,8 @@ export class EconetApi {
 
   private userAuth?: UserAuth;
   private retryIndex: number = 0;
+
+  private readonly httpsAgent = new https.Agent({ ca: [CLEARBLADE_CERT_ROOT, CLEARBLADE_CERT_INTERMEDIATE, ...tls.rootCertificates] });
 
   private static instance?: EconetApi;
 
@@ -105,9 +109,9 @@ export class EconetApi {
     let config: AxiosRequestConfig;
     if (this.userAuth?.token) {
       const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.userAuth?.token };
-      config = { headers: headers, timeout: HTTP_TIMEOUT };
+      config = { headers: headers, timeout: HTTP_TIMEOUT, httpsAgent: this.httpsAgent };
     } else {
-      config = { headers: BASE_HEADERS, timeout: HTTP_TIMEOUT };
+      config = { headers: BASE_HEADERS, timeout: HTTP_TIMEOUT, httpsAgent: this.httpsAgent };
     }
 
     try {
