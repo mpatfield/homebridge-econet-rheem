@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.10-beta.0
+## 1.7.10
 
 ### Fixed
 - Embed clearblade certs to fix "unable to get local issuer certificate" errors
