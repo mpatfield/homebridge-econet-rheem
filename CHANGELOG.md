@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.7.11.beta- ()
+
+### Changed
+- ⚠️ Dropped [official support](https://github.com/homebridge/homebridge/wiki/How-To-Update-Node.js) for Node.js v20 and added Node.js v26
+
+### Notes
+Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
+
 ## 1.7.10 (2026-06-26)
 
 ### Fixed
@@ -9,9 +17,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Changed
 - Updated dependencies
-
-### Notes
-Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
 
 ## 1.7.9
 
