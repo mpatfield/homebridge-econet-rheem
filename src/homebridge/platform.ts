@@ -171,8 +171,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         }
       });
     }
-
-    this.log.always(strings.startup.complete);
   }
 
   private removeAccessory(accessory: PlatformAccessory) {

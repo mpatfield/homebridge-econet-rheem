@@ -78,7 +78,6 @@ const en = {
 
   startup: {
     badConfig: 'One or more required variables are missing from the config. Please check the documentation.',
-    complete: '✓ Setup complete.',
     newEquipment: 'Adding new device:',
     noEquipment: 'No equipment found',
     removeDevice: 'Removing device:',
