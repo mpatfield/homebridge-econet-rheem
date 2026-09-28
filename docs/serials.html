@@ -39,7 +39,7 @@ document.getElementById('loginForm').onsubmit = async (e) => {
       }
 
   try {
-    const authResponse = await fetch('https://rheem.clearblade.com/api/v/1/user/auth', {
+    const authResponse = await fetch('https://rheem.rheemconnect.com/api/v/1/user/auth', {
       method: 'POST',
       headers,
       body: JSON.stringify({ email, password })
@@ -49,7 +49,7 @@ document.getElementById('loginForm').onsubmit = async (e) => {
     
     headers = { ...headers, 'ClearBlade-UserToken': auth.user_token }
 
-    const locationsResponse = await fetch('https://rheem.clearblade.com/api/v/1/code/e2e699cb0bb0bbb88fc8858cb5a401/getUserDataForApp', {
+    const locationsResponse = await fetch('https://rheem.rheemconnect.com/api/v/1/code/e2e699cb0bb0bbb88fc8858cb5a401/getUserDataForApp', {
       method: 'POST',
       headers,
       body: JSON.stringify({ resource: 'friedrich' })

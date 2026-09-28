@@ -2,13 +2,19 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.7.12 (2026-09-08)
+## 1.7.13-beta.0 ()
 
 ### Changed
+- Use new API endpoint as [suggested by Rheem](https://github.com/home-assistant/core/issues/183346#issuecomment-5872397435)
 - Updated dependencies
 
 ### Notes
 Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
+
+## 1.7.12 (2026-09-08)
+
+### Changed
+- Updated dependencies
 
 ## 1.7.11 (2026-08-06)
 

@@ -2,7 +2,6 @@ import { createHash } from 'crypto';
 import { PrimitiveTypes } from 'homebridge';
 import mqtt from 'mqtt';
 import storage from 'node-persist';
-import tls from 'tls';
 
 import { AuthType, DeviceAuth, UserAuth } from './auth.js';
 import { MQTTKey } from './enums.js';
@@ -10,12 +9,12 @@ import { EconetApi } from './http.js';
 
 import { strings } from '../i18n/i18n.js';
 
-import { CLEARBLADE_CERT_INTERMEDIATE, CLEARBLADE_CERT_ROOT, CLEARBLADE_HOST, CLEARBLADE_KEY, PLATFORM_NAME } from '../homebridge/settings.js';
+import { RHEEMCONNECT_HOST, CLEARBLADE_KEY, PLATFORM_NAME } from '../homebridge/settings.js';
 
 import { Log, LogType } from '../tools/log.js';
 import { MINUTE, SECOND } from '../tools/time.js';
 
-const BROKER_URL = `mqtts://${CLEARBLADE_HOST}:1884`;
+const BROKER_URL = `mqtts://${RHEEMCONNECT_HOST}:1884`;
 
 const TOPIC_BASE_USER = 'user/%s/device/';
 const TOPIC_BASE_DEVICE = 'device/%s/%s/4736/';
@@ -71,7 +70,6 @@ export class MQTT {
       username,
       clientId,
       password: CLEARBLADE_KEY,
-      ca: [CLEARBLADE_CERT_ROOT, CLEARBLADE_CERT_INTERMEDIATE, ...tls.rootCertificates],
       rejectUnauthorized: true,
       keepalive: KEEPALIVE,
       reconnectPeriod: 0,
