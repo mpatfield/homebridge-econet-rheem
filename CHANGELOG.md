@@ -2,7 +2,7 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.8.0-alpha.0 ()
+## 1.8.0-beta.0 ()
 
 ### Added
 - [Advanced Setup](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Advanced-Setup) for water heaters now includes a "Type" option
