@@ -2,14 +2,23 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.8.0-alpha.0 ()
+
+### Added
+- [Advanced Setup](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Advanced-Setup) for water heaters now includes a "Type" option
+    - If you previously tried this feature and it didn't work for you, please try again by selecting the appropriate water heater type: Electric Tank, Heat Pump, Tankless
+
+### Changed
+- Updated dependencies
+
+### Notes
+Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
+
 ## 1.7.13 (2026-10-11)
 
 ### Changed
 - Use new API endpoint as [suggested by Rheem](https://github.com/home-assistant/core/issues/183346#issuecomment-5872397435)
 - Updated dependencies
-
-### Notes
-Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
 
 ## 1.7.12 (2026-09-08)
 

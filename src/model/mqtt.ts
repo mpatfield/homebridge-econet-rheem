@@ -4,7 +4,7 @@ import mqtt from 'mqtt';
 import storage from 'node-persist';
 
 import { AuthType, DeviceAuth, UserAuth } from './auth.js';
-import { MQTTKey } from './enums.js';
+import { DeviceType, MQTTKey } from './enums.js';
 import { EconetApi } from './http.js';
 
 import { strings } from '../i18n/i18n.js';
@@ -17,7 +17,13 @@ import { MINUTE, SECOND } from '../tools/time.js';
 const BROKER_URL = `mqtts://${RHEEMCONNECT_HOST}:1884`;
 
 const TOPIC_BASE_USER = 'user/%s/device/';
-const TOPIC_BASE_DEVICE = 'device/%s/%s/4736/';
+const TOPIC_BASE_DEVICE = 'device/%s/%s/%s/';
+
+const DEVICE_ADDRESS = new Map<DeviceType, number>([
+  [DeviceType.WH_ELECTRIC_TANK, 0x1200], // https://github.com/esphome-econet/esphome-econet/blob/main/econet_electric_tank_water_heater.yaml
+  [DeviceType.WH_HEAT_PUMP, 0x1280], // https://github.com/esphome-econet/esphome-econet/blob/main/econet_heatpump_water_heater.yaml
+  [DeviceType.WH_TANKLESS, 0x1040], // https://github.com/esphome-econet/esphome-econet/blob/main/econet_tankless_water_heater.yaml
+]);
 
 const KEEPALIVE = 30;
 
@@ -38,6 +44,7 @@ export type MQTTDependency = {
   parentName: string,
   email: string,
   auth: DeviceAuth | UserAuth,
+  deviceType?: DeviceType,
   serialNumber: string,
   macAddress: string,
   debug: boolean,
@@ -49,18 +56,18 @@ export class MQTT {
 
   static connect(dependency: MQTTDependency, listener: MQTTListener): MQTT | undefined {
 
-    let username: string;
+    const username: string = dependency.auth.token;
     let clientId: string | undefined;
 
     let topic: string;
 
     switch(dependency.auth.type) {
-    case AuthType.DEVICE:
-      username = dependency.auth.token;
-      topic = TOPIC_BASE_DEVICE.replace('%s', dependency.macAddress).replace('%s', dependency.serialNumber);
+    case AuthType.DEVICE: {
+      const deviceAddress = (DEVICE_ADDRESS.get(dependency.deviceType ?? DeviceType.WH_HEAT_PUMP) ?? 0x1280).toString();
+      topic = TOPIC_BASE_DEVICE.replace('%s', dependency.macAddress).replace('%s', dependency.serialNumber).replace('%s', deviceAddress);
       break;
+    }
     case AuthType.USER:
-      username = dependency.auth.token;
       clientId = `${dependency.email}${Date.now().toString().replace('.', '').slice(0, 13)}_android`;
       topic = TOPIC_BASE_USER.replace('%s', (dependency.auth as UserAuth).accountId);
       break;

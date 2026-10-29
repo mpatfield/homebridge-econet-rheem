@@ -3,7 +3,7 @@ import { PlatformAccessory, PlatformConfig as HBPlatformConfig } from 'homebridg
 export type ServiceType = typeof import('homebridge').Service;
 export type CharacteristicType = typeof import('homebridge').Characteristic;
 
-import { EquipmentType } from './enums.js';
+import { DeviceType, EquipmentType } from './enums.js';
 
 import { History } from './history.js';
 import { Log } from '../tools/log.js';
@@ -19,6 +19,7 @@ export type PlatformConfig = HBPlatformConfig & {
 }
 
 export type DeviceDetails = {
+  type?: DeviceType,
   serialNumber: string,
   deviceName: string,
   activeKey: string
@@ -33,7 +34,8 @@ export type AccessoryDependency = {
   disableLogging: boolean,
   debug: boolean,
   email: string,
-  auth: DeviceAuth | UserAuth
+  auth: DeviceAuth | UserAuth,
+  deviceType?: DeviceType,
 }
 
 export type UserTokenData = {

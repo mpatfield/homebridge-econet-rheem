@@ -19,7 +19,13 @@ const en = {
 
     description: {
       account: 'Dedicated account recommended. See documentation.',
-      devices: 'Providing additional device details gives a better experience. See documentation for details.',
+      waterHeaters: 'Providing additional details gives a better experience. See wiki for more info.',
+    },
+
+    enumNames: {
+      waterHeaterElectricTank: 'Electric Tank',
+      waterHeaterHeatPump: 'Heat Pump',
+      waterHeaterTankless: 'Tankless',
     },
 
     needed: 'You will need your Rheem username and password',
@@ -30,12 +36,13 @@ const en = {
       activeKey: 'Active Key',
       device: 'Device',
       deviceName: 'Device Name',
-      devices: 'Devices',
       disableLogging: 'Disable Logging',
       email: 'Email',
       enableHistory: 'Enable History',
       password: 'Password',
       serialNumber: 'Serial Number',
+      waterHeaters: 'Water Heater Details',
+      type: 'Type',
     },
   },
 

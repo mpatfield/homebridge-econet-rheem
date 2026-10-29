@@ -25,6 +25,12 @@
         "items": {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "title": "${config.title.type}",
+              "enum": [ "WH_ELECTRIC_TANK", "WH_HEAT_PUMP", "WH_TANKLESS" ],
+              "enumNames": [ "${config.enumNames.waterHeaterElectricTank}", "${config.enumNames.waterHeaterHeatPump}", "${config.enumNames.waterHeaterTankless}" ]
+            },
             "serialNumber": {
               "type": "string",
               "title": "${config.title.serialNumber}"
@@ -122,8 +128,8 @@
     },
     {
       "type": "fieldset",
-      "title": "${config.title.devices}",
-      "description": "${config.description.devices}",
+      "title": "${config.title.waterHeaters}",
+      "description": "${config.description.waterHeaters}",
       "items": [
         {
           "type": "array",
@@ -137,16 +143,20 @@
               "flex-direction": "row",
               "items": [
                 {
+                  "key": "devices[].type",
+                  "flex": "0 0 20%"
+                },
+                {
                   "key": "devices[].serialNumber",
-                  "flex": "0 0 33%"
+                  "flex": "0 0 30%"
                 },
                 {
                   "key": "devices[].deviceName",
-                  "flex": "0 0 33%"
+                  "flex": "0 0 20%"
                 },
                 {
                   "key": "devices[].activeKey",
-                  "flex": "0 0 33%"
+                  "flex": "0 0 20%"
                 }
               ]
             }

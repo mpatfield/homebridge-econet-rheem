@@ -8,6 +8,12 @@ export enum EquipmentType {
   WATER_HEATER = 'WH'
 }
 
+export enum DeviceType {
+  WH_ELECTRIC_TANK = 'WH_ELECTRIC_TANK',
+  WH_HEAT_PUMP = 'WH_HEAT_PUMP',
+  WH_TANKLESS = 'WH_TANKLESS',
+}
+
 export type CharacteristicKey = CustomCharacteristicKey | HKCharacteristicKey | EveCharacteristicKey;
 
 export enum CustomCharacteristicKey {

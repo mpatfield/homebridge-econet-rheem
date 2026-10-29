@@ -154,6 +154,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
         debug: this.config.debug === true,
         email: this.config.email,
         auth: deviceAuth ?? userAuth,
+        deviceType: device?.type,
       };
 
       const accessory = createAccessory(dependency, equipmentData);
