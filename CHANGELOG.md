@@ -2,11 +2,12 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.8.0-beta.0 ()
+## 1.8.0 (2026-11-01)
 
 ### Added
-- [Advanced Setup](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Advanced-Setup) for water heaters now includes a "Type" option
-    - If you previously tried this feature and it didn't work for you, please try again by selecting the appropriate water heater type: Electric Tank, Heat Pump, Tankless
+- [Advanced Setup](https://github.com/mpatfield/homebridge-econet-rheem/wiki/Advanced-Setup) for water heaters now offers a "Type" option
+    - If you previously tried this feature and it didn't work for you, please try again by selecting the appropriate water heater type: Electric Tank, Heat Pump, or Tankless
+    - If this feature is working for you, please comment on [this ticket](https://github.com/mpatfield/homebridge-econet-rheem/issues/301) with the make/model of your water heater so I can update the documentation
 
 ### Changed
 - Updated dependencies
