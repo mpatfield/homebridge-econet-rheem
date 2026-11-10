@@ -2,6 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
+## 1.8.1 (2026-11-10)
+
+### Changed
+- Updated dependencies
+
+### Notes
+Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
+
 ## 1.8.0 (2026-11-01)
 
 ### Added
@@ -11,9 +19,6 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 
 ### Changed
 - Updated dependencies
-
-### Notes
-Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
 
 ## 1.7.13 (2026-10-11)
 
