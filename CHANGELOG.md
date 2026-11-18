@@ -2,13 +2,21 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.8.1 (2026-11-10)
+## 1.8.2-beta.0 ()
+
+### Fixed
+- Support for multipe devices
 
 ### Changed
 - Updated dependencies
 
 ### Notes
 Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!
+
+## 1.8.1 (2026-11-10)
+
+### Changed
+- Updated dependencies
 
 ## 1.8.0 (2026-11-01)
 

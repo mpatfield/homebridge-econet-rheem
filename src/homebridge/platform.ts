@@ -184,8 +184,6 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
       this.accessories.push(accessory);
     }
 
-    // Only remove stale accessories once every piece of equipment has been processed. Inside the
-    // loop, every device after the first was removed and then re-created on each start.
     this.platformAccessories.forEach(accessory => {
       if (!keepSerials.has(accessory.context.serialNumber)) {
         this.removeAccessory(accessory);
