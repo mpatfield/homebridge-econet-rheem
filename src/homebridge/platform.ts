@@ -165,13 +165,13 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
       keepSerials.add(equipmentData.serial_number);
       this.accessories.push(accessory);
-
-      this.platformAccessories.forEach(accessory => {
-        if (!keepSerials.has(accessory.context.serialNumber)) {
-          this.removeAccessory(accessory);
-        }
-      });
     }
+
+    this.platformAccessories.forEach(accessory => {
+      if (!keepSerials.has(accessory.context.serialNumber)) {
+        this.removeAccessory(accessory);
+      }
+    });
   }
 
   private removeAccessory(accessory: PlatformAccessory) {
