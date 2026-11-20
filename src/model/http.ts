@@ -27,6 +27,9 @@ const LOCATIONS_URL = `${BASE_URL_V1}/code/${CLEARBLADE_KEY}/getUserDataForApp`;
 const HTTP_TIMEOUT = 10 * SECOND;
 
 const HTTP_RETRY_CODES = [
+  'EAI_AGAIN',    // DNS lookup temporarily failed
+  'ECONNABORTED', // Connection aborted
+  'ENOTFOUND',    // DNS host not found
   'ERR_NETWORK',  // General network error in Axios
   'ETIMEDOUT',    // Request timed out
   'ECONNREFUSED', // Connection refused by server
@@ -144,11 +147,15 @@ export class EconetApi {
   
     const errorCode = err.code || err.response?.status?.toString() || 'UNKNOWN';
 
-    if (!HTTP_RETRY_CODES.includes(errorCode) || this.retryIndex >= DELAYS.length) {
+    const shouldRetry = HTTP_RETRY_CODES.includes(errorCode);
+    if (!shouldRetry || this.retryIndex >= DELAYS.length) {
       this.log.warning(err.message);
+    }
+
+    if (!shouldRetry) {
       return undefined;
     }
-    
+
     const retryDelay = DELAYS[Math.min(this.retryIndex, DELAYS.length - 1)];
     if (retryDelay <= MINUTE) {
       this.log.ifDebug(strings.http.retryInSeconds, retryDelay / SECOND);
