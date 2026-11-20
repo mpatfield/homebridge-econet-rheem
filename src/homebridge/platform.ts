@@ -17,12 +17,17 @@ import { Log } from '../tools/log.js';
 import { Properties } from '../tools/properties.js';
 import getVersion from '../tools/version.js';
 
+const SETUP_RETRY_FIRST_SECONDS = 60;
+const SETUP_RETRY_MAX_SECONDS = 30 * 60;
+
 export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
   private readonly log: Log;
 
   private readonly platformAccessories: Map<string, PlatformAccessory> = new Map();
   private readonly accessories: BaseAccessory[] = [];
+  private setupRetry?: NodeJS.Timeout;
+  private setupRetrySeconds = SETUP_RETRY_FIRST_SECONDS;
 
   constructor(
     logger: Logger,
@@ -60,6 +65,7 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
   }
 
   private teardown() {
+    clearTimeout(this.setupRetry);
     this.accessories.forEach( accessory => {
       accessory.teardown();
     });
@@ -88,6 +94,17 @@ export class EconetRheemPlatform implements DynamicPlatformPlugin {
 
     const equipmentsData = await EconetApi.connect(dependency);
     if (equipmentsData === undefined) {
+      // Without a retry, cached accessories stay without their services until the next restart
+      // (Home shows them as "Not Supported" / "No Response"). Back off so that a persistent
+      // failure (e.g. wrong credentials) does not hammer the EcoNet API.
+      const delay = this.setupRetrySeconds;
+      if (delay < 120) {
+        this.log.warning(strings.http.retryInSeconds, delay);
+      } else {
+        this.log.warning(strings.http.retryInMinutes, Math.round(delay / 60));
+      }
+      this.setupRetrySeconds = Math.min(delay * 2, SETUP_RETRY_MAX_SECONDS);
+      this.setupRetry = setTimeout(() => this.setup(), delay * 1000);
       return;
     }
 
