@@ -2,14 +2,14 @@
 
 All notable changes to homebridge-econet-rheem will be documented in this file.
 
-## 1.8.2-beta.1 ()
+## 1.8.2-beta.2 ()
 
 ### Fixed
 - Support for multipe devices (Thanks, [@rjcady](https://github.com/sponsors/rjcady)!)
 
 ### Changed
-- Updated dependencies
 - Certain temporary networking errors will continually retry to allow for eventual reconnection (Thanks, [@rjcady](https://github.com/sponsors/rjcady)!)
+- Updated dependencies
 
 ### Notes
 Please consider giving this plugin a ⭐️ on [GitHub](https://github.com/mpatfield/homebridge-econet-rheem) if you're finding it useful!

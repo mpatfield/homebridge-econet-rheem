@@ -153,6 +153,7 @@ export class EconetApi {
     }
 
     if (!shouldRetry) {
+      this.log.error(strings.http.retryFailed);
       return undefined;
     }
 
