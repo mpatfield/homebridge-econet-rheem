@@ -5,8 +5,8 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ## 1.8.2 (2026-11-24)
 
 ### Fixed
-- 400 errors caused by [major outage at Rheem](https://status.rheemconnect.com/pages/history/5b9a6e9604398204bb35ee9a)
-    - ⚠️ Two plugin restarts required to fully fix the issue
+- 400 errors caused by [major outage at Rheem](https://status.rheemconnect.com/pages/history/5b9a6e9604398204bb35ee9a) on November 21, 2026
+    - ⚠️ Two plugin restarts are required to completely fix the issue
 - Support for multipe devices (Thanks, [@rjcady](https://github.com/sponsors/rjcady)!)
 - Some retriable network responses were not correctly retried
 
