@@ -33,11 +33,11 @@ const HTTP_RETRY_CODES = [
   'ERR_NETWORK',  // General network error in Axios
   'ETIMEDOUT',    // Request timed out
   'ECONNREFUSED', // Connection refused by server
-  '429',          // Too Many Requests (rate limit)
-  '500',          // Internal Server Error
-  '502',          // Bad Gateway
-  '503',          // Service Unavailable
-  '504',          // Gateway Timeout
+  429,          // Too Many Requests (rate limit)
+  500,          // Internal Server Error
+  502,          // Bad Gateway
+  503,          // Service Unavailable
+  504,          // Gateway Timeout
 ];
 
 export type EconetApiDependency = {
@@ -145,9 +145,7 @@ export class EconetApi {
       return undefined;
     }
   
-    const errorCode = err.code || err.response?.status?.toString() || 'UNKNOWN';
-
-    const shouldRetry = HTTP_RETRY_CODES.includes(errorCode);
+    const shouldRetry = HTTP_RETRY_CODES.includes(err.code ?? -1) || HTTP_RETRY_CODES.includes(err.response?.status ?? -1);
     if (!shouldRetry || this.retryIndex >= DELAYS.length) {
       this.log.warning(err.message);
     }
