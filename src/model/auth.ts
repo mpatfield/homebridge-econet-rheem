@@ -1,11 +1,11 @@
 import { DeviceTokenData, UserTokenData } from './types.js';
 
 import { Properties } from '../tools/properties.js';
-import { HOUR } from '../tools/time.js';
+import { DAY } from '../tools/time.js';
 
 const USER_AUTH_IDENTIFIER = 'e7764cce33fe4f9baa6fb6ffec909bca';
 
-const EXPIRATION = 24 * HOUR;
+const EXPIRATION = 14 * DAY;
 
 export enum AuthType {
   DEVICE,
@@ -52,6 +52,10 @@ export class UserAuth extends Auth {
 
     const obj = JSON.parse(decrypted) as { data: UserTokenData, expiration: number | undefined };
     return new UserAuth(obj.data, obj.expiration ?? -1);
+  }
+
+  static async reset() {
+    await Properties.set(USER_AUTH_IDENTIFIER, UserAuth.name, undefined);
   }
 }
 

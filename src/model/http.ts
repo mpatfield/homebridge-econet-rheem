@@ -154,6 +154,11 @@ export class EconetApi {
     }
 
     if (!shouldRetry) {
+
+      if (err.response?.status === 400) {
+        await UserAuth.reset();
+      }
+
       this.log.error(strings.http.retryFailed);
       return undefined;
     }
