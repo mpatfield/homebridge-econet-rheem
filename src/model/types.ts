@@ -47,6 +47,7 @@ export type UserTokenData = {
 export type DeviceTokenData = {
   deviceName: string,
   deviceToken: string,
+  expiresAt: number,
 }
 
 type LocationData = {

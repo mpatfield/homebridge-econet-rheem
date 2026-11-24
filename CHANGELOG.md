@@ -5,6 +5,7 @@ All notable changes to homebridge-econet-rheem will be documented in this file.
 ## 1.8.2-beta.3 ()
 
 ### Fixed
+- 400 errors caused by Rheem invalidating tokens after [major outage](https://status.rheemconnect.com/pages/history/5b9a6e9604398204bb35ee9a)
 - Support for multipe devices (Thanks, [@rjcady](https://github.com/sponsors/rjcady)!)
 - Some retriable network respones were not correctly retrying
 

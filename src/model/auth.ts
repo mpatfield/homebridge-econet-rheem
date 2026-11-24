@@ -1,8 +1,11 @@
 import { DeviceTokenData, UserTokenData } from './types.js';
 
 import { Properties } from '../tools/properties.js';
+import { HOUR } from '../tools/time.js';
 
 const USER_AUTH_IDENTIFIER = 'e7764cce33fe4f9baa6fb6ffec909bca';
+
+const EXPIRATION = 24 * HOUR;
 
 export enum AuthType {
   DEVICE,
@@ -10,13 +13,17 @@ export enum AuthType {
 }
 
 abstract class Auth {
-  constructor(public readonly type: AuthType) {}
+  constructor(public readonly type: AuthType, protected readonly expiration: number) {}
+
+  get isExpired(): boolean {
+    return Date.now() >= this.expiration;
+  }
 }
 
 export class UserAuth extends Auth {
 
-  constructor(private readonly data: UserTokenData) {
-    super(AuthType.USER);
+  constructor(private readonly data: UserTokenData, expiration: number = Date.now() + EXPIRATION) {
+    super(AuthType.USER, expiration);
   }
 
   get token(): string {
@@ -32,7 +39,7 @@ export class UserAuth extends Auth {
   }
 
   save(encryptionKey: string) {
-    const serialized = JSON.stringify({ data: this.data });
+    const serialized = JSON.stringify({ data: this.data, expiration: this.expiration });
     Properties.set(USER_AUTH_IDENTIFIER, UserAuth.name, serialized, encryptionKey);
   }
 
@@ -43,8 +50,8 @@ export class UserAuth extends Auth {
       return;
     }
 
-    const obj = JSON.parse(decrypted) as { data: UserTokenData };
-    return new UserAuth(obj.data);
+    const obj = JSON.parse(decrypted) as { data: UserTokenData, expiration: number | undefined };
+    return new UserAuth(obj.data, obj.expiration ?? -1);
   }
 }
 
@@ -53,7 +60,7 @@ export class DeviceAuth extends Auth {
   static cache = new Map<string, DeviceAuth>();
 
   private constructor(private readonly data: DeviceTokenData) {
-    super(AuthType.DEVICE);
+    super(AuthType.DEVICE, data.expiresAt);
   }
 
   get name(): string {
@@ -65,6 +72,8 @@ export class DeviceAuth extends Auth {
   }
 
   static save(serialNumber: string, data: DeviceTokenData, encryptionKey: string) {
+    data.expiresAt = Date.now() + EXPIRATION;
+
     const serialized = JSON.stringify({ data });
     Properties.set(serialNumber, DeviceAuth.name, serialized, encryptionKey);
 

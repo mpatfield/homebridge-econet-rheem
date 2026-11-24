@@ -69,7 +69,7 @@ export class EconetApi {
     api.userAuth = UserAuth.load(dependency.email);
 
     let shouldContinue = true;
-    if (!api.userAuth) {
+    if (!api.userAuth || api.userAuth.isExpired) {
       shouldContinue = await api.authenticateUser();
     }
 
@@ -84,8 +84,11 @@ export class EconetApi {
 
     for (const equipmentData of equipmentsData.values()) {
       const device = dependency.devices.find( (device) => device.serialNumber === equipmentData.serial_number);
-      if (device !== undefined && DeviceAuth.load(device.serialNumber, dependency.email) === undefined) {
-        await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
+      if (device !== undefined) {
+        const deviceAuth = DeviceAuth.load(device.serialNumber, dependency.email);
+        if (deviceAuth === undefined || deviceAuth.isExpired) {
+          await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
+        }
       }
     }
 
