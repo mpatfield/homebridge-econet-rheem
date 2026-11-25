@@ -67,7 +67,7 @@ const en = {
     reauthFailed: '%s failed to reauthenticate', // device name
     retryInMinutes: 'Request failed. Retrying in %d minutes…', // number
     retryInSeconds: 'Request failed. Retrying in %d seconds…', // number
-    retryFailed: 'Unable to retry request. You may need to restart the Econet Rheem plugin.',
+    retryFailed: 'Unable to retry %s. You may need to restart the Econet Rheem plugin.', // request name
   },
 
   mqtt: {

@@ -68,24 +68,16 @@ export class EconetApi {
 
     api.userAuth = UserAuth.load(dependency.email);
 
-    const usingSavedAuth = api.userAuth !== undefined && !api.userAuth.isExpired;
-
     let shouldContinue = true;
-    if (!usingSavedAuth) {
-      shouldContinue = await api.authenticateUser();
+    if (!api.userAuth || api.userAuth.isExpired) {
+      shouldContinue = await api.authenticateUser() !== undefined;
     }
 
     if (!shouldContinue) {
       return;
     }
 
-    let equipmentsData = await api.getLocations();
-
-    // The saved token was rejected (400), so sign in again now instead of waiting for a restart
-    if (!equipmentsData && usingSavedAuth && api.userAuth === undefined && await api.authenticateUser()) {
-      equipmentsData = await api.getLocations();
-    }
-
+    const equipmentsData = await api.getLocations();
     if (!equipmentsData) {
       return;
     }
@@ -95,7 +87,7 @@ export class EconetApi {
       if (device !== undefined) {
         const deviceAuth = DeviceAuth.load(device.serialNumber, dependency.email);
         if (deviceAuth === undefined || deviceAuth.isExpired) {
-          await api.authenticateDevice(device.serialNumber, device.deviceName, device.activeKey);
+          await api.authenticateDevice(device);
         }
       }
     }
@@ -116,7 +108,6 @@ export class EconetApi {
       url = url.replace('%s', param ?? '');
     });
 
-    // Never send the old user token with the sign-in request itself
     let config: AxiosRequestConfig;
     if (this.userAuth?.token && url !== AUTH_USER_URL) {
       const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.userAuth?.token };
@@ -135,7 +126,7 @@ export class EconetApi {
       }
 
       if (!res.data) {
-        this.log.warning(caller, JSON.stringify(res.data));
+        this.log.warning(`${caller}() —`, JSON.stringify(res.data));
         throw new Error(strings.http.noDataReceived);
       }
 
@@ -153,13 +144,17 @@ export class EconetApi {
   private async retryHTTPIfPossible<T = any>(err: unknown, caller: string, retry: () => (Promise<T | undefined>)): Promise<T | undefined> {
 
     if (!isAxiosError(err)) {
-      this.log.warning((err as Error).message);
+      this.log.warning(`${caller}() —`, (err as Error).message);
       return undefined;
     }
   
-    const shouldRetry = HTTP_RETRY_CODES.includes(err.code ?? -1) || HTTP_RETRY_CODES.includes(err.response?.status ?? -1);
+    let shouldRetry = HTTP_RETRY_CODES.includes(err.code ?? -1) || HTTP_RETRY_CODES.includes(err.response?.status ?? -1);
     if (!shouldRetry || this.retryIndex >= DELAYS.length) {
-      this.log.warning(err.message);
+      this.log.warning(`${caller}() —`, err.message);
+    }
+
+    if (caller !== this.authenticateUser.name && err.response?.status === 400 && this.retryIndex === 0) {
+      shouldRetry = await this.authenticateUser() !== undefined;
     }
 
     if (!shouldRetry) {
@@ -169,7 +164,7 @@ export class EconetApi {
         await UserAuth.reset();
       }
 
-      this.log.error(strings.http.retryFailed);
+      this.log.error(strings.http.retryFailed, `${caller}()`);
       return undefined;
     }
 
@@ -187,26 +182,22 @@ export class EconetApi {
     return await retry();
   }
 
-  public static get userToken(): string | undefined {
-    return EconetApi.instance?.userAuth?.token;
+  public static async authenticateUser(): Promise<UserAuth | undefined> {
+    return await EconetApi.instance?.authenticateUser();
   }
 
-  public static async authenticateUser() {
-    await EconetApi.instance?.authenticateUser();
-  }
-
-  private async authenticateUser(): Promise<boolean> {
+  private async authenticateUser(): Promise<UserAuth | undefined> {
 
     const data = { email: this.dependency.email, password: this.dependency.password };
     const tokenData = await this.httpRequest<UserTokenData>(this.authenticateUser.name, data, AUTH_USER_URL);
 
     if (!tokenData) {
-      return false;
+      return;
     } 
 
     if (tokenData.options.success === false) {
       this.log.warning(tokenData.options.message);
-      return false;
+      return;
     }
   
     this.userAuth = new UserAuth(tokenData);
@@ -216,21 +207,23 @@ export class EconetApi {
       this.log.always(strings.http.authSuccess);
     }
 
-    return true;
+    return this.userAuth;
   }
 
-  private async authenticateDevice(serialNumber: string, deviceName: string, activeKey: string): Promise<boolean> {
+  public static async authenticateDevice(device: DeviceDetails): Promise<DeviceAuth | undefined> {
+    return await EconetApi.instance?.authenticateDevice(device);
+  }
 
-    const data = { deviceName, activeKey };
+  private async authenticateDevice(device: DeviceDetails): Promise<DeviceAuth | undefined> {
+
+    const data = { deviceName: device.deviceName, activeKey: device.activeKey };
     const tokenData = await this.httpRequest<DeviceTokenData>(this.authenticateDevice.name, data, AUTH_DEVICE_URL);
 
     if (!tokenData) {
-      return false;
+      return;
     }
     
-    DeviceAuth.save(serialNumber, tokenData, this.dependency.email);
-
-    return true;
+    return DeviceAuth.save(device.serialNumber, tokenData, this.dependency.email);
   }
 
   private async getLocations(): Promise<EquipmentData[] | undefined> {

@@ -51,8 +51,7 @@ export abstract class BaseAccessory implements MQTTListener {
       parentName: this.name,
       email: dependency.email,
       auth: dependency.auth,
-      deviceType: dependency.deviceType,
-      serialNumber: data.serial_number,
+      device: dependency.device,
       macAddress: data.mac_address,
       debug: dependency.debug,
     };
