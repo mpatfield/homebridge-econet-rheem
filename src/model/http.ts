@@ -68,8 +68,10 @@ export class EconetApi {
 
     api.userAuth = UserAuth.load(dependency.email);
 
+    const usingSavedAuth = api.userAuth !== undefined && !api.userAuth.isExpired;
+
     let shouldContinue = true;
-    if (!api.userAuth || api.userAuth.isExpired) {
+    if (!usingSavedAuth) {
       shouldContinue = await api.authenticateUser();
     }
 
@@ -77,7 +79,13 @@ export class EconetApi {
       return;
     }
 
-    const equipmentsData = await api.getLocations();
+    let equipmentsData = await api.getLocations();
+
+    // The saved token was rejected (400), so sign in again now instead of waiting for a restart
+    if (!equipmentsData && usingSavedAuth && api.userAuth === undefined && await api.authenticateUser()) {
+      equipmentsData = await api.getLocations();
+    }
+
     if (!equipmentsData) {
       return;
     }
@@ -108,8 +116,9 @@ export class EconetApi {
       url = url.replace('%s', param ?? '');
     });
 
+    // Never send the old user token with the sign-in request itself
     let config: AxiosRequestConfig;
-    if (this.userAuth?.token) {
+    if (this.userAuth?.token && url !== AUTH_USER_URL) {
       const headers = { ...BASE_HEADERS, 'ClearBlade-UserToken': this.userAuth?.token };
       config = { headers: headers, timeout: HTTP_TIMEOUT };
     } else {
@@ -156,6 +165,7 @@ export class EconetApi {
     if (!shouldRetry) {
 
       if (err.response?.status === 400) {
+        this.userAuth = undefined;
         await UserAuth.reset();
       }
 
@@ -175,6 +185,10 @@ export class EconetApi {
     this.retryIndex += 1;
 
     return await retry();
+  }
+
+  public static get userToken(): string | undefined {
+    return EconetApi.instance?.userAuth?.token;
   }
 
   public static async authenticateUser() {

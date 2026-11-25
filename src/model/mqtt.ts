@@ -134,6 +134,11 @@ export class MQTT {
 
     this.shouldReconnect = true;
 
+    // Use the current user token, which may have been renewed since this connection was first made
+    if (this.dependency.auth.type === AuthType.USER && EconetApi.userToken) {
+      this.options.username = EconetApi.userToken;
+    }
+
     this.client = mqtt.connect(BROKER_URL, this.options);
 
     this.client.on('connect', () => {
