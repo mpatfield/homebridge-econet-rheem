@@ -35,7 +35,7 @@ export type AccessoryDependency = {
   debug: boolean,
   email: string,
   auth: DeviceAuth | UserAuth,
-  deviceType?: DeviceType,
+  device?: DeviceDetails,
 }
 
 export type UserTokenData = {

@@ -75,13 +75,16 @@ export class DeviceAuth extends Auth {
     return this.data.deviceToken;
   }
 
-  static save(serialNumber: string, data: DeviceTokenData, encryptionKey: string) {
+  static save(serialNumber: string, data: DeviceTokenData, encryptionKey: string): DeviceAuth {
     data.expiresAt = Date.now() + EXPIRATION;
 
     const serialized = JSON.stringify({ data });
     Properties.set(serialNumber, DeviceAuth.name, serialized, encryptionKey);
 
-    DeviceAuth.cache.set(serialNumber, new DeviceAuth(data));
+    const deviceAuth = new DeviceAuth(data);
+    DeviceAuth.cache.set(serialNumber, deviceAuth);
+
+    return deviceAuth;
   }
 
   static load(serialNumber: string, encryptionKey: string): DeviceAuth | undefined {

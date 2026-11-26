@@ -6,6 +6,7 @@ import storage from 'node-persist';
 import { AuthType, DeviceAuth, UserAuth } from './auth.js';
 import { DeviceType, MQTTKey } from './enums.js';
 import { EconetApi } from './http.js';
+import { DeviceDetails } from './types.js';
 
 import { strings } from '../i18n/i18n.js';
 
@@ -44,8 +45,7 @@ export type MQTTDependency = {
   parentName: string,
   email: string,
   auth: DeviceAuth | UserAuth,
-  deviceType?: DeviceType,
-  serialNumber: string,
+  device?: DeviceDetails,
   macAddress: string,
   debug: boolean,
 }
@@ -63,8 +63,11 @@ export class MQTT {
 
     switch(dependency.auth.type) {
     case AuthType.DEVICE: {
-      const deviceAddress = (DEVICE_ADDRESS.get(dependency.deviceType ?? DeviceType.WH_HEAT_PUMP) ?? 0x1280).toString();
-      topic = TOPIC_BASE_DEVICE.replace('%s', dependency.macAddress).replace('%s', dependency.serialNumber).replace('%s', deviceAddress);
+      if (dependency.device === undefined) {
+        throw new Error('`device` missing from MQTT dependency');
+      }
+      const deviceAddress = (DEVICE_ADDRESS.get(dependency.device.type ?? DeviceType.WH_HEAT_PUMP) ?? 0x1280).toString();
+      topic = TOPIC_BASE_DEVICE.replace('%s', dependency.macAddress).replace('%s', dependency.device.serialNumber).replace('%s', deviceAddress);
       break;
     }
     case AuthType.USER:
@@ -224,7 +227,22 @@ export class MQTT {
     if (this.reconnectCount % DELAYS.length === 0) {
       try {
         this.log.ifDebug(LogType.WARNING, strings.mqtt.unstable, this.dependency.parentName);
-        await EconetApi.authenticateUser();
+
+        let newToken: string | undefined;
+        switch(this.dependency.auth.type) {
+        case AuthType.DEVICE: {
+          newToken = (await EconetApi.authenticateDevice(this.dependency.device!))?.token;
+          break;
+        }
+        case AuthType.USER:
+          newToken = (await EconetApi.authenticateUser())?.token;
+          break;
+        }
+
+        if (newToken !== undefined) {
+          this.options.username = newToken;
+        }
+
       } catch (error) {
         this.log.ifDebug(LogType.ERROR, strings.http.reauthFailed, this.dependency.parentName, JSON.stringify(error));
       }
